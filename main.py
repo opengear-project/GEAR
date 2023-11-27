@@ -10,6 +10,11 @@ parser.add_argument(
     default="Salesforce/xgen-7b-8k-inst",
 )
 parser.add_argument(
+    "--dataset",
+    type=str,
+    default="EdinburghNLP/xsum",
+)
+parser.add_argument(
     "--batch-size",
     type=int,
     default=1,
