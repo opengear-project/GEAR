@@ -8,12 +8,12 @@ def create_model(args):
     tokenizer = AutoTokenizer.from_pretrained(
         args.model,
         trust_remote_code=True,
-        cache_dir="../cache/",
+        cache_dir=args.cache_dir,
         device_map="auto",
         padding=True,
         truncation=True,
         use_cache=True,
-        max_length=8000,
+        max_length=args.maxlength,
     )
     model = AutoModelForCausalLM.from_pretrained(
         args.model,
