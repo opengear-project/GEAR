@@ -13,7 +13,7 @@ parser.add_argument(
     "--model",
     type=str,
     # default="Salesforce/xgen-7b-8k-inst",
-    default="togethercomputer/Llama-2-7B-32K-Instruct"
+    default="togethercomputer/Llama-2-7B-32K-Instruct",
 )
 parser.add_argument(
     "--dataset",
@@ -70,8 +70,19 @@ def main(args):
             #     f"### Human: Please summarize the following article.\n\n{article}.\n###"
             # )
             # prompt = (f"[INST]\nPlease summarize the following article.\n\n{article}.\n\n[/INST]\n\n")
-            prompt = [(f"[INST]\nPlease summarize the following article.\n\n{article[doc_id][0:int(args.maxlength-args.offset)]}.\n\n[/INST]\n\n") for doc_id in range(len(article))]
-            inputs = tokenizer(prompt, return_tensors="pt", padding=True, truncation=True, max_length=args.maxlength)
+            prompt = [
+                (
+                    f"[INST]\nPlease summarize the following article.\n\n{article[doc_id][0:int(args.maxlength-args.offset)]}.\n\n[/INST]\n\n"
+                )
+                for doc_id in range(len(article))
+            ]
+            inputs = tokenizer(
+                prompt,
+                return_tensors="pt",
+                padding=True,
+                truncation=True,
+                max_length=args.maxlength,
+            )
             # TODO search parameter unsured
             if args.dataset == "EdinburghNLP/xsum":
                 reference = data["summary"]
@@ -79,18 +90,29 @@ def main(args):
                 reference = data["summary_text"]
                 # for i in range(len(reference)):
                 #     print(len(reference[i]))
-            sample = model.generate(**inputs, max_new_tokens=args.max_new_tokens,
-                temperature=0.7, repetition_penalty=1.1, top_p=0.7, top_k=50,eos_token_id=50256,do_sample=True)
+            sample = model.generate(
+                **inputs,
+                max_new_tokens=args.max_new_tokens,
+                temperature=0.7,
+                repetition_penalty=1.1,
+                top_p=0.7,
+                top_k=50,
+                eos_token_id=50256,
+                do_sample=True,
+            )
             output = tokenizer.batch_decode(sample)
             # print(reference)
 
-            predictions = [output[doc_id].split(delimiter)[1].strip() for doc_id in range(len(article))]
+            predictions = [
+                output[doc_id].split(delimiter)[1].strip()
+                for doc_id in range(len(article))
+            ]
             results = rouge.compute(
                 predictions=predictions,
                 references=reference,
                 use_aggregator=True,
             )
-            
+
             rouge1 += results["rouge1"]
             rouge2 += results["rouge2"]
             rougeL += results["rougeL"]
