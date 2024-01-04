@@ -13,7 +13,9 @@ class GPT2CompressConfig(dict):
         stage=1,
         device_num=0,
         batch_num=1,
-        intermediate_saving=0.0,
+        start_saving=0.0,
+        locality_saving=0.0,
+        token_preserving=False,
     ):
         self.compress_method = compress_method
         self.quantize_bit = quantize_bit
@@ -28,7 +30,9 @@ class GPT2CompressConfig(dict):
         self.left = left
         self.batch_num = batch_num
         self.stage = stage
-        self.intermediate_saving = intermediate_saving
+        self.start_saving = start_saving
+        self.locality_saving = locality_saving
+        self.token_preserving = token_preserving
 
     def create_attention_config(self, config):
         attention_config = []
@@ -47,9 +51,9 @@ class GPT2CompressConfig(dict):
         self.left = self.create_attention_config(self.left)
         self.stage = self.create_attention_config(self.stage)
         self.rankv = self.create_attention_config(self.rankv)
-        self.intermediate_saving = self.create_attention_config(
-            self.intermediate_saving
-        )
+        self.start_saving = self.create_attention_config(self.start_saving)
+        self.locality_saving = self.create_attention_config(self.locality_saving)
+        self.token_preserving = self.create_attention_config(self.token_preserving)
 
     def compress_ratio(
         self,

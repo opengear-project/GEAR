@@ -6,6 +6,7 @@ def fake_groupwise_asymmetric_quantization(input: torch.Tensor, quantize_bit):
     # what flexgen uses
     batch, num_head, seq_len, sep_dim = input.shape
     # 64 groups, group alone sep_dim
+    input = input.float()
     input = input.permute(3, 0, 1, 2)
     input = input.reshape(sep_dim, batch * num_head * seq_len)
     min, max = input.min(1).values, input.max(1).values
@@ -21,6 +22,7 @@ def fake_groupwise_asymmetric_quantization(input: torch.Tensor, quantize_bit):
         )
     input = input.reshape(sep_dim, batch, num_head, seq_len)
     input = input.permute(1, 2, 3, 0)
+    input = input.type(torch.bfloat16)
     return input
 
 
@@ -59,7 +61,6 @@ def fake_uniformquantization(input: torch.Tensor, quantize_bit):
     input = input.reshape(-1)
     input = input.float()  # convert to 32bits to avoid max - min = inf
     min, max = input.min(), input.max()
-
     step = (max - min) / (pow(2, quantize_bit) - 1)
     # print("before min max:",min,max,step)
     quantized_input = torch.round((input - min) / step)
@@ -67,7 +68,7 @@ def fake_uniformquantization(input: torch.Tensor, quantize_bit):
     # print("quantized isnan:",torch.any(torch.isnan(quantized_input)))
     dequantized_input = (quantized_input * step) + min
     returning_input = dequantized_input.reshape(shape)
-    returning_input = returning_input.half()
+    returning_input = returning_input.type(torch.bfloat16)
     # print("isnan:",torch.any(torch.isnan(returning_input)))
     # while(True):
     #     pass
@@ -159,7 +160,7 @@ def fake_dense_sparse_uniformquantization(input: torch.Tensor, quantize_bit, lef
     )
     input[indices] = sortedtensor
     input = input.reshape(shape)
-    input = input.half()
+    input = input.type(torch.bfloat16)
     return input
 
 
@@ -228,8 +229,8 @@ def fake_poweriteration(input: torch.Tensor, loop, rank, device, p_base, q_base)
         p_base[0] = p_base[0].float()
         q_base[0] = q_base[0].float()
     else:
-        p_base = [torch.rand(sep_dim * num_head, rank).to(device)]
-        q_base = [torch.rand(batch * seq_len, rank).to(device)]
+        p_base = [torch.rand(sep_dim * num_head, rank).to(input.device)]
+        q_base = [torch.rand(batch * seq_len, rank).to(input.device)]
     # 3 calculation = loop * (matmul) + 2 * qrO(n^2)
     for i in range(loop):
         if i == loop - 1:
@@ -391,10 +392,20 @@ def compress_insert_function(
     qbase1=None,
     pbase2=None,
     qbase2=None,
+    attn_weights=None,
 ):
+    batch, num_head, seq_len, sep_dim = previous_key.shape
+    if compress_config.token_preserving[layer_idx] == True:
+        starting_idx = int(compress_config.start_saving[layer_idx] * seq_len)
+        locality_idx = int(compress_config.locality_saving[layer_idx] * seq_len)
+    else:
+        starting_idx = int(0)
+        locality_idx = -seq_len
+    # print("starting_idx:", starting_idx, "locality_idx:", locality_idx,compress_config.token_preserving[layer_idx],batch, num_head, seq_len, sep_dim)
     if compress_config.compress_method[layer_idx] == "Picache":
         # TODO
         batch, num_head, seq_len, sep_dim = previous_key.shape
+
         if seq_len > compress_config.rank[layer_idx]:
             previous_key = fake_picache_compress(
                 previous_key,
@@ -431,21 +442,29 @@ def compress_insert_function(
             )
 
     if compress_config.compress_method[layer_idx] == "groupquantization":
-        previous_key = fake_groupwise_asymmetric_quantization(
-            previous_key, compress_config.quantize_bit[layer_idx]
+        previous_key[
+            :, :, starting_idx:-locality_idx, :
+        ] = fake_groupwise_asymmetric_quantization(
+            previous_key[:, :, starting_idx:-locality_idx, :],
+            compress_config.quantize_bit[layer_idx],
         )
         if previous_value is not None:
-            previous_value = fake_groupwise_asymmetric_quantization(
-                previous_value,
+            previous_value[
+                :, :, starting_idx:-locality_idx, :
+            ] = fake_groupwise_asymmetric_quantization(
+                previous_value[:, :, starting_idx:-locality_idx, :],
                 compress_config.quantize_bit[layer_idx],
             )
     if compress_config.compress_method[layer_idx] == "uniformquantization":
-        previous_key = fake_uniformquantization(
-            previous_key, compress_config.quantize_bit[layer_idx]
+        previous_key[:, :, starting_idx:-locality_idx, :] = fake_uniformquantization(
+            previous_key[:, :, starting_idx:-locality_idx, :],
+            compress_config.quantize_bit[layer_idx],
         )
         if previous_value is not None:
-            previous_value = fake_uniformquantization(
-                previous_value,
+            previous_value[
+                :, :, starting_idx:-locality_idx, :
+            ] = fake_uniformquantization(
+                previous_value[:, :, starting_idx:-locality_idx, :],
                 compress_config.quantize_bit[layer_idx],
             )
     if compress_config.compress_method[layer_idx] == "poweriteration":
@@ -467,10 +486,7 @@ def compress_insert_function(
                 qbase2,
             )
         pass
-    if (
-        compress_config.compress_method[layer_idx] == "dynamicpoweriteration"
-        or "dynamicpoweriteration_intermediate"
-    ):
+    if compress_config.compress_method[layer_idx] == "dynamicpoweriteration":
         batch, num_head, seq_len, sep_dim = previous_key.shape
 
         if seq_len % compress_config.stage[layer_idx] == 0:
@@ -491,6 +507,45 @@ def compress_insert_function(
             if previous_value is not None and compress_config.rankv[layer_idx] != 0.0:
                 previous_value = fake_poweriteration(
                     previous_value,
+                    compress_config.loop[layer_idx],
+                    rank_v,
+                    compress_config.device_num[layer_idx],
+                    pbase2,
+                    qbase2,
+                )
+    if (
+        compress_config.compress_method[layer_idx]
+        == "dynamicpoweriteration_intermediate"
+    ):
+        batch, num_head, seq_len, sep_dim = previous_key.shape
+
+        if seq_len % compress_config.stage[layer_idx] == 0:
+            starting_idx = int(compress_config.start_saving[layer_idx] * seq_len)
+            locality_idx = int(compress_config.locality_saving[layer_idx] * seq_len)
+            compress_length = seq_len - starting_idx - locality_idx
+            smaller_dim = (
+                compress_length
+                if compress_length <= num_head * sep_dim
+                else num_head * sep_dim
+            )
+            smaller_dim = int(smaller_dim)
+
+            # print("seq_len:",seq_len,"starting_idx:",starting_idx,"locality_idx:",locality_idx,"smaller_dim:",smaller_dim)
+            rank_k = int(smaller_dim * compress_config.rank[layer_idx])
+            rank_v = int(smaller_dim * compress_config.rankv[layer_idx])
+            previous_key[:, :, starting_idx:-locality_idx, :] = fake_poweriteration(
+                previous_key[:, :, starting_idx:-locality_idx, :],
+                compress_config.loop[layer_idx],
+                rank_k,
+                compress_config.device_num[layer_idx],
+                pbase1,
+                qbase1,
+            )
+            if previous_value is not None and compress_config.rankv[layer_idx] != 0.0:
+                previous_value[
+                    :, :, starting_idx:-locality_idx, :
+                ] = fake_poweriteration(
+                    previous_value[:, :, starting_idx:-locality_idx, :],
                     compress_config.loop[layer_idx],
                     rank_v,
                     compress_config.device_num[layer_idx],
@@ -560,14 +615,19 @@ def compress_insert_function(
                 previous_value, compress_config.top_k[layer_idx]
             )
     if compress_config.compress_method[layer_idx] == "densesparseuniformquantization":
-        previous_key = fake_dense_sparse_uniformquantization(
-            previous_key,
+        # print("seqlen:",seq_len,"starting_idx:",starting_idx,"locality_idx:",locality_idx)
+        previous_key[
+            :, :, starting_idx:-locality_idx, :
+        ] = fake_dense_sparse_uniformquantization(
+            previous_key[:, :, starting_idx:-locality_idx, :],
             compress_config.quantize_bit[layer_idx],
             compress_config.left[layer_idx],
         )
         if previous_value is not None:
-            previous_value = fake_dense_sparse_uniformquantization(
-                previous_value,
+            previous_value[
+                :, :, starting_idx:-locality_idx, :
+            ] = fake_dense_sparse_uniformquantization(
+                previous_value[:, :, starting_idx:-locality_idx, :],
                 compress_config.quantize_bit[layer_idx],
                 compress_config.left[layer_idx],
             )
@@ -585,116 +645,65 @@ def compress_insert_function(
                 compress_config.group_num[layer_idx],
                 compress_config.left[layer_idx],
             )
+    if compress_config.compress_method[layer_idx] == "quantize_with_lrap":
+        smaller_dim = seq_len if seq_len <= num_head * sep_dim else num_head * sep_dim
+        smaller_dim = int(smaller_dim)
+        rank_k = int(smaller_dim * compress_config.rank[layer_idx])
+        rank_v = int(smaller_dim * compress_config.rankv[layer_idx])
+        previous_key = fake_quant_with_lrap(
+            previous_key,
+            compress_config.quantize_bit[layer_idx],
+            rank_k,
+            compress_config.loop[layer_idx],
+        )
+        if previous_value is not None:
+            previous_value = fake_quant_with_lrap(
+                previous_value,
+                compress_config.quantize_bit[layer_idx],
+                rank_v,
+                compress_config.loop[layer_idx],
+            )
+    if compress_config.compress_method[layer_idx] == "outquantize_with_lrap":
+        smaller_dim = seq_len if seq_len <= num_head * sep_dim else num_head * sep_dim
+        smaller_dim = int(smaller_dim)
+        rank_k = int(smaller_dim * compress_config.rank[layer_idx])
+        rank_v = int(smaller_dim * compress_config.rankv[layer_idx])
+        previous_key = fake_outquant_with_lrap(
+            previous_key,
+            compress_config.quantize_bit[layer_idx],
+            rank_k,
+            compress_config.loop[layer_idx],
+            compress_config.left[layer_idx],
+        )
+        if previous_value is not None:
+            previous_value = fake_outquant_with_lrap(
+                previous_value,
+                compress_config.quantize_bit[layer_idx],
+                rank_v,
+                compress_config.loop[layer_idx],
+                compress_config.left[layer_idx],
+            )
     return previous_key, previous_value
 
 
-class PiCache:
-    def __init__(
-        self, cache_shape: tuple, rank, loop, device_num, compress_dim
-    ) -> None:
-        self.batch, self.num_head, self.seq_len, self.sep_dim = cache_shape
-        print(self.batch, self.num_head, self.seq_len, self.sep_dim)
-        self.p_buffers = (
-            []
-        )  # torch.rand(self.sep_dim * self.num_head, rank).to(device_num)
-        self.q_buffers = (
-            []
-        )  # torch.rand(self.batch * self.seq_len, rank).to(device_num)
-        self.p_base = [torch.rand(self.sep_dim * self.num_head, rank).to(device_num)]
-        self.q_base = [torch.rand(self.batch * self.seq_len, rank).to(device_num)]
-        self.cache_buffer = None
-        self.loop = loop
-        self.compress_dim = compress_dim
-        self.device_num = device_num
-        self.rank = rank
+def fake_outquant_with_lrap(tensor, quantize_bit, rank, loop, left):
+    tensor_quantized = fake_dense_sparse_uniformquantization(tensor, quantize_bit, left)
+    tensor_error = tensor - tensor_quantized
+    tensor_error_lrap = fake_poweriteration(
+        tensor_error, loop, rank, tensor_quantized.device, None, None
+    )
+    tensor_return = tensor_quantized + tensor_error_lrap
+    return tensor_return
 
-    def update(self):
-        self.seq_len = self.seq_len + 1
 
-    def decompress(self):
-        # print("len of p_buffers:",len(self.p_buffers))
-        for i in range(len(self.p_buffers)):
-            # print("i:",i)
-            p_buffer = self.p_buffers[i]
-            q_buffer = self.q_buffers[i]
-            # print("p_buffer shape:",p_buffer[0].shape)
-            # print("q_buffer shape:",q_buffer[0].shape)
-            if i == 0:
-                matrix0 = ptdecompress(
-                    p_buffer,
-                    q_buffer,
-                    self.batch,
-                    self.num_head,
-                    self.compress_dim,
-                    self.sep_dim,
-                )
-            else:
-                matrix = ptdecompress(
-                    p_buffer,
-                    q_buffer,
-                    self.batch,
-                    self.num_head,
-                    self.compress_dim,
-                    self.sep_dim,
-                )
-                matrix0 = torch.cat((matrix0, matrix), 2)
-        if self.cache_buffer is not None:
-            matrix0 = torch.cat((matrix0, self.cache_buffer), 2)
-            # print(matrix0.shape, self.cache_buffer.shape)
-        matrix0 = matrix0.view(self.batch, self.num_head, self.seq_len, self.sep_dim)
-        return matrix0
-
-    def fill_cache_buffer(self, cache):
-        self.cache_buffer = cache
-
-    def compress(self, cache):
-        self.batch, self.num_head, self.seq_len, self.sep_dim = cache.shape
-        if self.seq_len % self.compress_dim != 0:
-            cache_dim = self.seq_len % self.compress_dim
-            self.cache_buffer = cache[:, :, -cache_dim:, :]
-            return
-        elif self.seq_len % self.compress_dim == 0:
-            p_buffer, q_buffer, _, _, _, _ = ptcompress(
-                self.cache_buffer, self.p_base, self.q_base, self.loop
-            )
-            self.cache_buffer = None
-            # p_buffer = p_buffer
-            # q_buffer = q_buffer
-            self.p_buffers.append(p_buffer)
-            self.q_buffers.append(q_buffer)
-            return
-
-    def compress_cache(self, cache):
-        self.batch, self.num_head, self.seq_len, self.sep_dim = cache.shape
-        cache_dim = self.seq_len % self.compress_dim
-        # print("cache_dim:",cache_dim)
-        # print("cache_num:",self.seq_len // self.compress_dim)
-        for i in range(self.seq_len // self.compress_dim):
-            cache_buffer = cache[
-                :, :, i * self.compress_dim : (i + 1) * self.compress_dim, :
-            ]
-            p_buffer, q_buffer, _, _, _, _ = ptcompress(
-                cache_buffer, self.p_base, self.q_base, self.loop
-            )
-            # print("p_buffer shape:",p_buffer[0].shape)
-            # print("q_buffer shape:",q_buffer[0].shape)
-            # print("p_buffer_nan:",torch.any(torch.isnan(p_buffer[0])))
-            # print("q_buffer_nan:",torch.any(torch.isnan(q_buffer[0])))
-            self.p_buffers.append(p_buffer)
-            self.q_buffers.append(q_buffer)
-        if cache_dim != 0:
-            self.cache_buffer = cache[:, :, -cache_dim:, :]
-        # print("len of p_buffers:",len(self.p_buffers))
-        # print("len of q_buffers:",len(self.q_buffers))
-        return
-
-    def clean(self):
-        for i in range(len(self.p_buffers)):
-            self.p_buffers[i] = None
-            self.q_buffers[i] = None
-            self.cache_buffer = None
-        self.p_buffers = []
-        self.q_buffers = []
+def fake_quant_with_lrap(tensor, quantize_bit, rank, loop):
+    tensor_quantized = fake_uniformquantization(tensor, quantize_bit)
+    tensor_error = tensor - tensor_quantized
+    tensor_error_lrap = fake_poweriteration(
+        tensor_error, loop, rank, tensor_quantized.device, None, None
+    )
+    tensor_return = tensor_quantized + tensor_error_lrap
+    return tensor_return
 
 
 # def fake_top_k_pruning(input_tensor, rate):

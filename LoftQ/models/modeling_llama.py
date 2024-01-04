@@ -279,6 +279,9 @@ class LlamaAttention(nn.Module):
                     None,
                     None,
                 )
+        if compress_config.compress_method[layer_id] == "H2O":
+            pass
+            self.h2ocache = H2OCache()
 
     def _shape(self, tensor: torch.Tensor, seq_len: int, bsz: int):
         return (
@@ -327,7 +330,10 @@ class LlamaAttention(nn.Module):
         # pastkey, pastvalue = past_key_value
         # print(pastkey)
         if past_key_value is not None:
-            if self.compress_config is not None:
+            if (
+                self.compress_config is not None
+                or self.compress_config.compress_method[self.layer_id] != "H2O"
+            ):
                 # print("pastkeyvalue",past_key_value[0])
                 (past_key, past_value) = compress_insert_function(
                     past_key_value[0],
@@ -375,6 +381,18 @@ class LlamaAttention(nn.Module):
         attn_weights = nn.functional.softmax(
             attn_weights, dim=-1, dtype=torch.float32
         ).to(query_states.dtype)
+        if self.compress_config.compress_method[self.layer_id] == "H2O":
+            (past_key, past_value) = compress_insert_function(
+                past_key_value[0],
+                past_key_value[1],
+                self.compress_config,
+                self.layer_id,
+                pbase1=self.pbase1,
+                qbase1=self.qbase1,
+                pbase2=self.pbase2,
+                qbase2=self.qbase2,
+                attn_weights=attn_weights,
+            )
         attn_output = torch.matmul(attn_weights, value_states)
 
         if attn_output.size() != (bsz, self.num_heads, q_len, self.head_dim):
@@ -392,6 +410,88 @@ class LlamaAttention(nn.Module):
             attn_weights = None
 
         return attn_output, attn_weights, past_key_value
+
+
+class H2OCache:
+    def __init__(self, hhsize, start_saving, locality_saving, batch_size, head_num):
+        self.batch_size = batch_size
+        self.head_num = head_num
+        self.hhsize = hhsize
+        self.start_saving = start_saving
+        self.locality_saving = locality_saving
+        self.attn_score_cache = None
+
+    def prefill_selection(self, attn_score, previous_key, previous_value):
+        # attn_score: [bsz, nh, t1, t1] attn_score_cache: [bsz, nh, t2, t2] previous_key: [bsz, nh, t2, hd]
+        bsz, nh, t, _ = attn_score.shape
+        start_saving_idx = int(self.start_saving * t)
+        locality_saving_idx = (
+            int(self.locality_saving * t) if self.locality_saving != 0.0 else -t
+        )
+        preserving_idx = start_saving_idx + locality_saving_idx
+        preserving_idx = int(preserving_idx) if preserving_idx > 0 else 0
+        # preserve if the tokens are in the first and last x% of the sequence
+        if t > self.hhsize + preserving_idx:
+            attn_score_sum = attn_score.sum(dim=2)
+            attn_score_sum = attn_score_sum[:, :, start_saving_idx:-locality_saving_idx]
+
+            _, indices = attn_score_sum.topk(int(self.hhsize), dim=-1)
+            previous_key[:, :, start_saving_idx:-locality_saving_idx, :] = torch.gather(
+                previous_key[:, :, start_saving_idx:-locality_saving_idx, :], 2, indices
+            )
+            previous_value[
+                :, :, start_saving_idx:-locality_saving_idx, :
+            ] = torch.gather(
+                previous_value[:, :, start_saving_idx:-locality_saving_idx, :],
+                2,
+                indices,
+            )
+            attn_score_cache = attn_score[
+                :,
+                :,
+                start_saving_idx:-locality_saving_idx,
+                start_saving_idx:-locality_saving_idx,
+            ]
+            attn_score_cache = torch.gather(attn_score_cache, 2, indices)
+            attn_score_cache = torch.gather(attn_score_cache, 3, indices)
+            self.attn_score_cache = attn_score_cache
+        else:
+            self.attn_score_cache = attn_score_cache
+        return previous_key, previous_value
+
+    def update_cache(self, attn_score, previous_key, previous_value):
+        # attn_score: [bsz, nh, t1, t1] attn_score_cache: [bsz, nh, t2, t2] previous_key: [bsz, nh, t2, hd]
+        bsz, nh, t, _ = attn_score.shape
+        start_saving_idx = int(self.start_saving * t)
+        locality_saving_idx = (
+            int(self.locality_saving * t) if self.locality_saving != 0.0 else -t
+        )
+        preserving_idx = start_saving_idx + locality_saving_idx
+        preserving_idx = int(preserving_idx) if preserving_idx > 0 else 0
+        attn_score_sum = attn_score.sum(dim=2)
+        attn_score_sum = attn_score_sum[:, :, start_saving_idx:-locality_saving_idx]
+        if t > self.hhsize + preserving_idx:
+            attn_cache_sum = self.attn_score_cache.sum(dim=2)
+            # bsz,nt,t-1
+
+        else:
+            extended_matrix = torch.zeros(bsz, nh, t, t).to(attn_score.device)
+            extended_matrix[bsz, nh, : t - 1, : t - 1] = self.attn_score_cache
+            extended_matrix[:, :, -1, :] = attn_score_sum
+            self.attn_score_cache = extended_matrix
+
+    def update_score_cache(self, attn_score_cache, attn_score):
+        # attn_score: [bsz, nh, t, t]
+        attn_score_cache = torch.cat([attn_score_cache, attn_score], dim=0)
+
+        bsz, nh, t, _ = attn_score_cache.shape
+
+        start_saving_idx = int(self.start_saving * t)
+        locality_saving_idx = int(self.locality_saving * t)
+        attn_score_incalculate = attn_score_cache
+        if t > self.hhsize:
+            attn_score_cache = attn_score_cache[:, :, -self.hhsize :, :]
+        return attn_score_cache
 
 
 class LlamaDecoderLayer(nn.Module):
