@@ -14,4 +14,6 @@
 # python3 test_gsm8k.py --model_name_or_path LoftQ/Llama-2-7b-hf-fp16-64rank-gsm8k --batch_size 8 --device_map "cuda:1" --gpu 1 --compress_method groupquantization --attention_number 32 --quantize_bit 6 --stage 100 --token_preserving --start_saving 0.10 --locality 0.05 > llama2_gsm8k_groupquant6_inter0.10_0.05.txt
 
 
-python3 test_gsm8k.py --model_name_or_path LoftQ/Llama-2-7b-hf-fp16-64rank-gsm8k --batch_size 8 --device_map "cuda:1" --gpu 1 --compress_method outquantize_with_lrap --attention_number 32 --quantize_bit 4 --rank 0.05 --rankv 0.10 --loop 3 --left 0.02 > llama2_gsm8k_outquant4_0.02_lrap_0.05_0.10.txt
+# python3 test_gsm8k.py --model_name_or_path LoftQ/Llama-2-7b-hf-fp16-64rank-gsm8k --batch_size 8 --device_map "cuda:1" --gpu 1 --compress_method outquantize_with_lrap --attention_number 32 --quantize_bit 4 --rank 0.05 --rankv 0.10 --loop 3 --left 0.02 > llama2_gsm8k_outquant4_0.02_lrap_0.05_0.10.txt
+python3 test_gsm8k.py --model_name_or_path LoftQ/Llama-2-7b-hf-fp16-64rank-gsm8k --batch_size 8 --device_map "cuda:1" --gpu 1 --compress_method outquantize_with_lrap --attention_number 32 --quantize_bit 4 --rank 0.05 --rankv 0.10 --loop 3 --left 0.01 > llama2_gsm8k_outquant4_0.01_lrap_0.05_0.10.txt
+python3 test_gsm8k.py --model_name_or_path LoftQ/Llama-2-7b-hf-fp16-64rank-gsm8k --batch_size 8 --device_map "cuda:1" --gpu 1 --compress_method outquantize_with_lrap --attention_number 32 --quantize_bit 4 --rank 0.10 --rankv 0.05 --loop 3 --left 0.02 > llama2_gsm8k_outquant4_0.02_lrap_0.10_0.05.txt
