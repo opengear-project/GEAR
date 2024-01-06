@@ -1,0 +1,24 @@
+accelerate
+transformers
+dataclasses_json
+datasets
+invoke
+jupyter
+jupyter_http_over_ws
+matplotlib
+nltk
+requests
+scikit-learn==1.0.2
+scipy==1.7.3
+seaborn
+spacy
+tqdm
+wget
+tensorboard 
+
+# dev dependencies
+black
+isort
+mypy
+types-requests
+ipdb 
