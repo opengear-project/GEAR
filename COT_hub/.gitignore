@@ -1,0 +1,4 @@
+/cache
+*.pyc
+/LoftQ/cache
+/COT_hub/gsm8k/cache
