@@ -1,3 +1,4 @@
 /cache
 *.pyc
 /LoftQ/cache
+/chain-of-thought-hub/gsm8k/cache
