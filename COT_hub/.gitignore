@@ -2,3 +2,4 @@
 *.pyc
 /LoftQ/cache
 /COT_hub/gsm8k/cache
+/COT_hub/gsm8k/outputs
