@@ -279,7 +279,10 @@ class LlamaAttention(nn.Module):
                     None,
                     None,
                 )
-        if compress_config.compress_method[layer_id] == "H2O":
+        if (
+            compress_config is not None
+            and compress_config.compress_method[layer_id] == "H2O"
+        ):
             pass
             self.h2ocache = H2OCache()
 
@@ -332,7 +335,7 @@ class LlamaAttention(nn.Module):
         if past_key_value is not None:
             if (
                 self.compress_config is not None
-                or self.compress_config.compress_method[self.layer_id] != "H2O"
+                and self.compress_config.compress_method[self.layer_id] != "H2O"
             ):
                 # print("pastkeyvalue",past_key_value[0])
                 (past_key, past_value) = compress_insert_function(
@@ -381,7 +384,10 @@ class LlamaAttention(nn.Module):
         attn_weights = nn.functional.softmax(
             attn_weights, dim=-1, dtype=torch.float32
         ).to(query_states.dtype)
-        if self.compress_config.compress_method[self.layer_id] == "H2O":
+        if (
+            self.compress_config is not None
+            and self.compress_config.compress_method[self.layer_id] == "H2O"
+        ):
             (past_key, past_value) = compress_insert_function(
                 past_key_value[0],
                 past_key_value[1],
