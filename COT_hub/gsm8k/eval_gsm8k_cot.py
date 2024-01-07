@@ -274,7 +274,7 @@ if __name__ == "__main__":
         token=args.hf_token,
     )
     from transformers import LlamaTokenizer
-    from models import LlamaForCausalLMNew, GPT2CompressConfig
+    from models import LlamaForCausalLM, GPT2CompressConfig
 
     compress_config = (
         None
@@ -297,9 +297,11 @@ if __name__ == "__main__":
             token_preserving=args.token_preserving,
         )
     )
-
-    model = LlamaForCausalLMNew.from_pretrained(
-        args.model, config=config, **model_kwargs
+    if compress_config is not None:
+        compress_config.copy_for_all_attention()
+        compress_config.calculate_compress_ratio_list(4095, 4096)
+    model = LlamaForCausalLM.from_pretrained(
+        args.model, config=config, **model_kwargs, compress_config=compress_config
     )
     tokenizer = LlamaTokenizer.from_pretrained(
         args.model,
