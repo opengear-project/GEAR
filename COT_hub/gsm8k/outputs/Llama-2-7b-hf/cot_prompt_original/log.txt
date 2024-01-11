@@ -35,3 +35,88 @@
 01/07/2024 13:55:48 - INFO - root - Preprocessing the dataset.
 01/07/2024 14:13:52 - INFO - root - Loading Model and Tokenizer.
 01/07/2024 14:13:59 - INFO - root - Preprocessing the dataset.
+01/09/2024 02:33:07 - INFO - root - Loading Model and Tokenizer.
+01/09/2024 02:33:13 - INFO - root - Preprocessing the dataset.
+01/09/2024 02:36:38 - INFO - root - Loading Model and Tokenizer.
+01/09/2024 02:36:44 - INFO - root - Preprocessing the dataset.
+01/09/2024 02:37:36 - INFO - root - Loading Model and Tokenizer.
+01/09/2024 02:37:42 - INFO - root - Preprocessing the dataset.
+01/09/2024 02:39:19 - INFO - root - Loading Model and Tokenizer.
+01/09/2024 02:39:25 - INFO - root - Preprocessing the dataset.
+01/09/2024 02:41:30 - INFO - root - Loading Model and Tokenizer.
+01/09/2024 02:41:37 - INFO - root - Preprocessing the dataset.
+01/09/2024 07:37:39 - INFO - root - Loading Model and Tokenizer.
+01/09/2024 07:37:45 - INFO - root - Preprocessing the dataset.
+01/09/2024 16:01:39 - INFO - root - Loading Model and Tokenizer.
+01/09/2024 16:01:45 - INFO - root - Preprocessing the dataset.
+01/09/2024 16:32:25 - INFO - root - Loading Model and Tokenizer.
+01/09/2024 16:32:31 - INFO - root - Preprocessing the dataset.
+01/09/2024 16:35:23 - INFO - root - Loading Model and Tokenizer.
+01/09/2024 16:35:29 - INFO - root - Preprocessing the dataset.
+01/09/2024 20:38:55 - INFO - root - Accuracy: 0.15693707354056102
+01/10/2024 06:17:44 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 06:17:51 - INFO - root - Preprocessing the dataset.
+01/10/2024 06:20:52 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 06:20:58 - INFO - root - Preprocessing the dataset.
+01/10/2024 06:21:33 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 06:21:39 - INFO - root - Preprocessing the dataset.
+01/10/2024 09:42:10 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 09:42:16 - INFO - root - Preprocessing the dataset.
+01/10/2024 09:44:32 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 09:44:38 - INFO - root - Preprocessing the dataset.
+01/10/2024 09:47:43 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 09:47:49 - INFO - root - Preprocessing the dataset.
+01/10/2024 09:48:33 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 09:48:39 - INFO - root - Preprocessing the dataset.
+01/10/2024 09:49:31 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 09:49:37 - INFO - root - Preprocessing the dataset.
+01/10/2024 09:54:48 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 09:54:54 - INFO - root - Preprocessing the dataset.
+01/10/2024 10:00:13 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 10:00:19 - INFO - root - Preprocessing the dataset.
+01/10/2024 10:01:20 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 10:01:26 - INFO - root - Preprocessing the dataset.
+01/10/2024 10:02:08 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 10:02:14 - INFO - root - Preprocessing the dataset.
+01/10/2024 10:07:32 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 10:07:38 - INFO - root - Preprocessing the dataset.
+01/10/2024 10:09:21 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 10:09:28 - INFO - root - Preprocessing the dataset.
+01/10/2024 10:49:41 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 10:49:47 - INFO - root - Preprocessing the dataset.
+01/10/2024 11:07:56 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 11:08:02 - INFO - root - Preprocessing the dataset.
+01/10/2024 11:22:19 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 11:22:25 - INFO - root - Preprocessing the dataset.
+01/10/2024 11:23:34 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 11:23:40 - INFO - root - Preprocessing the dataset.
+01/10/2024 11:24:14 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 11:24:20 - INFO - root - Preprocessing the dataset.
+01/10/2024 11:54:12 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 11:54:18 - INFO - root - Preprocessing the dataset.
+01/10/2024 11:54:47 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 11:54:53 - INFO - root - Preprocessing the dataset.
+01/10/2024 12:07:12 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 12:07:18 - INFO - root - Preprocessing the dataset.
+01/10/2024 12:17:33 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 12:17:39 - INFO - root - Preprocessing the dataset.
+01/10/2024 12:33:25 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 12:33:31 - INFO - root - Preprocessing the dataset.
+01/10/2024 12:36:30 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 12:36:36 - INFO - root - Preprocessing the dataset.
+01/10/2024 12:42:09 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 12:42:15 - INFO - root - Preprocessing the dataset.
+01/10/2024 12:48:15 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 12:48:21 - INFO - root - Preprocessing the dataset.
+01/10/2024 12:49:52 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 12:49:58 - INFO - root - Preprocessing the dataset.
+01/10/2024 17:43:25 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 17:43:32 - INFO - root - Preprocessing the dataset.
+01/10/2024 17:45:40 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 17:45:46 - INFO - root - Preprocessing the dataset.
+01/10/2024 17:46:14 - INFO - root - Loading Model and Tokenizer.
+01/10/2024 17:46:20 - INFO - root - Preprocessing the dataset.
+01/11/2024 12:44:38 - INFO - root - Loading Model and Tokenizer.
+01/11/2024 12:44:44 - INFO - root - Preprocessing the dataset.
+01/11/2024 12:47:08 - INFO - root - Loading Model and Tokenizer.
+01/11/2024 12:47:15 - INFO - root - Preprocessing the dataset.

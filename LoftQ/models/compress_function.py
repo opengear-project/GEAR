@@ -683,7 +683,50 @@ def compress_insert_function(
                 compress_config.loop[layer_idx],
                 compress_config.left[layer_idx],
             )
+    # TODO take a look at this
+    if compress_config.compress_method[layer_idx] == "outquantize_with_lrap_iter":
+        smaller_dim = seq_len if seq_len <= num_head * sep_dim else num_head * sep_dim
+        smaller_dim = int(smaller_dim)
+        rank_k = int(smaller_dim * compress_config.rank[layer_idx])
+        rank_v = int(smaller_dim * compress_config.rankv[layer_idx])
+        previous_key = fake_outquant_with_lrap_iter(
+            previous_key,
+            compress_config.quantize_bit[layer_idx],
+            rank_k,
+            compress_config.loop[layer_idx],
+            compress_config.left[layer_idx],
+            compress_config.iter[layer_idx],
+        )
+        if previous_value is not None:
+            previous_value = fake_outquant_with_lrap_iter(
+                previous_value,
+                compress_config.quantize_bit[layer_idx],
+                rank_v,
+                compress_config.loop[layer_idx],
+                compress_config.left[layer_idx],
+                compress_config.iter[layer_idx],
+            )
     return previous_key, previous_value
+
+
+# iteratively compress the input tensor and simluate the error by low rank approximation
+def fake_outquant_with_lrap_iter(tensor, quantize_bit, rank, loop, left, iter):
+    lrap_error = tensor.clone()
+    batch, num_head, seq_len, sep_dim = tensor.shape
+    p_base = [torch.rand(sep_dim * num_head, rank).to(tensor.device)]
+    q_base = [torch.rand(batch * seq_len, rank).to(tensor.device)]
+    for i in range(iter):
+        tensor_quantized = fake_dense_sparse_uniformquantization(
+            lrap_error, quantize_bit, left
+        )
+        tensor_error = tensor - tensor_quantized
+        tensor_error_lrap = fake_poweriteration(
+            tensor_error, loop, rank, tensor_quantized.device, p_base, q_base
+        )
+        lrap_error = tensor - tensor_error_lrap
+
+    tensor_return = tensor_quantized + tensor_error_lrap
+    return tensor_return
 
 
 def fake_outquant_with_lrap(tensor, quantize_bit, rank, loop, left):

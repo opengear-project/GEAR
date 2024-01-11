@@ -17,6 +17,7 @@ from typing import Any, Callable, Dict, Sequence, cast
 from dataclasses import dataclass
 from dataclasses_json import DataClassJsonMixin
 from torch.utils.tensorboard import SummaryWriter
+from models import LlamaForCausalLMNew
 
 IGNORE_INDEX = -100
 DEFAULT_PAD_TOKEN = "[PAD]"
@@ -215,7 +216,7 @@ if __name__ == "__main__":
     parser.add_argument("--compress_method", type=str, default="None", help="")
     parser.add_argument("--rank", type=float, default=0.0, help="")
     parser.add_argument("--rankv", type=float, default=0.0, help="")
-    parser.add_argument("--loop", type=float, default=0.0, help="")
+    parser.add_argument("--loop", type=int, default=0.0, help="")
     parser.add_argument("--quantize_bit", type=int, default=8, help="")
     parser.add_argument("--group_num", type=int, default=0, help="")
     parser.add_argument("--top_kprun", type=float, default=0.0, help="")
@@ -274,7 +275,7 @@ if __name__ == "__main__":
         token=args.hf_token,
     )
     from transformers import LlamaTokenizer
-    from models import LlamaForCausalLM, GPT2CompressConfig
+    from models import GPT2CompressConfig
 
     compress_config = (
         None
@@ -300,7 +301,7 @@ if __name__ == "__main__":
     if compress_config is not None:
         compress_config.copy_for_all_attention()
         compress_config.calculate_compress_ratio_list(4095, 4096)
-    model = LlamaForCausalLM.from_pretrained(
+    model = LlamaForCausalLMNew.from_pretrained(
         args.model, config=config, **model_kwargs, compress_config=compress_config
     )
     tokenizer = LlamaTokenizer.from_pretrained(
@@ -345,6 +346,7 @@ if __name__ == "__main__":
             max_new_tokens=args.max_new_tokens,
             output_scores=True,
             pad_token_id=tokenizer.eos_token_id,
+            use_cache=True,
         )
         if args.do_sample:
             generate_kwargs["do_sample"] = True

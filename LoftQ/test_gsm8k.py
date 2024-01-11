@@ -94,6 +94,7 @@ class CompressArguments:
     )
     stage: int = field(default=0, metadata={"help": "Evaluation batch size."})
     gpu: int = field(default=1, metadata={"help": "Evaluation batch size."})
+    iter: int = field(default=1, metadata={"help": "Evaluation batch size."})
     locality_saving: float = field(
         default=0.0, metadata={"help": "Evaluation batch size."}
     )
@@ -195,6 +196,7 @@ def evaluation(model_args, data_args, compress_args):
             start_saving=compress_args.start_saving,
             locality_saving=compress_args.locality_saving,
             token_preserving=compress_args.token_preserving,
+            iter=compress_args.iter,
         )
     )
     # TODO extend for all models not just 7B

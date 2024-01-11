@@ -2,6 +2,94 @@ import torch
 import time
 
 
+class H2OCache:
+    def __init__(self, hh_size):
+        self.hh_size = hh_size
+        self.h2o_score = torch.zeros(hh_size, hh_size)
+
+    def selection(self, attn_score, key, value, query):
+        batch, num_head, seq_len, sep_dim = key.shape
+        batch, num_head, inp_len, cache_len = attn_score.shape
+
+        if inp_len == cache_len:
+            # prefill get the attn score
+            self.h2o_score = attn_score.clone()
+        else:
+            # update attn_score
+            new_score_cache = torch.zeros(batch, num_head, cache_len, cache_len)
+            new_score_cache[:, :, :-1, :-1] = self.h2o_score.clone()
+            new_score_cache[:, :, :, :-1] = attn_score.clone()
+            self.h2o_score = new_score_cache
+        if seq_len <= self.hh_size:
+            return key, value
+        else:
+            _, _, cache_len, cache_len = self.h2o_score.shape
+            summing_score = torch.sum(self.h2o_score, dim=-1)
+            choosing_idx = torch.topk(summing_score, self.hh_size, dim=-1).indices
+            # pruning the h2o_score
+            self.h2o_score = self.h2o_score.view(-1, cache_len, cache_len)
+            choosing_idx_flat = choosing_idx.view(-1, self.hh_size).clone()
+
+            choosing_idx_flat1 = choosing_idx_flat.unsqueeze(-1).expand(
+                -1, -1, cache_len
+            )
+
+            choosing_idx_flat2 = choosing_idx_flat.unsqueeze(-2).expand(
+                -1, self.hh_size, -1
+            )
+            selected_h2o_score1 = torch.gather(self.h2o_score, 1, choosing_idx_flat1)
+
+            selected_h2o_score2 = torch.gather(
+                selected_h2o_score1, 2, choosing_idx_flat2
+            )
+            self.h2o_score = selected_h2o_score2.view(
+                batch, num_head, self.hh_size, self.hh_size
+            )
+            # prun the kv cache
+            key = key.reshape(-1, seq_len, sep_dim)
+            value = value.reshape(-1, seq_len, sep_dim)
+            selected_key = torch.gather(
+                key, 1, choosing_idx_flat.unsqueeze(-1).expand(-1, -1, sep_dim)
+            )
+            selected_value = torch.gather(
+                value, 1, choosing_idx_flat.unsqueeze(-1).expand(-1, -1, sep_dim)
+            )
+            print(
+                "selected_key:",
+                selected_key.shape,
+                "selected_value:",
+                selected_value.shape,
+                "self.h2o_score:",
+                self.h2o_score.shape,
+            )
+            selected_key = selected_key.reshape(batch, num_head, self.hh_size, sep_dim)
+            selected_value = selected_value.reshape(
+                batch, num_head, self.hh_size, sep_dim
+            )
+            batch, num_head, q_seq_len, sep_dim = query.shape
+
+            if q_seq_len > 1:
+                # prefill part
+                print("prefill")
+                query = query.reshape(-1, q_seq_len, sep_dim)
+                selected_query = torch.gather(
+                    query, 1, choosing_idx_flat.unsqueeze(-1).expand(-1, -1, sep_dim)
+                )
+                query = query.reshape(batch, num_head, q_seq_len, sep_dim)
+            else:
+                selected_query = query
+            print("query shape:", query.shape)
+            return selected_key, selected_value, selected_query
+
+        # else:
+        #     # select key value
+        #     if inp_len == cache_len:
+        #         # prefill get the attn score
+        #         self.h2o_score = attn_score.clone()
+        #     else:
+        # return key, value
+
+
 def fake_groupwise_asymmetric_quantization(input: torch.Tensor, quantize_bit):
     # what flexgen uses
     batch, num_head, seq_len, sep_dim = input.shape
@@ -683,7 +771,49 @@ def compress_insert_function(
                 compress_config.loop[layer_idx],
                 compress_config.left[layer_idx],
             )
+    # TODO take a look at this
+    if compress_config.compress_method[layer_idx] == "outquantize_with_lrap_iter":
+        smaller_dim = seq_len if seq_len <= num_head * sep_dim else num_head * sep_dim
+        smaller_dim = int(smaller_dim)
+        rank_k = int(smaller_dim * compress_config.rank[layer_idx])
+        rank_v = int(smaller_dim * compress_config.rankv[layer_idx])
+        previous_key = fake_outquant_with_lrap_iter(
+            previous_key,
+            compress_config.quantize_bit[layer_idx],
+            rank_k,
+            compress_config.loop[layer_idx],
+            compress_config.left[layer_idx],
+            compress_config.iter[layer_idx],
+        )
+        if previous_value is not None:
+            previous_value = fake_outquant_with_lrap_iter(
+                previous_value,
+                compress_config.quantize_bit[layer_idx],
+                rank_v,
+                compress_config.loop[layer_idx],
+                compress_config.left[layer_idx],
+                compress_config.iter[layer_idx],
+            )
     return previous_key, previous_value
+
+
+# iteratively compress the input tensor and simluate the error by low rank approximation
+def fake_outquant_with_lrap_iter(tensor, quantize_bit, rank, loop, left, iter):
+    lrap_error = tensor
+    batch, num_head, seq_len, sep_dim = tensor.shape
+    p_base = [torch.rand(sep_dim * num_head, rank).to(tensor.device)]
+    q_base = [torch.rand(batch * seq_len, rank).to(tensor.device)]
+    for i in range(iter):
+        tensor_quantized = fake_dense_sparse_uniformquantization(
+            lrap_error, quantize_bit, left
+        )
+        tensor_error = tensor - tensor_quantized
+        tensor_error_lrap = fake_poweriteration(
+            tensor_error, loop, rank, tensor_quantized.device, p_base, q_base
+        )
+        lrap_error = tensor - tensor_error_lrap
+    tensor_return = tensor_quantized + tensor_error_lrap
+    return tensor_return
 
 
 def fake_outquant_with_lrap(tensor, quantize_bit, rank, loop, left):
