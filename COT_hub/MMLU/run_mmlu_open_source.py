@@ -167,8 +167,8 @@ def batch_split(prompts, batch_num):
         batch_prompts.append(mini_batch)
     return batch_prompts
 
-def batch_infer(model, tokenizer, prompts):
-    batch_size = 8
+def batch_infer(model, tokenizer, prompts,args):
+    batch_size = args.batchsize
     answers = []
     for batch_input in tqdm(batch_split(prompts, batch_size)):
         encode_inputs = prepare_input(tokenizer, batch_input)
@@ -202,7 +202,7 @@ def main(ckpt_dir: str, param_size: str, model_type: str):
             label = test_df.iloc[i, test_df.shape[1]-1]
             records.append({'prompt':prompt, 'answer':label})
 
-        pred_answers = batch_infer(model, tokenizer, [record['prompt'] for record in records])
+        pred_answers = batch_infer(model, tokenizer, [record['prompt'] for record in records],args)
         gold_answers = [record['answer'] for record in records]
         run_results[task] = {'pred_answers':pred_answers, 'gold_answers':gold_answers}
     with open(output_filename, 'w') as f:
@@ -221,6 +221,7 @@ if __name__ == "__main__":
     parser.add_argument('--model_type', type=str, required=True)
     parser.add_argument('--data_dir', type=str, default='data/')
     parser.add_argument('--ntrain', type=int, default=5)
+    parser.add_argument('--batchsize', type=int, default=8)
     args = parser.parse_args()
     
     main(args.ckpt_dir, args.param_size, args.model_type)
