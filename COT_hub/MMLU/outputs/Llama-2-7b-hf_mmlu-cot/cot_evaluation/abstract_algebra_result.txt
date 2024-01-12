@@ -1,0 +1,16 @@
+Q: Let p = (1, 2, 5, 4)(2, 3) in S_5 . Find the index of <p> in S_5.
+(A) 8 (B) 2 (C) 24 (D) 120 
+A: Let's think step by step.
+A_model:
+The index of <p> in S_5 is the number of elements of S_5 that are conjugate to p. The conjugates of p are p, (1, 2, 5, 4)(2, 3), (1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3), (1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3), (1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3). The answer is (B).
+A:
+C
+
+Q: Find all zeros in the indicated finite field of the given polynomial with coefficients in that field. x^5 + 3x^3 + x^2 + 2x in Z_5
+(A) 0 (B) 1 (C) 0,1 (D) 0,4 
+A: Let's think step by step.
+A_model:
+The polynomial x^5 + 3x^3 + x^2 + 2x has roots at x = 0, 1, 2, 3 and 4. The answer is (D).
+A:
+D
+

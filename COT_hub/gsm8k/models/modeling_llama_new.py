@@ -1005,7 +1005,6 @@ class LlamaDecoderLayer(nn.Module):
     def __init__(self, config: LlamaConfig, layer_idx: int, compress_config=None):
         super().__init__()
         self.hidden_size = config.hidden_size
-        config._attn_implementation = "eager"
         self.self_attn = LLAMA_ATTENTION_CLASSES[config._attn_implementation](
             config=config, layer_idx=layer_idx, compress_config=compress_config
         )

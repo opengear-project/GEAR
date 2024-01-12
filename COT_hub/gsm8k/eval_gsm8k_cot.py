@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from dataclasses_json import DataClassJsonMixin
 from torch.utils.tensorboard import SummaryWriter
 from models import LlamaForCausalLMNew
+from transformers import LlamaForCausalLM
 
 IGNORE_INDEX = -100
 DEFAULT_PAD_TOKEN = "[PAD]"

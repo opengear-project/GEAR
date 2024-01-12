@@ -113,6 +113,7 @@ def load_model_tokenizer(args):
         model_kwargs["torch_dtype"] = torch.float16 
         model_kwargs["device_map"] = "auto"
         model_kwargs["token"] = args.hf_token
+        model_kwargs["cache_dir"] = "../cache"
     
     config = transformers.AutoConfig.from_pretrained(
         args.model, use_auth_token=True, token=args.hf_token,
@@ -125,9 +126,10 @@ def load_model_tokenizer(args):
         token=args.hf_token,
         padding_side="left",
         model_max_length=args.model_max_length,
+        cache_dir="../cache"
     )
     tokenizer.pad_token = tokenizer.eos_token
-    model = model.to('cuda')
+    # model = model.to('cuda')
     return model, tokenizer
 
 
@@ -155,7 +157,7 @@ def main(args):
     for task in tasks:
         logging.info('Testing %s ...' % task)
         i, acc = 0, 0
-        task_data = load_dataset("lukaemon/mmlu", task)
+        task_data = load_dataset("lukaemon/mmlu", task,cache_dir="../cache")
 
         generation_file = output_dir / f"{task}_result.txt"
         with generation_file.open("w") as fd:
