@@ -544,6 +544,7 @@ def compress_insert_function(
                 compress_config.quantize_bit[layer_idx],
             )
     if compress_config.compress_method[layer_idx] == "uniformquantization":
+        # print("begin uniquant",starting_idx,locality_idx,compress_config.quantize_bit[layer_idx])
         previous_key[:, :, starting_idx:-locality_idx, :] = fake_uniformquantization(
             previous_key[:, :, starting_idx:-locality_idx, :],
             compress_config.quantize_bit[layer_idx],
