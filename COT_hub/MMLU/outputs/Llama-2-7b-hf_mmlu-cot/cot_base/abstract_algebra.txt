@@ -1,0 +1,32 @@
+Q: Let p = (1, 2, 5, 4)(2, 3) in S_5 . Find the index of <p> in S_5.
+(A) 8 (B) 2 (C) 24 (D) 120 
+A: Let's think step by step.
+A_model:
+The index of <p> in S_5 is the number of elements of S_5 that are conjugate to p. The conjugates of p are p, (1, 2, 5, 4)(2, 3), (1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3), (1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3), (1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3). The answer is (B).
+A:
+C
+
+Q: Find all zeros in the indicated finite field of the given polynomial with coefficients in that field. x^5 + 3x^3 + x^2 + 2x in Z_5
+(A) 0 (B) 1 (C) 0,1 (D) 0,4 
+A: Let's think step by step.
+A_model:
+The polynomial x^5 + 3x^3 + x^2 + 2x has roots at x = 0, 1, 2, 3 and 4. The answer is (D).
+A:
+D
+
+Q: Statement 1 | A factor group of a non-Abelian group is non-Abelian. Statement 2 | If K is a normal subgroup of H and H is a normal subgroup of G, then K is a normal subgroup of G.
+(A) True, True (B) False, False (C) True, False (D) False, True 
+A: Let's think step by step.
+A_model:
+Statement 1 is true. Let $G$ be a non-Abelian group and $H$ be a factor group of $G$. Then $H$ is non-Abelian. The answer is (A).
+A:
+B
+
+Q: Find the product of the given polynomials in the given polynomial ring. f(x) = 4x - 5, g(x) = 2x^2 - 4x + 2 in Z_8[x].
+(A) 2x^2 + 5 (B) 6x^2 + 4x + 6 (C) 0 (D) x^2 + 1 
+A: Let's think step by step.
+A_model:
+The product of f(x) and g(x) is 2x^2 + 5. The answer is (A).
+A:
+B
+

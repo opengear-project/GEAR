@@ -144,7 +144,8 @@ def load_model_tokenizer(args):
     config = transformers.AutoConfig.from_pretrained(
         args.model, use_auth_token=True, token=args.hf_token,
     )
-    model = transformers.AutoModelForCausalLM.from_pretrained(
+    from models import LlamaForCausalLMNew
+    model = LlamaForCausalLMNew.from_pretrained(
         args.model, config=config, **model_kwargs, cache_dir = "../cache"
     )
     tokenizer = transformers.AutoTokenizer.from_pretrained(
@@ -155,7 +156,7 @@ def load_model_tokenizer(args):
         cache_dir = "../cache"
     )
     tokenizer.pad_token = tokenizer.eos_token
-    model = model.to('cuda')
+    # model = model.to('cuda')
     return model, tokenizer
 
 def prepare_prompt_example_with_cot(example, prompt_cot):
