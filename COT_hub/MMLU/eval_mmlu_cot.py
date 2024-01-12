@@ -215,7 +215,7 @@ def main(args):
     all_ave_acc, num_task = 0, 0 
     for task in tasks:
         acc = 0
-        eval_dataset = load_dataset("lukaemon/mmlu", task, split=split)
+        eval_dataset = load_dataset("lukaemon/mmlu", task, split=split,cache_dir="../cache")
         eval_dataset = eval_dataset.map(
             prepare_example_prompt, batched=True, desc="Prepare question", 
         )
