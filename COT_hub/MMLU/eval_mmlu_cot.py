@@ -145,13 +145,14 @@ def load_model_tokenizer(args):
         args.model, use_auth_token=True, token=args.hf_token,
     )
     model = transformers.AutoModelForCausalLM.from_pretrained(
-        args.model, config=config, **model_kwargs
+        args.model, config=config, **model_kwargs, cache_dir = "../cache"
     )
     tokenizer = transformers.AutoTokenizer.from_pretrained(
         args.model,
         token=args.hf_token,
         padding_side="left",
         model_max_length=args.model_max_length,
+        cache_dir = "../cache"
     )
     tokenizer.pad_token = tokenizer.eos_token
     model = model.to('cuda')
