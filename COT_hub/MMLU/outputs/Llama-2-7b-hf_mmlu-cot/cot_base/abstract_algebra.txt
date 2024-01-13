@@ -2,7 +2,7 @@ Q: Let p = (1, 2, 5, 4)(2, 3) in S_5 . Find the index of <p> in S_5.
 (A) 8 (B) 2 (C) 24 (D) 120 
 A: Let's think step by step.
 A_model:
-The index of <p> in S_5 is the number of elements of S_5 that are conjugate to p. The conjugates of p are p, (1, 2, 5, 4)(2, 3), (1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3), (1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3), (1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3). The answer is (B).
+The index of <p> in S_5 is the number of elements of S_5 that are conjugate to p. The conjugates of p are p, (1, 2, 5, 4)(2, 3), (1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3), (1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3), (1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3), (1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3)(1, 2, 5, 4)(2, 3)(1, 2, 5, 
 A:
 C
 
@@ -10,7 +10,7 @@ Q: Find all zeros in the indicated finite field of the given polynomial with coe
 (A) 0 (B) 1 (C) 0,1 (D) 0,4 
 A: Let's think step by step.
 A_model:
-The polynomial x^5 + 3x^3 + x^2 + 2x has roots at x = 0, 1, 2, 3 and 4. The answer is (D).
+The polynomial x^5 + 3x^3 + x^2 + 2x has roots at x = 0, 1, 2, 3, 4. The answer is (D).
 A:
 D
 
@@ -18,7 +18,7 @@ Q: Statement 1 | A factor group of a non-Abelian group is non-Abelian. Statement
 (A) True, True (B) False, False (C) True, False (D) False, True 
 A: Let's think step by step.
 A_model:
-Statement 1 is true. Let $G$ be a non-Abelian group and $H$ be a factor group of $G$. Then $H$ is non-Abelian. The answer is (A).
+Statement 1 is false. Let $G$ be a non-Abelian group and $H$ be a subgroup of $G$. Let $K$ be a factor group of $H$. Then $K$ is a subgroup of $G$. Since $G$ is non-Abelian, $K$ is non-Abelian. The answer is (A).
 A:
 B
 
@@ -29,4 +29,22 @@ A_model:
 The product of f(x) and g(x) is 2x^2 + 5. The answer is (A).
 A:
 B
+
+Q: Statement 1 | If a group has an element of order 15 it must have at least 8 elements of order 15. Statement 2 | If a group has more than 8 elements of order 15, it must have at least 16 elements of order 15.
+(A) True, True (B) False, False (C) True, False (D) False, True 
+A: Let's think step by step.
+A_model:
+Statement 1 is true. Let $G$ be a group with an element of order 15. Then $|G| \geq 15$. If $|G| = 15$, then $G$ has 15 elements of order 15. If $|G| > 15$, then $|G| \geq 16$. Hence $|G| \geq 15$.
+Statement 2 is false. Let $G$ be a group with more than 8 elements of order 15. Then $|G| \geq 16$. If $|G| = 16$, then $G$ has 16 elements of order 15. If $|G| > 16$, then $|G| \geq 17$. Hence $|G| \geq 16$. The answer is (A).
+A:
+A
+
+Q: Statement 1 | Every homomorphic image of a group G is isomorphic to a factor group of G. Statement 2 | The homomorphic images of a group G are the same (up to isomorphism) as the factor groups of G.
+(A) True, True (B) False, False (C) True, False (D) False, True 
+A: Let's think step by step.
+A_model:
+Statement 1 is true. Let $f:G \rightarrow H$ be a homomorphism. Then $f(G)$ is a subgroup of $H$. Let $a \in G$. Then $f(a) \in H$. Since $f(G)$ is a subgroup of $H$, $f(a) \in f(G)$. Hence $f(a) = a$. Therefore, $f$ is an isomorphism.
+Statement 2 is false. Let $f:G \rightarrow H$ be a homomorphism. Then $f(G)$ is a subgroup of $H$. Let $a \in G$. Then $f(a) \in H$. Since $f(G)$ is a subgroup of $H$, $f(a) \in f(G)$. Hence $f(a) = a$. Therefore, $f$ is an isomorphism. The answer is (A).
+A:
+A
 
