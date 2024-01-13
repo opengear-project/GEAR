@@ -217,7 +217,7 @@ if __name__ == "__main__":
     parser.add_argument("--compress_method", type=str, default="None", help="")
     parser.add_argument("--rank", type=float, default=0.0, help="")
     parser.add_argument("--rankv", type=float, default=0.0, help="")
-    parser.add_argument("--loop", type=int, default=0.0, help="")
+    parser.add_argument("--loop", type=int, default=0, help="")
     parser.add_argument("--quantize_bit", type=int, default=8, help="")
     parser.add_argument("--group_num", type=int, default=0, help="")
     parser.add_argument("--top_kprun", type=float, default=0.0, help="")
