@@ -136,3 +136,40 @@
 01/12/2024 08:28:29 - INFO - root - Preprocessing the dataset.
 01/12/2024 08:34:35 - INFO - root - Loading Model and Tokenizer.
 01/12/2024 08:34:41 - INFO - root - Preprocessing the dataset.
+01/15/2024 22:47:51 - INFO - root - Loading Model and Tokenizer.
+01/15/2024 22:48:00 - INFO - root - Preprocessing the dataset.
+01/15/2024 22:48:22 - INFO - root - Loading Model and Tokenizer.
+01/15/2024 22:48:23 - INFO - root - Preprocessing the dataset.
+01/15/2024 22:48:48 - INFO - root - Loading Model and Tokenizer.
+01/15/2024 22:49:56 - INFO - root - Preprocessing the dataset.
+01/15/2024 22:56:53 - INFO - root - Loading Model and Tokenizer.
+01/15/2024 22:57:00 - INFO - root - Preprocessing the dataset.
+01/15/2024 23:20:37 - INFO - root - Loading Model and Tokenizer.
+01/15/2024 23:20:53 - INFO - root - Loading Model and Tokenizer.
+01/15/2024 23:23:02 - INFO - root - Loading Model and Tokenizer.
+01/15/2024 23:23:33 - INFO - root - Loading Model and Tokenizer.
+01/15/2024 23:23:40 - INFO - root - Preprocessing the dataset.
+01/15/2024 23:24:35 - INFO - root - Loading Model and Tokenizer.
+01/15/2024 23:26:50 - INFO - root - Loading Model and Tokenizer.
+01/15/2024 23:26:57 - INFO - root - Preprocessing the dataset.
+01/15/2024 23:28:35 - INFO - root - Loading Model and Tokenizer.
+01/15/2024 23:28:41 - INFO - root - Preprocessing the dataset.
+01/15/2024 23:29:21 - INFO - root - Loading Model and Tokenizer.
+01/15/2024 23:29:28 - INFO - root - Preprocessing the dataset.
+01/15/2024 23:30:18 - INFO - root - Loading Model and Tokenizer.
+01/15/2024 23:30:25 - INFO - root - Preprocessing the dataset.
+01/15/2024 23:32:08 - INFO - root - Loading Model and Tokenizer.
+01/15/2024 23:32:15 - INFO - root - Preprocessing the dataset.
+01/15/2024 23:32:52 - INFO - root - Loading Model and Tokenizer.
+01/15/2024 23:32:59 - INFO - root - Preprocessing the dataset.
+01/15/2024 23:38:15 - INFO - root - Loading Model and Tokenizer.
+01/15/2024 23:38:22 - INFO - root - Preprocessing the dataset.
+01/15/2024 23:39:21 - INFO - root - Loading Model and Tokenizer.
+01/15/2024 23:39:28 - INFO - root - Preprocessing the dataset.
+01/15/2024 23:45:08 - INFO - root - Loading Model and Tokenizer.
+01/15/2024 23:45:15 - INFO - root - Preprocessing the dataset.
+01/15/2024 23:53:20 - INFO - root - Loading Model and Tokenizer.
+01/15/2024 23:53:39 - INFO - root - Loading Model and Tokenizer.
+01/15/2024 23:53:46 - INFO - root - Preprocessing the dataset.
+01/15/2024 23:54:18 - INFO - root - Loading Model and Tokenizer.
+01/15/2024 23:54:24 - INFO - root - Preprocessing the dataset.

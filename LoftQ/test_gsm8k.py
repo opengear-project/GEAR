@@ -216,9 +216,10 @@ def evaluation(model_args, data_args, compress_args):
     # model = model.half()
     model = model.to(compress_args.gpu)
     TOKEN_ID = "meta-llama/Llama-2-7b-hf"
+    print(model_args.model_name_or_path)
     tokenizer = transformers.AutoTokenizer.from_pretrained(
-        TOKEN_ID,
-        # model_args.model_name_or_path,
+        # TOKEN_ID,
+        model_args.model_name_or_path,
         token=model_args.token,
         model_max_length=model_args.model_max_length,
         padding_side="left",

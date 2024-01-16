@@ -230,6 +230,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--token_preserving", action="store_true", default=False, help=""
     )
+    parser.add_argument("--heavy_ratio", type=float, default=0.0, help="")
+    parser.add_argument("--recent_ratio", type=float, default=0.0, help="")
     args = parser.parse_args()
 
     if args.debug:
@@ -264,16 +266,14 @@ if __name__ == "__main__":
     # Load Model and Tokenizer
     model_kwargs = {}
     logging.info("Loading Model and Tokenizer.")
-    if "Llama-2" in args.model:
+    if "Llama-2" or "Qwen" in args.model:
         model_kwargs["torch_dtype"] = torch.float16
         model_kwargs["device_map"] = "auto"
         model_kwargs["token"] = args.hf_token
-        model_kwargs["cache_dir"] = "./cache"
+        model_kwargs["cache_dir"] = "../cache"
 
     config = transformers.AutoConfig.from_pretrained(
-        args.model,
-        use_auth_token=True,
-        token=args.hf_token,
+        args.model, use_auth_token=True, token=args.hf_token, use_flash_attn=False
     )
     from transformers import LlamaTokenizer
     from models import GPT2CompressConfig
@@ -297,23 +297,67 @@ if __name__ == "__main__":
             start_saving=args.start_saving,
             locality_saving=args.locality_saving,
             token_preserving=args.token_preserving,
+            heavy_ratio=args.heavy_ratio,
+            recent_ratio=args.recent_ratio,
         )
     )
     if compress_config is not None:
         compress_config.copy_for_all_attention()
         compress_config.calculate_compress_ratio_list(4095, 4096)
-    model = LlamaForCausalLMNew.from_pretrained(
-        args.model, config=config, **model_kwargs, compress_config=compress_config
-    )
-    tokenizer = LlamaTokenizer.from_pretrained(
-        args.model,
-        token=args.hf_token,
-        padding_side="left",
-        model_max_length=args.model_max_length,
-        use_fast=False,
-        cache_dir="./cache",
-    )
-    tokenizer.pad_token = tokenizer.eos_token
+    if "Llama-2" in args.model:
+        if args.compress_method == "h2o":
+            from models import H2OLlamaForCausalLM, LlamaConfig
+
+            config = LlamaConfig.from_pretrained(
+                args.model,
+                use_auth_token=True,
+                token=args.hf_token,
+                use_flash_attn=False,
+            )
+            config.hh_size = 400
+            config.recent_size = 50
+            model = H2OLlamaForCausalLM.from_pretrained(
+                args.model, config=config, **model_kwargs
+            )
+        else:
+            model = LlamaForCausalLMNew.from_pretrained(
+                args.model,
+                config=config,
+                **model_kwargs,
+                compress_config=compress_config,
+            )
+        tokenizer = LlamaTokenizer.from_pretrained(
+            args.model,
+            token=args.hf_token,
+            padding_side="left",
+            model_max_length=args.model_max_length,
+            use_fast=False,
+            cache_dir="../cache",
+        )
+        tokenizer.pad_token = tokenizer.eos_token
+    elif "Qwen" in args.model:
+        from models import QWenLMHeadModel
+        from transformers import AutoTokenizer
+
+        model = QWenLMHeadModel.from_pretrained(
+            args.model,
+            config=config,
+            **model_kwargs,
+            compress_config=compress_config,
+            trust_remote_code=True,
+        )
+        tokenizer = AutoTokenizer.from_pretrained(
+            args.model,
+            token=args.hf_token,
+            padding_side="left",
+            model_max_length=args.model_max_length,
+            use_fast=False,
+            cache_dir="../cache",
+            trust_remote_code=True,
+            pad_token="<|endoftext|>",
+            use_flash_attn=False,
+        )
+
     # model = model.to('cuda')
 
     logging.info("Preprocessing the dataset.")

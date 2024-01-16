@@ -5,8 +5,8 @@ class GPT2CompressConfig(dict):
         attention_number=12,
         quantize_bit=0,
         group_num=0,
-        rank=0.0,
-        rankv=0.0,
+        rank=0,
+        rankv=0,
         loop=0,
         top_k=0.0,
         left=0.0,
@@ -17,9 +17,6 @@ class GPT2CompressConfig(dict):
         locality_saving=0.0,
         token_preserving=False,
         iter=0,
-        # h2o setings
-        heavy_ratio=0.0,
-        recent_ratio=0.0,
     ):
         self.compress_method = compress_method
         self.quantize_bit = quantize_bit
@@ -38,8 +35,6 @@ class GPT2CompressConfig(dict):
         self.locality_saving = locality_saving
         self.token_preserving = token_preserving
         self.iter = iter
-        self.heavy_ratio = heavy_ratio
-        self.recent_ratio = recent_ratio
 
     def create_attention_config(self, config):
         attention_config = []
@@ -62,8 +57,6 @@ class GPT2CompressConfig(dict):
         self.locality_saving = self.create_attention_config(self.locality_saving)
         self.token_preserving = self.create_attention_config(self.token_preserving)
         self.iter = self.create_attention_config(self.iter)
-        self.heavy_ratio = self.create_attention_config(self.heavy_ratio)
-        self.recent_ratio = self.create_attention_config(self.recent_ratio)
 
     def compress_ratio(
         self,

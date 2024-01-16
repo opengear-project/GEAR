@@ -24,7 +24,10 @@ class H2OCache:
             return key, value
         else:
             _, _, cache_len, cache_len = self.h2o_score.shape
+            # TODO is this about the last dim or should set dim=-2
             summing_score = torch.sum(self.h2o_score, dim=-1)
+            # batch,num_head,cache_len
+            summing_score = summing_score.reshape(-1, cache_len)
             choosing_idx = torch.topk(summing_score, self.hh_size, dim=-1).indices
             # pruning the h2o_score
             self.h2o_score = self.h2o_score.view(-1, cache_len, cache_len)
