@@ -204,7 +204,7 @@ def evaluation(model_args, data_args, compress_args):
         compress_config.copy_for_all_attention()
         compress_config.calculate_compress_ratio_list(4095, 4096)
     model = LlamaForCausalLM.from_pretrained(
-        MODEL_ID,
+        model_args.model_name_or_path,
         torch_dtype=torch.bfloat16,  # you may change it with different models
         token=model_args.token,
         device_map=model_args.device_map,

@@ -230,6 +230,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--token_preserving", action="store_true", default=False, help=""
     )
+    parser.add_argument("--streaming", action="store_true", default=False, help="")
+    parser.add_argument("--streaming_gap", type=int, default=0, help="")
     parser.add_argument("--heavy_ratio", type=float, default=0.0, help="")
     parser.add_argument("--recent_ratio", type=float, default=0.0, help="")
     args = parser.parse_args()
@@ -299,6 +301,8 @@ if __name__ == "__main__":
             token_preserving=args.token_preserving,
             heavy_ratio=args.heavy_ratio,
             recent_ratio=args.recent_ratio,
+            streaming=args.streaming,
+            streaming_gap=args.streaming_gap,
         )
     )
     if compress_config is not None:
