@@ -16,6 +16,8 @@ class GPT2CompressConfig(dict):
         start_saving=0.0,
         locality_saving=0.0,
         token_preserving=False,
+        streaming=False,
+        streaming_gap=0,
         iter=0,
         # h2o setings
         heavy_ratio=0.0,
@@ -40,6 +42,8 @@ class GPT2CompressConfig(dict):
         self.iter = iter
         self.heavy_ratio = heavy_ratio
         self.recent_ratio = recent_ratio
+        self.streaming = streaming
+        self.streaming_gap = streaming_gap
 
     def create_attention_config(self, config):
         attention_config = []
@@ -64,6 +68,8 @@ class GPT2CompressConfig(dict):
         self.iter = self.create_attention_config(self.iter)
         self.heavy_ratio = self.create_attention_config(self.heavy_ratio)
         self.recent_ratio = self.create_attention_config(self.recent_ratio)
+        self.streaming = self.create_attention_config(self.streaming)
+        self.streaming_gap = self.create_attention_config(self.streaming_gap)
 
     def compress_ratio(
         self,

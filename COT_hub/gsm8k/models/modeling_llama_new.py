@@ -352,7 +352,7 @@ class LlamaAttention(nn.Module):
                 "to errors during the forward call, if caching is used. Please make sure to provide a `layer_idx` "
                 "when creating this class."
             )
-
+        self.prefill = True
         self.attention_dropout = config.attention_dropout
         self.hidden_size = config.hidden_size
         self.num_heads = config.num_attention_heads
@@ -942,24 +942,54 @@ class LlamaSdpaAttention(LlamaAttention):
         if past_key_value is not None:
             # TODO : add compress_config and compress functions
             cache_kwargs = {"sin": sin, "cos": cos}  # Specific to RoPE models
+            if self.compress_config is not None:
+                if self.compress_config.streaming[self.layer_idx] is not None:
+                    past_key, past_value = past_key_value[self.layer_idx]
+                    bsz, num_heads, seq_len, head_dim = past_key.shape
+                    if (
+                        self.prefill is True
+                        or seq_len % self.compress_config.streaming_gap[self.layer_idx]
+                        == 0
+                    ):
+                        self.prefill = False
+                        # not streaming compress is compress every geneartion
+                        (
+                            past_key,
+                            past_value,
+                        ) = compress_insert_function(
+                            past_key,
+                            past_value,
+                            self.compress_config,
+                            self.layer_idx,
+                            pbase1=self.pbase1,
+                            qbase1=self.qbase1,
+                            pbase2=self.pbase2,
+                            qbase2=self.qbase2,
+                        )
+                        past_key_value.__setitem__(
+                            self.layer_idx, (past_key, past_value)
+                        )
+
             key_states, value_states = past_key_value.update(
                 key_states, value_states, self.layer_idx, cache_kwargs
             )
             # previous_key_states, previous_value_states = past_key_value[self.layer_idx]
             if self.compress_config is not None:
-                (
-                    key_states[:, :, :-1, :],
-                    value_states[:, :, :-1, :],
-                ) = compress_insert_function(
-                    key_states[:, :, :-1, :],
-                    value_states[:, :, :-1, :],
-                    self.compress_config,
-                    self.layer_idx,
-                    pbase1=self.pbase1,
-                    qbase1=self.qbase1,
-                    pbase2=self.pbase2,
-                    qbase2=self.qbase2,
-                )
+                if self.compress_config.streaming[self.layer_idx] is None:
+                    # not streaming compress is compress every geneartion
+                    (
+                        key_states[:, :, :-1, :],
+                        value_states[:, :, :-1, :],
+                    ) = compress_insert_function(
+                        key_states[:, :, :-1, :],
+                        value_states[:, :, :-1, :],
+                        self.compress_config,
+                        self.layer_idx,
+                        pbase1=self.pbase1,
+                        qbase1=self.qbase1,
+                        pbase2=self.pbase2,
+                        qbase2=self.qbase2,
+                    )
         key_states = repeat_kv(key_states, self.num_key_value_groups)
         value_states = repeat_kv(value_states, self.num_key_value_groups)
 
