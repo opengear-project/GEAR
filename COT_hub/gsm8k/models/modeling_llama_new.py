@@ -938,7 +938,9 @@ class LlamaSdpaAttention(LlamaAttention):
         query_states, key_states = apply_rotary_pos_emb(
             query_states, key_states, cos, sin, position_ids
         )
-
+        bsz, num_heads, q_len, head_dim = query_states.shape
+        if q_len > 1:
+            self.prefill = True
         if past_key_value is not None:
             # TODO : add compress_config and compress functions
             cache_kwargs = {"sin": sin, "cos": cos}  # Specific to RoPE models
@@ -979,7 +981,7 @@ class LlamaSdpaAttention(LlamaAttention):
             )
             # previous_key_states, previous_value_states = past_key_value[self.layer_idx]
             if self.compress_config is not None:
-                if self.compress_config.streaming[self.layer_idx] is None:
+                if self.compress_config.streaming[self.layer_idx] is False:
                     # not streaming compress is compress every geneartion
                     (
                         key_states[:, :, :-1, :],
