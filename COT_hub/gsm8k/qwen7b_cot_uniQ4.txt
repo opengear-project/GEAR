@@ -1,0 +1,5 @@
+Loading Model and Tokenizer.
+The repository for Qwen/Qwen-7B contains custom code which must be executed to correctly load the model. You can inspect the repository content at https://hf.co/Qwen/Qwen-7B.
+You can avoid this prompt in future by passing the argument `trust_remote_code=True`.
+
+Do you wish to run the custom code? [y/N] 
