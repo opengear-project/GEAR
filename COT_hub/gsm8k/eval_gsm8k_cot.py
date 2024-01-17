@@ -349,6 +349,7 @@ if __name__ == "__main__":
             **model_kwargs,
             compress_config=compress_config,
             trust_remote_code=True,
+            # use_cahce = True,
         )
         tokenizer = AutoTokenizer.from_pretrained(
             args.model,
@@ -407,7 +408,6 @@ if __name__ == "__main__":
             generate_kwargs["temperature"] = None
             generate_kwargs["top_k"] = None
             generate_kwargs["top_p"] = None
-
         outputs = model.generate(**inputs, **generate_kwargs)
         generations = tokenizer.batch_decode(
             outputs.sequences[:, inputs.input_ids.shape[1] :],

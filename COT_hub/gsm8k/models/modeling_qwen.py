@@ -51,6 +51,8 @@ from .qwen_generation_utils import (
     StopWordsLogitsProcessor,
 )
 
+from .compress_function import compress_insert_function
+
 
 logger = logging.get_logger(__name__)
 
@@ -272,9 +274,11 @@ class FlashSelfAttention(torch.nn.Module):
 
 
 class QWenAttention(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config,layer_idx=0,compress_config = None):
         super().__init__()
-
+        self.layer_idx = layer_idx
+        self.compress_config = compress_config
+        self.prefill = True
         self.register_buffer("masked_bias", torch.tensor(-1e4), persistent=False)
         self.seq_length = config.seq_length
 
@@ -500,7 +504,10 @@ class QWenAttention(nn.Module):
                     key_list += [apply_rotary_pos_emb(key[i : i + 1, :, :], k_pos_emb)]
                 query = torch.cat(query_list, dim=0)
                 key = torch.cat(key_list, dim=0)
-
+        
+        bsz, seq_len_q, num_heads, head_dim = query.shape
+        if seq_len_q > 1:
+            self.prefill = True
         if self.use_cache_quantization:
             key = quantize_cache_v(
                 key.permute(0, 2, 1, 3),
@@ -538,6 +545,44 @@ class QWenAttention(nn.Module):
                 value = torch.cat((past_value, value), dim=1)
 
         if use_cache:
+            # print(key.shape)
+            if self.compress_config is not None:
+                if self.compress_config.streaming[self.layer_idx] is True:
+                    bsz, seq_len, num_heads, head_dim = key.shape
+                    if (
+                        self.prefill is True
+                        or seq_len % self.compress_config.streaming_gap[self.layer_idx]
+                        == 0
+                    ):
+                        # not streaming compress is compress every geneartion
+                        (
+                            key,
+                            value,
+                        ) = compress_insert_function(
+                            key,
+                            value,
+                            self.compress_config,
+                            self.layer_idx,
+                            pbase1=None,
+                            qbase1=None,
+                            pbase2=None,
+                            qbase2=None,
+                        )
+                        self.prefill = False
+                else:
+                    (
+                        key,
+                        value,
+                    ) = compress_insert_function(
+                        key,
+                        value,
+                        self.compress_config,
+                        self.layer_idx,
+                        pbase1=None,
+                        qbase1=None,
+                        pbase2=None,
+                        qbase2=None,
+                    )
             present = (key, value)
         else:
             present = None
@@ -646,7 +691,7 @@ class QWenMLP(nn.Module):
 
 
 class QWenBlock(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config,layer_idx,compress_config = None):
         super().__init__()
         hidden_size = config.hidden_size
         self.bf16 = config.bf16
@@ -655,7 +700,7 @@ class QWenBlock(nn.Module):
             hidden_size,
             eps=config.layer_norm_epsilon,
         )
-        self.attn = QWenAttention(config)
+        self.attn = QWenAttention(config,layer_idx = layer_idx,compress_config = compress_config)
         self.ln_2 = RMSNorm(
             hidden_size,
             eps=config.layer_norm_epsilon,
@@ -749,7 +794,7 @@ class QWenPreTrainedModel(PreTrainedModel):
 class QWenModel(QWenPreTrainedModel):
     _keys_to_ignore_on_load_missing = ["attn.masked_bias"]
 
-    def __init__(self, config):
+    def __init__(self, config,compress_config = None):
         super().__init__(config)
         self.vocab_size = config.vocab_size
         self.num_hidden_layers = config.num_hidden_layers
@@ -780,7 +825,7 @@ class QWenModel(QWenPreTrainedModel):
         self.is_fp32 = not (config.bf16 or config.fp16)
 
         self.h = nn.ModuleList(
-            [QWenBlock(config) for i in range(config.num_hidden_layers)]
+            [QWenBlock(config,layer_idx = i,compress_config = compress_config) for i in range(config.num_hidden_layers)]
         )
         self.ln_f = RMSNorm(
             self.embed_dim,
@@ -1056,7 +1101,7 @@ class QWenLMHeadModel(QWenPreTrainedModel):
         if config.use_flash_attn:
             _import_flash_attn()
 
-        self.transformer = QWenModel(config)
+        self.transformer = QWenModel(config,compress_config = compress_config)
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
 
         if config.bf16:
