@@ -177,6 +177,8 @@ def load_model_tokenizer(args):
             start_saving=args.start_saving,
             locality_saving=args.locality_saving,
             token_preserving=args.token_preserving,
+            streaming=args.streaming,
+            streaming_gap=args.streaming_gap,
         )
     )
     if compress_config is not None:
@@ -410,6 +412,12 @@ if __name__ == "__main__":
     parser.add_argument("--start_saving", type=float, default=0.0, help="")
     parser.add_argument(
         "--token_preserving", action="store_true", default=False, help=""
+    )
+    parser.add_argument(
+        "--streaming", action="store_true", default=False, help=""
+    )
+    parser.add_argument(
+        "--streaming_gap", type=int, default=0, help=""
     )
     args = parser.parse_args()
     main(args)
