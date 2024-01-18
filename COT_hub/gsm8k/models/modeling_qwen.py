@@ -286,7 +286,7 @@ class QWenAttention(nn.Module):
         self.split_size = config.hidden_size
         self.num_heads = config.num_attention_heads
         self.head_dim = self.hidden_size // self.num_heads
-
+        print(config.use_flash_attn)
         self.use_flash_attn = config.use_flash_attn
         self.scale_attn_weights = True
 

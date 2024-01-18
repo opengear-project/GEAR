@@ -1,4 +1,4 @@
-echo y | python eval_gsm8k_cot.py --model Qwen/Qwen-7B --prompt_file prompt_original.txt --batch_size 8 --max_new_tokens 256 --compress_method uniformquantization --attention_number 40 > qwen7b_cot.txt
+echo y | python eval_gsm8k_cot.py --model Qwen/Qwen-7B --prompt_file prompt_original.txt --batch_size 8 --max_new_tokens 256 --attention_number 40 > qwen7b_cot.txt
 
 echo y | python eval_gsm8k_cot.py --model Qwen/Qwen-7B --prompt_file prompt_original.txt --batch_size 8 --max_new_tokens 256 --compress_method uniformquantization --attention_number 40 --quantize_bit 4 --streaming --streaming_gap 40 > qwen7b_cot_uniQ4.txt
 echo y | python eval_gsm8k_cot.py --model Qwen/Qwen-7B --prompt_file prompt_original.txt --batch_size 8 --max_new_tokens 256 --compress_method uniformquantization --attention_number 40 --quantize_bit 6 --streaming --streaming_gap 40 > qwen7b_cot_uniQ6.txt

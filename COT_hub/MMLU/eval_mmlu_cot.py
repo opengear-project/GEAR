@@ -184,21 +184,35 @@ def load_model_tokenizer(args):
     if compress_config is not None:
         compress_config.copy_for_all_attention()
         compress_config.calculate_compress_ratio_list(4095, 4096)
-    model = LlamaForCausalLMNew.from_pretrained(
-        args.model,
-        config=config,
-        **model_kwargs,
-        cache_dir="../cache",
-        compress_config=compress_config,
-    )
-
+    if "Qwen" not in args.model:
+        model = LlamaForCausalLMNew.from_pretrained(
+            args.model,
+            config=config,
+            **model_kwargs,
+            cache_dir="../cache",
+            compress_config=compress_config,
+        )
+    else:
+        from models import QWenLMHeadModel
+        model = QWenLMHeadModel.from_pretrained(
+            args.model,
+            config=config,
+            **model_kwargs,
+            cache_dir="../cache",
+            compress_config=compress_config,
+            trust_remote_code=True,
+        )
     tokenizer = transformers.AutoTokenizer.from_pretrained(
         args.model,
         token=args.hf_token,
         padding_side="left",
         model_max_length=args.model_max_length,
         cache_dir="../cache",
+        trust_remote_code=True,
+        pad_token="<|endoftext|>",
     )
+    if "Qwen" in args.model:
+        tokenizer.add_special_tokens({"eos_token": "<|endoftext|>"})
     tokenizer.pad_token = tokenizer.eos_token
     # model = model.to('cuda')
     return model, tokenizer
@@ -312,6 +326,7 @@ def main(args):
                     max_new_tokens=args.max_new_tokens,
                     output_scores=True,
                     pad_token_id=tokenizer.eos_token_id,
+                    use_cache=True,
                 )
                 if args.do_sample:
                     generate_kwargs["do_sample"] = True
