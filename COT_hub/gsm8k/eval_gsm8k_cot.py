@@ -275,7 +275,7 @@ if __name__ == "__main__":
         model_kwargs["cache_dir"] = "../cache"
 
     config = transformers.AutoConfig.from_pretrained(
-        args.model, use_auth_token=True, token=args.hf_token, use_flash_attn=False
+        args.model, use_auth_token=True, token=args.hf_token, use_flash_attn=False,trust_remote_code=True
     )
     from transformers import LlamaTokenizer
     from models import GPT2CompressConfig

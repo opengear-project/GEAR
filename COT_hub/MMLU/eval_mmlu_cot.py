@@ -145,16 +145,25 @@ def test_answer_mmlu_(pred_str, ans):
 
 def load_model_tokenizer(args):
     model_kwargs = {}
-    if "Llama-2" in args.model:
+    if "Llama-2" or "Qwen" in args.model:
         model_kwargs["torch_dtype"] = torch.float16
         model_kwargs["device_map"] = "auto"
         model_kwargs["token"] = args.hf_token
-
-    config = transformers.AutoConfig.from_pretrained(
-        args.model,
-        use_auth_token=True,
-        token=args.hf_token,
-    )
+    if "Qwen" in args.model:
+        config = transformers.AutoConfig.from_pretrained(
+            args.model,
+            use_auth_token=True,
+            token=args.hf_token,
+            use_flash_attn = False,
+            trust_remote_code=True,
+        )
+    else:
+        config = transformers.AutoConfig.from_pretrained(
+            args.model,
+            use_auth_token=True,
+            token=args.hf_token,
+            trust_remote_code=True,
+        )
     from models import LlamaForCausalLMNew
     from models import GPT2CompressConfig
 
@@ -320,6 +329,7 @@ def main(args):
                     truncation=True,
                 )
                 inputs = inputs.to("cuda")
+                # model = model.to("cuda")
                 generate_kwargs = dict(
                     return_dict_in_generate=True,
                     max_length=args.max_length,

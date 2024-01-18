@@ -254,13 +254,53 @@ def main(ckpt_dir: str, param_size: str, model_type: str):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--ckpt_dir", type=str, required=True)
-    parser.add_argument("--param_size", type=str, required=True)
-    parser.add_argument("--model_type", type=str, required=True)
-    parser.add_argument("--data_dir", type=str, default="data/")
-    parser.add_argument("--ntrain", type=int, default=5)
-    parser.add_argument("--batchsize", type=int, default=8)
+    parser = argparse.ArgumentParser(description="Evaluate MMLU Tasks")
+    parser.add_argument(
+        "--model", type=str, default="meta-llama/Llama-2-7b", help="Model name or path."
+    )
+    parser.add_argument(
+        "--tasks", nargs="+", type=str, default=TASKS, help="The evaluation tasks."
+    )
+    parser.add_argument(
+        "--prompt_file", type=str, default="lib_prompt/mmlu-cot.json", help=""
+    )
+    parser.add_argument("--batch_size", type=int, default=8, help="Batch size.")
+    parser.add_argument("--max_length", type=int, default=None, help="")
+    parser.add_argument("--max_new_tokens", type=int, default=256, help="")
+    parser.add_argument("--model_max_length", type=int, default=4096, help="")
+    parser.add_argument("--do_sample", action="store_true", default=False, help="")
+    parser.add_argument("--temperature", type=float, default=0.8, help="")
+    parser.add_argument("--top_k", type=int, default=50, help="")
+    parser.add_argument("--top_p", type=float, default=0.95, help="")
+    parser.add_argument("--dataset_split", type=str, default="test", help="")
+    parser.add_argument("--example_subset", type=str, default=None, help="")
+    parser.add_argument("--hf_token", type=str, default=None, help="")
+    parser.add_argument(
+        "--root_output_dir", type=str, default="outputs", help="Root output dir"
+    )
+    parser.add_argument("--debug", action="store_true", default=False, help="")
+    parser.add_argument("--compress_method", type=str, default="None", help="")
+    parser.add_argument("--rank", type=float, default=0.0, help="")
+    parser.add_argument("--rankv", type=float, default=0.0, help="")
+    parser.add_argument("--loop", type=int, default=0.0, help="")
+    parser.add_argument("--quantize_bit", type=int, default=8, help="")
+    parser.add_argument("--group_num", type=int, default=0, help="")
+    parser.add_argument("--top_kprun", type=float, default=0.0, help="")
+    parser.add_argument("--left", type=float, default=0.0, help="")
+    parser.add_argument("--attention_number", type=int, default=100, help="")
+    parser.add_argument("--stage", type=int, default=0, help="")
+    parser.add_argument("--gpu", type=int, default=0, help="")
+    parser.add_argument("--locality_saving", type=float, default=0.0, help="")
+    parser.add_argument("--start_saving", type=float, default=0.0, help="")
+    parser.add_argument(
+        "--token_preserving", action="store_true", default=False, help=""
+    )
+    parser.add_argument(
+        "--streaming", action="store_true", default=False, help=""
+    )
+    parser.add_argument(
+        "--streaming_gap", type=int, default=0, help=""
+    )
     args = parser.parse_args()
 
     main(args.ckpt_dir, args.param_size, args.model_type)
