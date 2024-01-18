@@ -4,7 +4,7 @@ import os
 import time
 
 import pandas as pd
-import tensor_parallel as tp
+# import tensor_parallel as tp
 import torch
 from tqdm import tqdm
 from transformers import (
@@ -13,7 +13,7 @@ from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM,
 )
-
+import transformers
 TASKS = [
     "abstract_algebra",
     "anatomy",
@@ -144,45 +144,87 @@ def prepare_input(tokenizer, prompts):
     return input_tokens
 
 
-def load(ckpt_dir, model_type):
-    n_gpus = torch.cuda.device_count()
-
-    if model_type == "llama":
-        # we use tensor parallel for loading llama
-        tokenizer = LlamaTokenizer.from_pretrained(
-            ckpt_dir, use_fast=False, padding_side="left"
-        )
-
-        model = LlamaForCausalLM.from_pretrained(
-            ckpt_dir, low_cpu_mem_usage=True, torch_dtype=torch.float16
-        )
-        model = tp.tensor_parallel(model, [i for i in range(n_gpus)])
-
-        tokenizer.pad_token_id = (
-            0 if tokenizer.pad_token_id is None else tokenizer.pad_token_id
-        )
-        tokenizer.bos_token_id = 1
-    else:
-        # mpt-30b's tokenizer only has the fast version
-        use_fast = "mosaicml/mpt-30b" in ckpt_dir
-        # however, tensor parallel for running falcon will occur bugs
-        tokenizer = AutoTokenizer.from_pretrained(
-            ckpt_dir, use_fast=use_fast, padding_side="left"
-        )
-        model = AutoModelForCausalLM.from_pretrained(
-            ckpt_dir,
-            device_map="balanced_low_0",
-            torch_dtype=torch.bfloat16,
+def load(args):
+    model_kwargs = {}
+    if "Llama-2" or "Qwen" in args.model:
+        model_kwargs["torch_dtype"] = torch.float16
+        model_kwargs["device_map"] = "auto"
+        model_kwargs["token"] = args.hf_token
+    if "Qwen" in args.model:
+        config = transformers.AutoConfig.from_pretrained(
+            args.model,
+            use_auth_token=True,
+            token=args.hf_token,
+            use_flash_attn = False,
             trust_remote_code=True,
         )
-        if tokenizer.pad_token_id is None:
-            if tokenizer.eos_token_id is not None:
-                tokenizer.pad_token_id = tokenizer.eos_token_id
-            else:
-                tokenizer.pad_token_id = 0
+    else:
+        config = transformers.AutoConfig.from_pretrained(
+            args.model,
+            use_auth_token=True,
+            token=args.hf_token,
+            trust_remote_code=True,
+        )
+    from models import LlamaForCausalLMNew
+    from models import GPT2CompressConfig
 
-    model.eval()
-
+    compress_config = (
+        None
+        if args.compress_method == "None"
+        else GPT2CompressConfig(
+            compress_method=args.compress_method,
+            rank=args.rank,
+            rankv=args.rankv,
+            loop=args.loop,
+            quantize_bit=args.quantize_bit,
+            group_num=args.group_num,
+            top_k=args.top_kprun,
+            left=args.left,
+            attention_number=args.attention_number,
+            device_num=args.gpu,
+            batch_num=args.batch_size,
+            stage=args.stage,
+            start_saving=args.start_saving,
+            locality_saving=args.locality_saving,
+            token_preserving=args.token_preserving,
+            streaming=args.streaming,
+            streaming_gap=args.streaming_gap,
+        )
+    )
+    if compress_config is not None:
+        compress_config.copy_for_all_attention()
+        compress_config.calculate_compress_ratio_list(4095, 4096)
+    if "Qwen" not in args.model:
+        model = LlamaForCausalLMNew.from_pretrained(
+            args.model,
+            config=config,
+            **model_kwargs,
+            cache_dir="../cache",
+            compress_config=compress_config,
+        )
+    else:
+        from models import QWenLMHeadModel
+        model = QWenLMHeadModel.from_pretrained(
+            args.model,
+            config=config,
+            **model_kwargs,
+            cache_dir="../cache",
+            compress_config=compress_config,
+            trust_remote_code=True,
+        )
+    tokenizer = transformers.AutoTokenizer.from_pretrained(
+        args.model,
+        token=args.hf_token,
+        padding_side="left",
+        model_max_length=args.model_max_length,
+        cache_dir="../cache",
+        trust_remote_code=True,
+        pad_token="<|endoftext|>",
+    )
+    if "Qwen" in args.model:
+        tokenizer.add_special_tokens({"eos_token": "<|endoftext|>"})
+    tokenizer.pad_token = tokenizer.eos_token
+    # model = model.to('cuda')
     return model, tokenizer
 
 
@@ -200,7 +242,7 @@ def batch_split(prompts, batch_num):
 
 
 def batch_infer(model, tokenizer, prompts, args):
-    batch_size = args.batchsize
+    batch_size = args.batch_size
     answers = []
     for batch_input in tqdm(batch_split(prompts, batch_size)):
         encode_inputs = prepare_input(tokenizer, batch_input)
@@ -212,11 +254,11 @@ def batch_infer(model, tokenizer, prompts, args):
     return answers
 
 
-def main(ckpt_dir: str, param_size: str, model_type: str):
+def main(args):
     run_results = {}
-    output_filename = "run_results_%s_%sb.json" % (model_type, param_size)
+    output_filename = "run_results_%s_%sb.json" % (args.model,args.compress_method)
 
-    model, tokenizer = load(ckpt_dir, model_type)
+    model, tokenizer = load(args)
     start_time = time.time()
     for task in TASKS:
         print("Testing %s ..." % task)
@@ -301,6 +343,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--streaming_gap", type=int, default=0, help=""
     )
+    parser.add_argument(
+        "--ntrain", type=int, default=0, help=""
+    )
+    parser.add_argument('--data_dir', type=str, default='data/')
     args = parser.parse_args()
 
-    main(args.ckpt_dir, args.param_size, args.model_type)
+    main(args)
