@@ -1,0 +1,36 @@
+Loading Model and Tokenizer.
+The model is automatically converting to fp16 for faster inference. If you want to disable the automatic precision, please manually add bf16/fp16/fp32=True to "AutoModelForCausalLM.from_pretrained".
+False
+False
+False
+False
+False
+False
+False
+False
+False
+False
+False
+False
+False
+False
+False
+False
+False
+False
+False
+False
+False
+False
+False
+False
+False
+False
+False
+False
+False
+False
+False
+False
+Preprocessing the dataset.
+Accuracy: 0.5375284306292646

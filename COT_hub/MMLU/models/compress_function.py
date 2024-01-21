@@ -96,6 +96,7 @@ class H2OCache:
 def fake_groupwise_asymmetric_quantization(input: torch.Tensor, quantize_bit):
     # what flexgen uses
     batch, num_head, seq_len, sep_dim = input.shape
+    dtype = input.dtype
     # 64 groups, group alone sep_dim
     input = input.float()
     input = input.permute(3, 0, 1, 2)
@@ -113,7 +114,7 @@ def fake_groupwise_asymmetric_quantization(input: torch.Tensor, quantize_bit):
         )
     input = input.reshape(sep_dim, batch, num_head, seq_len)
     input = input.permute(1, 2, 3, 0)
-    input = input.type(torch.bfloat16)
+    input = input.type(dtype)
     return input
 
 
@@ -149,6 +150,7 @@ def fake_svd_lowrank(input: torch.Tensor, q):
 
 def fake_uniformquantization(input: torch.Tensor, quantize_bit):
     shape = input.shape
+    dtype = input.dtype
     input = input.reshape(-1)
     input = input.float()  # convert to 32bits to avoid max - min = inf
     min, max = input.min(), input.max()
@@ -159,7 +161,7 @@ def fake_uniformquantization(input: torch.Tensor, quantize_bit):
     # print("quantized isnan:",torch.any(torch.isnan(quantized_input)))
     dequantized_input = (quantized_input * step) + min
     returning_input = dequantized_input.reshape(shape)
-    returning_input = returning_input.type(torch.bfloat16)
+    returning_input = returning_input.type(dtype)
     # print("isnan:",torch.any(torch.isnan(returning_input)))
     # while(True):
     #     pass
@@ -242,6 +244,7 @@ def fake_sort_quantization(input_tensor, group_num, quantize_bit):
 
 def fake_dense_sparse_uniformquantization(input: torch.Tensor, quantize_bit, left):
     shape = input.shape
+    dtype = input.dtype
     input = input.reshape(-1)
     input = input.float()  # convert to 32bits to avoid max - min = inf
     sortedtensor, indices = torch.sort(input)
@@ -251,7 +254,7 @@ def fake_dense_sparse_uniformquantization(input: torch.Tensor, quantize_bit, lef
     )
     input[indices] = sortedtensor
     input = input.reshape(shape)
-    input = input.type(torch.bfloat16)
+    input = input.type(dtype)
     return input
 
 
@@ -310,6 +313,7 @@ def fake_poweriteration(input: torch.Tensor, loop, rank, device, p_base, q_base)
     # -> [batch,seq_len,model_dim] -> [batch * seq_len,model_dim]
     # p_base = torch.rand(input.shape[3] * input.shape[1], rank).to(device)
     # q_base = torch.rand(input.shape[0] * input.shape[2], rank).to(device)
+    dtype = input.dtype
     batch, num_head, seq_len, sep_dim = input.shape
     input = (
         input.permute(0, 2, 1, 3).contiguous().view(batch, seq_len, sep_dim * num_head)
@@ -333,7 +337,7 @@ def fake_poweriteration(input: torch.Tensor, loop, rank, device, p_base, q_base)
     input = q_base[0] @ torch.transpose(p_base[0], 0, 1)
     input = input.view(batch, seq_len, num_head, sep_dim)
     input = input.permute(0, 2, 1, 3)
-    input = input.type(torch.bfloat16)
+    input = input.type(dtype)
     p_base[0] = p_base[0].half()
     q_base[0] = q_base[0].half()
     return input

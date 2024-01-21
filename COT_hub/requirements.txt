@@ -15,3 +15,5 @@ wget
 tensorboard 
 ipdb 
 SentencePiece
+einops #for Qwen
+tiktoken #for Qwen

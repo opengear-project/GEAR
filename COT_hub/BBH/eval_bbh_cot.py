@@ -131,25 +131,57 @@ def test_answer_mmlu_(pred_str, ans):
 
 def load_model_tokenizer(args):
     model_kwargs = {}
+    from models import LlamaForCausalLMNew,QWenLMHeadModel, GPT2CompressConfig
+    # add compression compression config
+    compress_config = (
+        None
+        if args.compress_method == "None"
+        else GPT2CompressConfig(
+            compress_method=args.compress_method,
+            rank=args.rank,
+            rankv=args.rankv,
+            loop=args.loop,
+            quantize_bit=args.quantize_bit,
+            group_num=args.group_num,
+            top_k=args.top_kprun,
+            left=args.left,
+            attention_number=args.attention_number,
+            device_num=args.gpu,
+            batch_num=args.batch_size,
+            stage=args.stage,
+            start_saving=args.start_saving,
+            locality_saving=args.locality_saving,
+            token_preserving=args.token_preserving,
+            heavy_ratio=args.heavy_ratio,
+            recent_ratio=args.recent_ratio,
+            streaming=args.streaming,
+            streaming_gap=args.streaming_gap,
+        )
+    )
+    if compress_config is not None:
+        compress_config.copy_for_all_attention()
+        compress_config.calculate_compress_ratio_list(4095, 4096)
     if "Llama-2" in args.model:
         model_kwargs["torch_dtype"] = torch.float16 
         model_kwargs["device_map"] = "auto"
         model_kwargs["token"] = args.hf_token
+        model_kwargs["cache_dir"] = "../cache"
     
     config = transformers.AutoConfig.from_pretrained(
         args.model, use_auth_token=True, token=args.hf_token,
     )
-    model = transformers.AutoModelForCausalLM.from_pretrained(
-        args.model, config=config, **model_kwargs
+    model = LlamaForCausalLMNew.from_pretrained(
+        args.model, config=config, **model_kwargs,compress_config=compress_config,
     )
     tokenizer = transformers.AutoTokenizer.from_pretrained(
         args.model,
         token=args.hf_token,
         padding_side="left",
         model_max_length=args.model_max_length,
+        cache_dir="../cache",
     )
     tokenizer.pad_token = tokenizer.eos_token
-    model = model.to('cuda')
+    # model = model.to('cuda')
     return model, tokenizer
 
 def prepare_prompt_example_with_cot(example, prompt_cot):
@@ -209,7 +241,7 @@ def main(args):
     all_ave_acc, num_task = 0, 0 
     for task in tasks:
         acc = 0
-        eval_dataset = load_dataset("lukaemon/bbh", task, split=split)
+        eval_dataset = load_dataset("lukaemon/bbh", task, split=split,cache_dir="../cache")
         # eval_dataset = eval_dataset.map(
         #     prepare_example_prompt, batched=True, desc="Prepare question", 
         # )
@@ -331,6 +363,25 @@ if __name__ == '__main__':
     parser.add_argument("--hf_token", type=str, default=None, help="")
     parser.add_argument("--root_output_dir", type=str, default="outputs", help="Root output dir")
     parser.add_argument("--debug", action="store_true", default=False, help="")
-
+    parser.add_argument("--compress_method", type=str, default="None", help="")
+    parser.add_argument("--rank", type=float, default=0.0, help="")
+    parser.add_argument("--rankv", type=float, default=0.0, help="")
+    parser.add_argument("--loop", type=int, default=0, help="")
+    parser.add_argument("--quantize_bit", type=int, default=8, help="")
+    parser.add_argument("--group_num", type=int, default=0, help="")
+    parser.add_argument("--top_kprun", type=float, default=0.0, help="")
+    parser.add_argument("--left", type=float, default=0.0, help="")
+    parser.add_argument("--attention_number", type=int, default=100, help="")
+    parser.add_argument("--stage", type=int, default=0, help="")
+    parser.add_argument("--gpu", type=int, default=0, help="")
+    parser.add_argument("--locality_saving", type=float, default=0.0, help="")
+    parser.add_argument("--start_saving", type=float, default=0.0, help="")
+    parser.add_argument(
+        "--token_preserving", action="store_true", default=False, help=""
+    )
+    parser.add_argument("--streaming", action="store_true", default=False, help="")
+    parser.add_argument("--streaming_gap", type=int, default=0, help="")
+    parser.add_argument("--heavy_ratio", type=float, default=0.0, help="")
+    parser.add_argument("--recent_ratio", type=float, default=0.0, help="")
     args = parser.parse_args()
     main(args)
