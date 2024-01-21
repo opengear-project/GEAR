@@ -1,0 +1,889 @@
+Q: This SVG path element <path d="M 55.57,80.69 L 57.38,65.80 M 57.38,65.80 L 48.90,57.46 M 48.90,57.46 L 45.58,47.78 M 45.58,47.78 L 53.25,36.07 L 66.29,48.90 L 78.69,61.09 L 55.57,80.69"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 6 separate commands.
+(1) M 55.57,80.69: Move the current point to 55.57,80.69.
+(2) L 57.38,65
+A_target:
+(B)
+
+Q: This SVG path element <path d="M 30.17,45.97 L 58.79,40.36 L 18.10,15.70 M 18.10,15.70 L 30.17,45.97"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 4 separate commands.
+(1) M 30.17,45.97: Move the current point to 30.17,45.97.
+(2) L 58.79,40
+A_target:
+(J)
+
+Q: This SVG path element <path d="M 21.10,97.94 L 22.14,97.44 L 10.48,73.34 L 9.43,73.84 L 21.10,97.94"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+(K) trapezoid
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 5 separate commands.
+(1) M 21.10,97.94: Move the current point to 21.10,97.94.
+(2) L 22.14,97
+A_target:
+(K)
+
+Q: This SVG path element <path d="M 12.64,60.32 L 16.36,27.35"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 2 separate commands.
+(1) M 12.64,60.32: Move the current point to 12.64,60.32.
+(2) L 16.36,27
+A_target:
+(E)
+
+Q: This SVG path element <path d="M 90.54,84.19 L 72.03,34.41 L 33.90,48.59 M 33.90,48.59 L 52.41,98.37 M 52.41,98.37 L 90.54,84.19"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+(K) trapezoid
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 4 separate commands.
+(1) M 90.54,84.19: Move the current point to 90.54,84.19.
+(2) L 72.03,34
+A_target:
+(K)
+
+Q: This SVG path element <path d="M 2.10,61.72 L 38.86,44.98 M 38.86,44.98 L 65.79,63.32 L 39.63,11.62 L 21.25,37.04 M 21.25,37.04 L 31.13,38.33 L 2.10,61.72"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 6 separate commands.
+(1) M 2.10,61.72: Move the current point to 2.10,61.72.
+(2) L 38.86,44.9
+A_target:
+(C)
+
+Q: This SVG path element <path d="M 52.00,72.00 L 3.00,95.00 L 53.00,30.00 L 52.00,72.00"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 4 separate commands.
+(1) M 52.00,72.00: Move the current point to 52.00,72.00.
+(2) L 3.00,95.
+A_target:
+(J)
+
+Q: This SVG path element <path d="M 4.12,72.94 L 38.85,35.38 M 38.85,35.38 L 50.28,77.12 L 30.89,80.59 M 30.89,80.59 L 31.43,90.13 L 22.93,92.01 M 22.93,92.01 L 4.12,72.94"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 6 separate commands.
+(1) M 4.12,72.94: Move the current point to 4.12,72.94.
+(2) L 38.85,35.3
+A_target:
+(C)
+
+Q: This SVG path element <path d="M 22.06,65.18 L 22.58,64.52 L 7.52,52.61 L 7.00,53.26 L 22.06,65.18"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+(K) trapezoid
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 5 separate commands.
+(1) M 22.06,65.18: Move the current point to 22.06,65.18.
+(2) L 22.58,64
+A_target:
+(K)
+
+Q: This SVG path element <path d="M 76.00,30.00 L 58.00,25.00 L 42.00,26.00 L 41.00,41.00 L 47.00,54.00 L 76.00,30.00"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 6 separate commands.
+(1) M 76.00,30.00: Move the current point to 76.00,30.00.
+(2) L 58.00,25
+A_target:
+(G)
+
+Q: This SVG path element <path d="M 49.47,26.27 L 55.28,65.93 L 48.51,77.47 M 48.51,77.47 L 34.78,81.76 L 36.76,67.00 M 36.76,67.00 L 14.38,76.83 M 14.38,76.83 L 49.47,26.27"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 6 separate commands.
+(1) M 49.47,26.27: Move the current point to 49.47,26.27.
+(2) L 55.28,65
+A_target:
+(C)
+
+Q: This SVG path element <path d="M 5.41,37.88 L 1.69,19.06 M 1.69,19.06 L 0.30,43.85 M 0.30,43.85 L 5.41,37.88"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 3 separate commands.
+(1) M 5.41,37.88: Move the current point to 5.41,37.88.
+(2) L 1.69,19.06
+A_target:
+(J)
+
+Q: This SVG path element <path d="M 22.34,17.53 A 19.21,19.21 220.48 1,0 51.57,42.47 A 19.21,19.21 220.48 1,0 22.34,17.53"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+(K) ellipse
+A_model:
+
+This SVG path element contains "M" and "A" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). A takes two parameters (x1,y1) and (x2,y2) and creates an arc from the previous coordinate to the new coordinate (x1,y1) to (x2,y2).
+This path can be decomposed into 4 separate commands.
+(1) M 22.34,17.53: Move the current point to 22.34,1
+A_target:
+(K)
+
+Q: This SVG path element <path d="M 65.00,42.00 A 21.00,21.00 0.00 1,0 23.00,42.00 A 21.00,21.00 0.00 1,0 65.00,42.00"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+(K) ellipse
+A_model:
+
+This SVG path element contains "M" and "A" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). A takes two parameters (x,y) and draws an arc from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 4 separate commands.
+(1) M 65.00,42.00: Move the current point to 65.00,42.00.
+(2) A 21.00,21
+A_target:
+(K)
+
+Q: This SVG path element <path d="M 4.70,85.15 L 2.36,37.14 L 18.76,36.34 M 18.76,36.34 L 21.10,84.35 L 4.70,85.15"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+(K) trapezoid
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 4 separate commands.
+(1) M 4.70,85.15: Move the current point to 4.70,85.15.
+(2) L 2.36,37.14
+A_target:
+(K)
+
+Q: This SVG path element <path d="M 48.48,23.04 L 30.68,44.97 M 30.68,44.97 A 28.25,28.25 317.18 0,1 20.40,19.91 L 48.48,23.04"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 6 separate commands.
+(1) M 48.48,23.04: Move the current point to 48.48,23.04.
+(2) L 30.68,44
+A_target:
+(I)
+
+Q: This SVG path element <path d="M 34.08,19.65 L 43.45,30.98 L 38.19,35.33 L 28.82,24.00 L 26.80,25.67 L 24.63,13.16 L 36.11,17.98 M 36.11,17.98 L 34.08,19.65"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 6 separate commands.
+(1) M 34.08,19.65: Move the current point to 34.08,19.65.
+(2) L 43.45,30
+A_target:
+(B)
+
+Q: This SVG path element <path d="M 55.55,71.33 L 51.11,64.45 L 42.82,59.85 L 51.86,58.44 M 51.86,58.44 L 52.09,49.14 M 52.09,49.14 L 58.23,50.71 M 58.23,50.71 L 62.67,57.59 M 62.67,57.59 L 62.43,66.89 M 62.43,66.89 L 55.55,71.33"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 6 separate commands.
+(1) M 55.55,71.33: Move the current point to 55.55,71.33.
+(2) L 51.11,64
+A_target:
+(F)
+
+Q: This SVG path element <path d="M 63.28,25.83 L 51.43,14.65 M 51.43,14.65 L 46.46,19.91 L 58.31,31.09 M 58.31,31.09 L 63.28,25.83"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+(K) trapezoid
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 6 separate commands.
+(1) M 63.28,25.83: Move the current point to 63.28,25.83.
+(2) L 51.43,14
+A_target:
+(K)
+
+Q: This SVG path element <path d="M 64.00,63.00 L 44.00,63.00 L 44.00,50.00 L 64.00,50.00 L 64.00,45.00 L 85.00,57.00 L 64.00,68.00 L 64.00,63.00"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 10 separate commands.
+(1) M 64.00,63.00: Move the current point to 64.00,63.00.
+(2) L 44.00,6
+A_target:
+(B)
+
+Q: This SVG path element <path d="M 22.00,62.00 L 46.00,65.00 L 64.00,60.00 L 91.00,42.00 L 92.00,24.00 L 46.00,19.00 L 22.00,62.00"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 6 separate commands.
+(1) M 22.00,62.00: Move the current point to 22.00,62.00.
+(2) L 46.00,65
+A_target:
+(C)
+
+Q: This SVG path element <path d="M 50.55,76.16 L 40.00,72.83 M 40.00,72.83 L 34.22,59.10 M 34.22,59.10 L 38.51,46.47 L 49.40,60.03 L 68.54,44.66 L 72.08,58.87 M 72.08,58.87 L 61.72,73.75 L 50.55,76.16"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 6 separate commands.
+(1) M 50.55,76.16: Move the current point to 50.55,76.16.
+(2) L 40.00,72
+A_target:
+(F)
+
+Q: This SVG path element <path d="M 77.37,27.19 L 75.57,16.98 L 55.39,21.31 L 44.39,14.63 M 44.39,14.63 L 57.18,30.28 M 57.18,30.28 L 77.37,27.19"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 4 separate commands.
+(1) M 77.37,27.19: Move the current point to 77.37,27.19.
+(2) L 75.57,16
+A_target:
+(G)
+
+Q: This SVG path element <path d="M 59.64,77.72 L 75.18,56.50 M 75.18,56.50 L 6.90,59.13 M 6.90,59.13 L 22.09,77.44 M 22.09,77.44 L 2.73,94.57 M 2.73,94.57 L 91.78,91.66 M 91.78,91.66 L 59.64,77.72"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 6 separate commands.
+(1) M 59.64,77.72: Move the current point to 59.64,77.72.
+(2) L 75.18,56
+A_target:
+(C)
+
+Q: This SVG path element <path d="M 12.89,27.63 L 16.46,21.41 M 16.46,21.41 L 23.97,19.93 M 23.97,19.93 L 28.27,16.91 L 36.05,18.39 L 35.28,28.22 M 35.28,28.22 L 27.40,36.33 L 25.21,26.77 L 12.89,27.63"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 6 separate commands.
+(1) M 12.89,27.63: Move the current point to 12.89,27.63.
+(2) L 16.46,21
+A_target:
+(F)
+
+Q: This SVG path element <path d="M 55.46,58.72 L 70.25,50.16 M 70.25,50.16 L 78.35,57.33 M 78.35,57.33 L 71.18,65.42 L 55.46,58.72"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 4 separate commands.
+(1) M 55.46,58.72: Move the current point to 55.46,58.72.
+(2) L 70.25,50
+A_target:
+(D)
+
+Q: This SVG path element <path d="M 13.00,17.00 L 78.00,22.00 L 44.00,59.00 L 13.00,17.00"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 4 separate commands.
+(1) M 13.00,17.00: Move the current point to 13.00,17.00.
+(2) L 78.00,22
+A_target:
+(J)
+
+Q: This SVG path element <path d="M 49.56,30.61 L 43.41,40.44 L 37.02,36.44 L 43.17,26.61 L 36.78,22.62 L 53.07,18.45 L 55.94,34.61 L 49.56,30.61"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 7 separate commands.
+(1) M 49.56,30.61: Move the current point to 49.56,30.61.
+(2) L 43.41,40
+A_target:
+(B)
+
+Q: This SVG path element <path d="M 50.91,18.41 L 57.39,58.34 L 25.82,45.12 L 33.11,31.36 L 26.90,27.04 L 29.87,20.84 M 29.87,20.84 L 50.91,18.41"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 6 separate commands.
+(1) M 50.91,18.41: Move the current point to 50.91,18.41.
+(2) L 57.39,58
+A_target:
+(C)
+
+Q: This SVG path element <path d="M 73.00,72.00 L 9.00,72.00 L 9.00,37.00 L 73.00,37.00 L 73.00,72.00"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+(K) trapezoid
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 5 separate commands.
+(1) M 73.00,72.00: Move the current point to 73.00,72.00.
+(2) L 9.00,72.
+A_target:
+(K)
+
+Q: This SVG path element <path d="M 69.24,46.18 L 13.17,38.44 L 30.15,61.29 L 33.42,76.85 L 44.01,67.32 L 67.92,63.11 L 69.24,46.18"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 6 separate commands.
+(1) M 69.24,46.18: Move the current point to 69.24,46.18.
+(2) L 13.17,38
+A_target:
+(C)
+
+Q: This SVG path element <path d="M 83.17,32.03 L 87.90,19.01 L 76.80,8.19 L 69.67,12.38 L 72.92,22.11 M 72.92,22.11 L 83.17,32.03"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 5 separate commands.
+(1) M 83.17,32.03: Move the current point to 83.17,32.03.
+(2) L 87.90,19
+A_target:
+(G)
+
+Q: This SVG path element <path d="M 16.51,69.21 L 1.64,57.99 M 1.64,57.99 A 18.62,18.62 217.04 0,1 32.80,78.21 L 16.51,69.21"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 6 separate commands.
+(1) M 16.51,69.21: Move the current point to 16.51,69.21.
+(2) L 1.64,57.
+A_target:
+(I)
+
+Q: This SVG path element <path d="M 12.89,87.25 A 28.33,28.33 124.93 1,0 45.33,40.79 A 28.33,28.33 124.93 1,0 12.89,87.25"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+(K) ellipse
+A_model:
+
+This SVG path element contains "M" and "A" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). A takes three parameters (x1,y1,x2,y2) and creates an arc from the previous coordinate to the new coordinate (x1,y1) to the new coordinate (x2,y2).
+This path can be decomposed into 4 separate commands.
+(1) M 12.89,87.25: Move the current point to 12.89,
+A_target:
+(K)
+
+Q: This SVG path element <path d="M 25.26,65.86 L 39.41,66.15 L 17.14,36.90 M 17.14,36.90 L 13.78,49.25 L 0.26,46.02 L 29.07,84.32 L 25.26,65.86"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 6 separate commands.
+(1) M 25.26,65.86: Move the current point to 25.26,65.86.
+(2) L 39.41,66
+A_target:
+(C)
+
+Q: This SVG path element <path d="M 27.58,40.70 L 35.74,22.14 A 20.28,20.28 293.73 0,1 22.12,60.23 L 27.58,40.70"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 6 separate commands.
+(1) M 27.58,40.70: Move the current point to 27.58,40.70.
+(2) L 35.74,22
+A_target:
+(I)
+
+Q: This SVG path element <path d="M 27.90,64.74 L 34.84,44.47 L 47.96,46.51 L 42.27,35.46 L 66.92,43.08 M 66.92,43.08 L 55.91,49.64 M 55.91,49.64 L 56.62,66.11 L 27.90,64.74"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 6 separate commands.
+(1) M 27.90,64.74: Move the current point to 27.90,64.74.
+(2) L 34.84,44
+A_target:
+(B)
+
+Q: This SVG path element <path d="M 20.00,24.00 L 39.00,57.00 L 82.00,55.00 L 20.00,24.00"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 4 separate commands.
+(1) M 20.00,24.00: Move the current point to 20.00,24.00.
+(2) L 39.00,57
+A_target:
+(J)
+
+Q: This SVG path element <path d="M 88.24,69.26 L 80.27,95.00 A 26.94,26.94 107.20 0,1 92.49,42.66 L 88.24,69.26"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 6 separate commands.
+(1) M 88.24,69.26: Move the current point to 88.24,69.26.
+(2) L 80.27,95
+A_target:
+(I)
+
+Q: This SVG path element <path d="M 2.27,59.23 L 52.45,67.18"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 2 separate commands.
+(1) M 2.27,59.23: Move the current point to 2.27,59.23.
+(2) L 52.45,67.1
+A_target:
+(E)
+
+Q: This SVG path element <path d="M 38.00,68.00 L 39.00,41.00 L 52.00,61.00 L 55.00,48.00 L 74.00,40.00 L 71.00,55.00 L 65.00,68.00 L 48.00,73.00 L 38.00,68.00"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 7 separate commands.
+(1) M 38.00,68.00: Move the current point to 38.00,68.00.
+(2) L 39.00,41
+A_target:
+(F)
+
+Q: This SVG path element <path d="M 82.59,29.92 L 82.20,49.38 M 82.20,49.38 L 65.38,41.46 L 64.44,22.89 L 82.59,29.92"/> draws a
+Options:
+(A) circle
+(B) heptagon
+(C) hexagon
+(D) kite
+(E) line
+(F) octagon
+(G) pentagon
+(H) rectangle
+(I) sector
+(J) triangle
+A_model:
+
+This SVG path element contains "M" and "L" commands. M takes two parameters (x,y) and moves the current point to the coordinates (x,y). L takes two parameters (x,y) and draws a line from the previous coordinate to the new coordinate (x,y).
+This path can be decomposed into 5 separate commands.
+(1) M 82.59,29.92: Move the current point to 82.59,29.92.
+(2) L 82.20,49
+A_target:
+(D)
+
