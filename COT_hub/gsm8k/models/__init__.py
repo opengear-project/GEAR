@@ -5,3 +5,4 @@ from .modeling_llama import LlamaForCausalLM
 from .modeling_llama_new import LlamaForCausalLMNew
 from .modeling_qwen import QWenLMHeadModel
 from .modeling_llama_h2o import H2OLlamaForCausalLM, LlamaConfig
+# from .modeling_mixtral import MixTralForCausalLM, MixtralConfig

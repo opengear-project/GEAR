@@ -268,7 +268,7 @@ if __name__ == "__main__":
     # Load Model and Tokenizer
     model_kwargs = {}
     logging.info("Loading Model and Tokenizer.")
-    if "Llama-2" or "Qwen" in args.model:
+    if "Llama-2" or "Qwen" or "Mistral" in args.model:
         model_kwargs["torch_dtype"] = torch.float16
         model_kwargs["device_map"] = "auto"
         model_kwargs["token"] = args.hf_token
@@ -311,7 +311,7 @@ if __name__ == "__main__":
     if "Llama-2" in args.model:
         if args.compress_method == "h2o":
             from models import H2OLlamaForCausalLM, LlamaConfig
-
+            
             config = LlamaConfig.from_pretrained(
                 args.model,
                 use_auth_token=True,
@@ -362,11 +362,37 @@ if __name__ == "__main__":
             pad_token="<|endoftext|>",
             use_flash_attn=False,
         )
+        
         # if "Qwen" in args.model:
         #     tokenizer.add_special_tokens({"eos_token": "<|endoftext|>"})
         #     tokenizer.pad_token = tokenizer.eos_token
     # model = model.to('cuda')
-
+    elif "Mistral" in args.model:
+        # from models import MixTralForCausalLM, MixtralConfig
+        from transformers import AutoTokenizer
+        from transformers import MistralForCausalLM,MistralConfig
+        config = MistralConfig.from_pretrained(
+            args.model,
+            use_auth_token=True,
+            token=args.hf_token,
+            use_flash_attn=False,
+        )
+        model = MistralForCausalLM.from_pretrained(
+            args.model,
+            config=config,
+            **model_kwargs,
+            # compress_config=compress_config,
+        )
+        tokenizer = AutoTokenizer.from_pretrained(
+            args.model,
+            token=args.hf_token,
+            padding_side="left",
+            model_max_length=args.model_max_length,
+            use_fast=False,
+            cache_dir="../cache",
+        )
+        tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+        pass
     logging.info("Preprocessing the dataset.")
     with open(f"lib_prompt/{args.prompt_file}", "r") as handle:
         prompt_cot = handle.read()
