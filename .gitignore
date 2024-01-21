@@ -9,4 +9,9 @@
 /COT_hub/gsm8k/kvcache_distributions
 /COT_hub/MMLU/outputs
 /COT_hub/MMLU/results
+/COT_hub/BBH/outputs
+/COT_hub/BBH/results
+/COT_hub/BBH/lib_prompt
+/COT_hub/BBH/lib_prompt_multiround_claude_instant
+/COT_hub/BBH/lib_prompt_multiround_claude_instant_test
 /tests
