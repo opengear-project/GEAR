@@ -104,6 +104,12 @@ class CompressArguments:
     token_preserving: bool = field(
         default=False, metadata={"help": "Evaluation batch size."}
     )
+    streaming: bool = field(
+        default=False, metadata={"help": "Evaluation batch size."}
+    )
+    streaming_gap: int = field(
+        default=0, metadata={"help": "Evaluation batch size."}
+    )
 
 
 def smart_tokenizer_and_embedding_resize(
@@ -176,7 +182,7 @@ def evaluation(model_args, data_args, compress_args):
     #                                       token=model_args.token,
     #                                       cache_dir="./cache"
     #                                       )
-    MODEL_ID = "LoftQ/Llama-2-7b-hf-fp16-64rank-gsm8k"
+    # MODEL_ID = "LoftQ/Llama-2-7b-hf-fp16-64rank-gsm8k"
     compress_config = (
         None
         if compress_args.compress_method == "None"
@@ -197,6 +203,8 @@ def evaluation(model_args, data_args, compress_args):
             locality_saving=compress_args.locality_saving,
             token_preserving=compress_args.token_preserving,
             iter=compress_args.iter,
+            streaming=compress_args.streaming,
+            streaming_gap=compress_args.streaming_gap,
         )
     )
     # TODO extend for all models not just 7B
@@ -217,15 +225,18 @@ def evaluation(model_args, data_args, compress_args):
         )
     else:
         from models import QWenLMHeadModel
+        from transformers import AutoModelForCausalLM
         config = transformers.AutoConfig.from_pretrained(
             model_args.model_name_or_path, use_auth_token=True, token=None, use_flash_attn=False,trust_remote_code=True
         )
+        model_kwargs = {}
+        model_kwargs["torch_dtype"] = torch.float16
+        model_kwargs["device_map"] = "auto"
+        model_kwargs["token"] = None
+        model_kwargs["cache_dir"] = "../cache"
         model = QWenLMHeadModel.from_pretrained(
             model_args.model_name_or_path,
-            torch_dtype=torch.bfloat16,  # you may change it with different models
-            token=model_args.token,
-            device_map=model_args.device_map,
-            cache_dir="./cache",
+            **model_kwargs,
             compress_config=compress_config,
             trust_remote_code=True,
             config = config
@@ -233,7 +244,7 @@ def evaluation(model_args, data_args, compress_args):
     # print(model)
     # model = model.half()
     model = model.to(compress_args.gpu)
-    TOKEN_ID = "meta-llama/Llama-2-7b-hf"
+    # TOKEN_ID = "meta-llama/Llama-2-7b-hf"
     print(model_args.model_name_or_path)
     tokenizer = transformers.AutoTokenizer.from_pretrained(
         # TOKEN_ID,
@@ -248,8 +259,28 @@ def evaluation(model_args, data_args, compress_args):
     special_tokens_dict = dict()
     
     if "Qwen" in model_args.model_name_or_path:
-        special_tokens_dict["pad_token"] = "<|endoftext|>"
-        special_tokens_dict["eos_token"] = "<|endoftext|>"
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_args.model_name_or_path,
+            token = None,
+            padding_side='left',
+            model_max_length=model_args.model_max_length,
+            use_fast=False,
+            cache_dir="../cache",
+            trust_remote_code=True,
+            pad_token='<|endoftext|>',
+            use_flash_attn=False,
+            # eos_token='<|endoftext|>',    
+        )
+        # special_tokens_dict["pad_token"] = "<|endoftext|>"
+        # special_tokens_dict["eos_token"] = "<|endoftext|>"
+        # if tokenizer.pad_token is None:
+        #     special_tokens_dict["pad_token"] = DEFAULT_PAD_TOKEN
+        # if tokenizer.eos_token is None:
+        #     special_tokens_dict["eos_token"] = DEFAULT_EOS_TOKEN
+        # if tokenizer.bos_token is None:
+        #     special_tokens_dict["bos_token"] = DEFAULT_BOS_TOKEN
+        # if tokenizer.unk_token is None:
+        #     special_tokens_dict["unk_token"] = DEFAULT_UNK_TOKEN
     else:
         if tokenizer.pad_token is None:
             special_tokens_dict["pad_token"] = DEFAULT_PAD_TOKEN
@@ -310,24 +341,36 @@ def evaluation(model_args, data_args, compress_args):
         question_data.append(batch)
 
     model.eval()
-    gen_kwargs = {
-        "max_new_tokens": 256,
-        "temperature": 0.8,
-        "top_k": 40,
-        "top_p": 0.95,
-        "do_sample": True,
-        "use_cache": True,
-    }
+    if "Qwen" not in model_args.model_name_or_path:
+        #Llama2-7b
+        gen_kwargs = {
+            "max_new_tokens": 256,
+            "temperature": 0.8,
+            "top_k": 40,
+            "top_p": 0.95,
+            "do_sample": True,
+            "use_cache": True,
+        }
+    else:
+        from transformers.generation import GenerationConfig
+        model.generation_config = GenerationConfig.from_pretrained(
+            model_args.model_name_or_path, trust_remote_code=True
+        )
+        model.generation_config.do_sample = False
     ans_pred_list = []
     set_seed(42)
     import time
 
     for step, batch in enumerate(question_data):
         with torch.no_grad():
-            gen_kwargs["input_ids"] = batch["input_ids"].to(compress_args.gpu)
-            gen_kwargs["attention_mask"] = batch["attention_mask"].to(compress_args.gpu)
-            start = time.time()
-            generated_tokens = model.generate(**gen_kwargs)
+            if "Qwen" not in model_args.model_name_or_path:
+                gen_kwargs["input_ids"] = batch["input_ids"].to(compress_args.gpu)
+                gen_kwargs["attention_mask"] = batch["attention_mask"].to(compress_args.gpu)
+                start = time.time()
+                generated_tokens = model.generate(**gen_kwargs)
+            else:
+                start = time.time()
+                generated_tokens = model.generate(input_ids=batch["input_ids"].to(compress_args.gpu))
             torch.cuda.synchronize()
             end = time.time()
 

@@ -362,9 +362,9 @@ if __name__ == "__main__":
             pad_token="<|endoftext|>",
             use_flash_attn=False,
         )
-        if "Qwen" in args.model:
-            tokenizer.add_special_tokens({"eos_token": "<|endoftext|>"})
-            tokenizer.pad_token = tokenizer.eos_token
+        # if "Qwen" in args.model:
+        #     tokenizer.add_special_tokens({"eos_token": "<|endoftext|>"})
+        #     tokenizer.pad_token = tokenizer.eos_token
     # model = model.to('cuda')
 
     logging.info("Preprocessing the dataset.")
