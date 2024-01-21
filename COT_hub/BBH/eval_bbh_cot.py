@@ -80,6 +80,8 @@ class EvaluationResults(DataClassJsonMixin):
 
 
 def extract_ans(ans, mode):
+    if not ans.startswith("\n\nQ: ") and "\n\nQ: " in ans:
+        ans = ans.split("\n\nQ: ")[0]
     ans_line = ans.split('answer is ')
     # Expect to see 'answer is'. If not return whole string
     if len(ans_line) == 1:
@@ -88,6 +90,8 @@ def extract_ans(ans, mode):
         ans = ans_line[-1].strip()
     
     if mode == 'multiple_choice':
+        if len(ans)>3 and ans[0] == "(" and ans[2] == ")":
+            return ans[1]
         options = ['(A)', '(B)', '(C)', '(D)', '(E)', '(F)', '(G)', '(H)', '(I)', '(J)', '(K)', '(L)', '(M)', '(N)', '(O)', '(P)', '(Q)', '(R)', '(S)', '(T)', '(U)', '(V)', '(W)', '(X)', '(Y)', '(Z)']
         for option in options:
             if option in ans:
@@ -206,6 +210,18 @@ def prepare_example_prompt(examples):
     examples['question'] = questions
     return examples
 
+def get_method_name(args):
+    if args.compress_method == "uniformquantization":
+        return f"uniformquant" 
+    elif args.compress_method == "outquantize_with_lrap":
+        return f"lrapoutquant_rank-{args.rank}-{args.rankv}_left-{args.left}"
+    elif args.compress_method == "densesparseuniformquantization":
+        return f"denspaquant-{args.left}"
+    elif args.compress_method == "groupquantization":
+        return f"groupquant"
+    else:
+        return f"base"
+
 
 def main(args):
     logging.info("Loading Model and Tokenizer.")
@@ -216,7 +232,12 @@ def main(args):
         ipdb.set_trace()
 
     root_output_dir = Path(args.root_output_dir)
-    output_dir = "cot_base"
+    output_dir = "cot_{name}_bit-{bit}_attnum-{attnum}_len-{max_new_tokens}".format(
+        name=get_method_name(args),
+        bit=args.quantize_bit, 
+        attnum=args.attention_number, 
+        max_new_tokens=args.max_new_tokens,
+    )
     if args.example_subset is not None:
         output_dir += f"_subset-{args.example_subset}"
     output_dir = (
@@ -353,7 +374,7 @@ if __name__ == '__main__':
     parser.add_argument("--batch_size", type=int, default=8, help="Batch size.")
     parser.add_argument("--max_length", type=int, default=None, help="")
     parser.add_argument("--max_new_tokens", type=int, default=256, help="")
-    parser.add_argument("--model_max_length", type=int, default=4096, help="")
+    parser.add_argument("--model_max_length", type=int, default=3072, help="")
     parser.add_argument("--do_sample", action="store_true", default=False, help="")
     parser.add_argument("--temperature", type=float, default=0.8, help="")
     parser.add_argument("--top_k", type=int, default=50, help="")

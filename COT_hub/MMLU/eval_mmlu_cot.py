@@ -292,7 +292,7 @@ def main(args):
     for task in tasks:
         acc = 0
         eval_dataset = load_dataset(
-            "lukaemon/mmlu", task, split=split, cache_dir="../cache",
+            "lukaemon/mmlu", task, split=split, #cache_dir="../cache",
             download_mode='force_redownload',
         )
         eval_dataset = eval_dataset.map(
