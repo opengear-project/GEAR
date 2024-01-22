@@ -57,8 +57,8 @@ from transformers.utils import (
     logging,
     replace_return_docstrings,
 )
-
-from transformers.models.mixtral.configuration_mixtral import MixtralConfig
+from .compress_function import compress_insert_function
+from transformers.models.mistral.configuration_mistral import MistralConfig
 
 
 
@@ -213,7 +213,7 @@ class MistralAttention(nn.Module):
     and "Generating Long Sequences with Sparse Transformers".
     """
 
-    def __init__(self, config: MistralConfig, layer_idx: Optional[int] = None):
+    def __init__(self, config: MistralConfig, layer_idx: Optional[int] = None, compress_config=None):
         super().__init__()
         self.config = config
         self.layer_idx = layer_idx
@@ -291,8 +291,56 @@ class MistralAttention(nn.Module):
 
         if past_key_value is not None:
             cache_kwargs = {"sin": sin, "cos": cos}  # Specific to RoPE models
+            #apply compression
+            if self.compress_config is not None:
+                if self.compress_config.streaming[self.layer_idx] is True:
+                    if len(past_key_value) >= self.layer_idx + 1:
+                        past_key, past_value = past_key_value[self.layer_idx]
+                    else:
+                        past_key, past_value = key_states, value_states
+                    bsz, num_heads, seq_len, head_dim = past_key.shape
+                    if (
+                        self.prefill is True
+                        or seq_len % self.compress_config.streaming_gap[self.layer_idx]
+                        == 0
+                    ):
+                        # not streaming compress is compress every geneartion
+                        (
+                            past_key,
+                            past_value,
+                        ) = compress_insert_function(
+                            past_key,
+                            past_value,
+                            self.compress_config,
+                            self.layer_idx,
+                            pbase1=self.pbase1,
+                            qbase1=self.qbase1,
+                            pbase2=self.pbase2,
+                            qbase2=self.qbase2,
+                        )
+                        
+                        if self.prefill is False:
+                            past_key_value.__setitem__(
+                                self.layer_idx, (past_key, past_value)
+                            )
+                        self.prefill = False
             key_states, value_states = past_key_value.update(key_states, value_states, self.layer_idx, cache_kwargs)
-
+            if self.compress_config is not None:
+                if self.compress_config.streaming[self.layer_idx] is False:
+                    # not streaming compress is compress every geneartion
+                    (
+                        key_states[:, :, :-1, :],
+                        value_states[:, :, :-1, :],
+                    ) = compress_insert_function(
+                        key_states[:, :, :-1, :],
+                        value_states[:, :, :-1, :],
+                        self.compress_config,
+                        self.layer_idx,
+                        pbase1=self.pbase1,
+                        qbase1=self.qbase1,
+                        pbase2=self.pbase2,
+                        qbase2=self.qbase2,
+                    )
         # repeat k/v heads if n_kv_heads < n_heads
         key_states = repeat_kv(key_states, self.num_key_value_groups)
         value_states = repeat_kv(value_states, self.num_key_value_groups)
@@ -634,11 +682,11 @@ MISTRAL_ATTENTION_CLASSES = {
 
 
 class MistralDecoderLayer(nn.Module):
-    def __init__(self, config: MistralConfig, layer_idx: int):
+    def __init__(self, config: MistralConfig, layer_idx: int,compress_config=None):
         super().__init__()
         self.hidden_size = config.hidden_size
 
-        self.self_attn = MISTRAL_ATTENTION_CLASSES[config._attn_implementation](config, layer_idx)
+        self.self_attn = MISTRAL_ATTENTION_CLASSES[config._attn_implementation](config, layer_idx,compress_config)
 
         self.mlp = MistralMLP(config)
         self.input_layernorm = MistralRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
@@ -828,14 +876,14 @@ class MistralModel(MistralPreTrainedModel):
         config: MistralConfig
     """
 
-    def __init__(self, config: MistralConfig):
+    def __init__(self, config: MistralConfig,compress_config=None):
         super().__init__(config)
         self.padding_idx = config.pad_token_id
         self.vocab_size = config.vocab_size
 
         self.embed_tokens = nn.Embedding(config.vocab_size, config.hidden_size, self.padding_idx)
         self.layers = nn.ModuleList(
-            [MistralDecoderLayer(config, layer_idx) for layer_idx in range(config.num_hidden_layers)]
+            [MistralDecoderLayer(config, layer_idx,compress_config) for layer_idx in range(config.num_hidden_layers)]
         )
         self._use_flash_attention_2 = config._attn_implementation == "flash_attention_2"
         self.norm = MistralRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
@@ -1192,10 +1240,10 @@ class MistralForCausalLM(MistralPreTrainedModel):
 )
 # Copied from transformers.models.llama.modeling_llama.LlamaForSequenceClassification with Llama->Mistral, LLAMA->MISTRAL
 class MistralForSequenceClassification(MistralPreTrainedModel):
-    def __init__(self, config):
+    def __init__(self, config,compress_config=None):
         super().__init__(config)
         self.num_labels = config.num_labels
-        self.model = MistralModel(config)
+        self.model = MistralModel(config, compress_config)
         self.score = nn.Linear(config.hidden_size, self.num_labels, bias=False)
 
         # Initialize weights and apply final processing

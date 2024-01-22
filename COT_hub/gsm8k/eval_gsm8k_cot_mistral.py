@@ -281,6 +281,35 @@ if __name__ == "__main__":
     #     use_flash_attn=False,
     #     trust_remote_code=True,
     # )
+    from models import GPT2CompressConfig
+    compress_config = (
+        None
+        if args.compress_method == "None"
+        else GPT2CompressConfig(
+            compress_method=args.compress_method,
+            rank=args.rank,
+            rankv=args.rankv,
+            loop=args.loop,
+            quantize_bit=args.quantize_bit,
+            group_num=args.group_num,
+            top_k=args.top_kprun,
+            left=args.left,
+            attention_number=args.attention_number,
+            device_num=args.gpu,
+            batch_num=args.batch_size,
+            stage=args.stage,
+            start_saving=args.start_saving,
+            locality_saving=args.locality_saving,
+            token_preserving=args.token_preserving,
+            heavy_ratio=args.heavy_ratio,
+            recent_ratio=args.recent_ratio,
+            streaming=args.streaming,
+            streaming_gap=args.streaming_gap,
+        )
+    )
+    if compress_config is not None:
+        compress_config.copy_for_all_attention()
+        compress_config.calculate_compress_ratio_list(4095, 4096)
     model = MistralForCausalLM.from_pretrained(
         args.model,
         # config=config,
