@@ -315,7 +315,7 @@ if __name__ == "__main__":
         # config=config,
         **model_kwargs,
         trust_remote_code=True,
-        # compress_config=compress_config,
+        compress_config=compress_config,
     )
     tokenizer = AutoTokenizer.from_pretrained(
         args.model,

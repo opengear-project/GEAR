@@ -270,7 +270,7 @@ if __name__ == "__main__":
     logging.info("Loading Model and Tokenizer.")
     if "Llama-2" or "Qwen" or "Mistral" in args.model:
         model_kwargs["torch_dtype"] = torch.float16
-        model_kwargs["device_map"] = "cpu"
+        model_kwargs["device_map"] = "auto"
         model_kwargs["token"] = args.hf_token
         model_kwargs["cache_dir"] = "../cache"
 
@@ -421,7 +421,6 @@ if __name__ == "__main__":
             truncation=True,
         )
         # inputs = inputs.to("cuda")
-        print(inputs)
         generate_kwargs = dict(
             return_dict_in_generate=True,
             max_length=args.max_length,

@@ -216,6 +216,7 @@ class MistralAttention(nn.Module):
     def __init__(self, config: MistralConfig, layer_idx: Optional[int] = None, compress_config=None):
         super().__init__()
         self.config = config
+        self.prefill = True
         self.layer_idx = layer_idx
         if layer_idx is None:
             logger.warning_once(
@@ -249,6 +250,61 @@ class MistralAttention(nn.Module):
             max_position_embeddings=self.max_position_embeddings,
             base=self.rope_theta,
         )
+        if compress_config is not None:
+            self.rank = compress_config.rank[self.layer_idx]
+            self.rankv = compress_config.rankv[self.layer_idx]
+            self.dveice_num = compress_config.device_num[self.layer_idx]
+            if (
+                compress_config.compress_method[self.layer_idx] == "poweriteration"
+                or compress_config.compress_method[self.layer_idx] == "stagept"
+                or compress_config.compress_method[self.layer_idx] == "pt+outlier"
+                or compress_config.compress_method[self.layer_idx] == "Picache"
+            ):
+                # self.k_cache = PiCache((1, 12, 1023, 64), 100, 4, 0, 200)
+                # self.v_cache = PiCache((1, 12, 1023, 64), 100, 4, 0, 200)
+                # TODO 1023 change to inputsize
+                if self.hidden_size > self.rank:
+                    self.pbase1 = [
+                        torch.rand(self.hidden_size, self.rank).to(self.dveice_num)
+                    ]
+                    # max input size is 1023
+                    self.qbase1 = [
+                        torch.rand(config.max_position_embeddings - 1, self.rank).to(
+                            self.dveice_num
+                        )
+                    ]
+                else:
+                    self.pbase1, self.qbase1 = None, None
+                if self.hidden_size > self.rankv:
+                    self.pbase2 = [
+                        torch.rand(self.hidden_size, self.rankv).to(self.dveice_num)
+                    ]
+                    self.qbase2 = [
+                        torch.rand(config.max_position_embeddings - 1, self.rankv).to(
+                            self.dveice_num
+                        )
+                    ]
+                else:
+                    self.pbase2, self.qbase2 = None, None
+
+            else:
+                self.pbase1, self.qbase1, self.pbase2, self.qbase2 = (
+                    None,
+                    None,
+                    None,
+                    None,
+                )
+                if compress_config.compress_method[self.layer_idx] == "H2O":
+                    # self.h2ocache = H2OCache(100)
+                    #TODO reserve for h2o
+                    pass
+        else:
+            self.pbase1, self.qbase1, self.pbase2, self.qbase2 = (
+                None,
+                None,
+                None,
+                None,
+            )
 
     def _shape(self, tensor: torch.Tensor, seq_len: int, bsz: int):
         return tensor.view(bsz, seq_len, self.num_heads, self.head_dim).transpose(1, 2).contiguous()
@@ -276,7 +332,9 @@ class MistralAttention(nn.Module):
         query_states = query_states.view(bsz, q_len, self.num_heads, self.head_dim).transpose(1, 2)
         key_states = key_states.view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
         value_states = value_states.view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
-
+        bsz,num_heads,seq_len_q,head_dim = query_states.shape
+        if seq_len_q > 1:
+            self.prefill = True
         kv_seq_len = key_states.shape[-2]
         if past_key_value is not None:
             if self.layer_idx is None:
@@ -304,6 +362,7 @@ class MistralAttention(nn.Module):
                         or seq_len % self.compress_config.streaming_gap[self.layer_idx]
                         == 0
                     ):
+                        # print("begin compress",past_key.shape)
                         # not streaming compress is compress every geneartion
                         (
                             past_key,
@@ -323,6 +382,8 @@ class MistralAttention(nn.Module):
                             past_key_value.__setitem__(
                                 self.layer_idx, (past_key, past_value)
                             )
+                        else:
+                            key_states, value_states = past_key, past_value
                         self.prefill = False
             key_states, value_states = past_key_value.update(key_states, value_states, self.layer_idx, cache_kwargs)
             if self.compress_config is not None:
@@ -1040,9 +1101,9 @@ class MistralModel(MistralPreTrainedModel):
 class MistralForCausalLM(MistralPreTrainedModel):
     _tied_weights_keys = ["lm_head.weight"]
 
-    def __init__(self, config):
+    def __init__(self, config,compress_config=None):
         super().__init__(config)
-        self.model = MistralModel(config)
+        self.model = MistralModel(config,compress_config =compress_config)
         self.vocab_size = config.vocab_size
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
 
