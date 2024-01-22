@@ -267,9 +267,13 @@ if __name__ == "__main__":
 
     # Load Model and Tokenizer
     model_kwargs = {}
+    model_kwargs["torch_dtype"] = torch.float16
+    model_kwargs["device_map"] = "auto"
+    model_kwargs["token"] = args.hf_token
+    model_kwargs["cache_dir"] = "../cache"
     logging.info("Loading Model and Tokenizer.")
     from transformers import AutoTokenizer
-    from transformers import MistralForCausalLM,MistralConfig
+    from models import MistralForCausalLM,MistralConfig
     # config = MistralConfig.from_pretrained(
     #     args.model,
     #     use_auth_token=True,
@@ -293,7 +297,7 @@ if __name__ == "__main__":
         cache_dir="../cache",
         trust_remote_code=True,
     )
-    tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+    tokenizer.pad_token = tokenizer.eos_token
     logging.info("Preprocessing the dataset.")
     with open(f"lib_prompt/{args.prompt_file}", "r") as handle:
         prompt_cot = handle.read()
@@ -319,8 +323,7 @@ if __name__ == "__main__":
             padding="longest",
             truncation=True,
         )
-        # inputs = inputs.to("cuda")
-        print(inputs["input_ids"].shape)
+        inputs = inputs.to("cuda")
         generate_kwargs = dict(
             return_dict_in_generate=True,
             max_length=args.max_length,
@@ -339,7 +342,7 @@ if __name__ == "__main__":
             generate_kwargs["temperature"] = None
             generate_kwargs["top_k"] = None
             generate_kwargs["top_p"] = None
-        outputs = model.generate(input_ids = inputs["input_ids"])
+        outputs = model.generate(**inputs, **generate_kwargs)
         generations = tokenizer.batch_decode(
             outputs.sequences[:, inputs.input_ids.shape[1] :],
             skip_special_tokens=True,
