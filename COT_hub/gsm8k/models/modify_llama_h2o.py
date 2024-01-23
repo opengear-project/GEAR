@@ -10,14 +10,16 @@ import torch.nn.functional as F
 
 from transformers.models.llama.configuration_llama import LlamaConfig
 from transformers.models.llama.modeling_llama import (
-    LlamaAttention,
+    # LlamaAttention,
     rotate_half,
     apply_rotary_pos_emb,
     repeat_kv,
     LlamaRotaryEmbedding,
     apply_rotary_pos_emb,
-    LlamaForCausalLM,
+    # LlamaForCausalLM,
 )
+# need to change to old version
+from .modeling_llama import LlamaAttention, LlamaForCausalLM
 import types
 
 __all__ = ["H2OLlamaForCausalLM", "H2OLlamaAttention",
@@ -57,7 +59,7 @@ def _make_causal_mask(
         mask = torch.cat([torch.zeros(tgt_len, past_key_values_length, dtype=dtype, device=device), mask], dim=-1)
     return mask[None, None, :, :].expand(bsz, 1, tgt_len, tgt_len + past_key_values_length)
 
-def apply_rotary_pos_emb_single(x, cos, sin, position_ids):
+def   apply_rotary_pos_emb_single(x, cos, sin, position_ids):
     # The first two dimensions of cos and sin are always 1, so we can `squeeze` them.
     cos = cos.squeeze(1).squeeze(0)  # [seq_len, dim]
     sin = sin.squeeze(1).squeeze(0)  # [seq_len, dim]

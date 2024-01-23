@@ -7,4 +7,5 @@ from .modeling_qwen import QWenLMHeadModel
 # from .modeling_llama_h2o import H2OLlamaForCausalLM, LlamaConfig
 from .modeling_mistral import MistralForCausalLM, MistralConfig
 from .modify_llama_h2o import H2OLlamaForCausalLM, LlamaConfig
+from .h2o_llama_self_written import LlamaForCausalLMH2O
 # from .modeling_mixtral import MixTralForCausalLM, MixtralConfig

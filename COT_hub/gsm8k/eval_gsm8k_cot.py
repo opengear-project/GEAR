@@ -230,10 +230,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--token_preserving", action="store_true", default=False, help=""
     )
+    parser.add_argument("--heavy_size", type=int, default=0, help="")
+    parser.add_argument("--recent_size", type=int, default=0, help="")
     parser.add_argument("--streaming", action="store_true", default=False, help="")
     parser.add_argument("--streaming_gap", type=int, default=0, help="")
-    parser.add_argument("--heavy_ratio", type=float, default=0.0, help="")
-    parser.add_argument("--recent_ratio", type=float, default=0.0, help="")
     args = parser.parse_args()
 
     if args.debug:
@@ -299,8 +299,8 @@ if __name__ == "__main__":
             start_saving=args.start_saving,
             locality_saving=args.locality_saving,
             token_preserving=args.token_preserving,
-            heavy_ratio=args.heavy_ratio,
-            recent_ratio=args.recent_ratio,
+            heavy_size=args.heavy_size,
+            recent_size=args.recent_size,
             streaming=args.streaming,
             streaming_gap=args.streaming_gap,
         )
@@ -310,7 +310,7 @@ if __name__ == "__main__":
         compress_config.calculate_compress_ratio_list(4095, 4096)
     if "Llama-2" in args.model:
         if args.compress_method == "h2o":
-            from models import H2OLlamaForCausalLM, LlamaConfig
+            from models import LlamaForCausalLMH2O, LlamaConfig
             
             config = LlamaConfig.from_pretrained(
                 args.model,
@@ -320,7 +320,7 @@ if __name__ == "__main__":
             )
             config.hh_size = 400
             config.recent_size = 50
-            model = H2OLlamaForCausalLM.from_pretrained(
+            model = LlamaForCausalLMH2O.from_pretrained(
                 args.model, config=config, **model_kwargs
             )
         else:
