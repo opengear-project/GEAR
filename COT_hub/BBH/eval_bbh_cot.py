@@ -135,7 +135,7 @@ def test_answer_mmlu_(pred_str, ans):
 
 def load_model_tokenizer(args):
     model_kwargs = {}
-    from models import LlamaForCausalLMNew,QWenLMHeadModel, GPT2CompressConfig
+    from .models import LlamaForCausalLMNew,QWenLMHeadModel, GPT2CompressConfig
     # add compression compression config
     compress_config = (
         None
@@ -227,9 +227,6 @@ def main(args):
     logging.info("Loading Model and Tokenizer.")
     model, tokenizer = load_model_tokenizer(args)
     tasks = args.tasks
-    if args.debug:
-        import ipdb
-        ipdb.set_trace()
 
     root_output_dir = Path(args.root_output_dir)
     output_dir = "cot_{name}_bit-{bit}_attnum-{attnum}_len-{max_new_tokens}".format(
@@ -405,4 +402,7 @@ if __name__ == '__main__':
     parser.add_argument("--heavy_ratio", type=float, default=0.0, help="")
     parser.add_argument("--recent_ratio", type=float, default=0.0, help="")
     args = parser.parse_args()
+    if args.debug:
+        import ipdb
+        ipdb.set_trace()
     main(args)
