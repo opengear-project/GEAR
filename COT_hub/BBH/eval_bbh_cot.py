@@ -99,7 +99,7 @@ def extract_ans(ans, mode):
                 break
         return ans
     elif mode == 'free_form':
-        if ans[-1] == '.':
+        if len(ans)>0 and ans[-1] == '.':
             ans = ans[:-1]
         return ans
 
