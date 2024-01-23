@@ -145,7 +145,7 @@ def test_answer_mmlu_(pred_str, ans):
 
 def load_model_tokenizer(args):
     model_kwargs = {}
-    if "Llama-2" or "Qwen" in args.model:
+    if "Llama-2" or "Qwen" or "Mistral" in args.model:
         model_kwargs["torch_dtype"] = torch.float16
         model_kwargs["device_map"] = "auto"
         model_kwargs["token"] = args.hf_token
@@ -163,6 +163,7 @@ def load_model_tokenizer(args):
             use_auth_token=True,
             token=args.hf_token,
             trust_remote_code=True,
+            use_flash_attn = False,
         )
     from models import LlamaForCausalLMNew
     from models import GPT2CompressConfig
@@ -193,7 +194,7 @@ def load_model_tokenizer(args):
     if compress_config is not None:
         compress_config.copy_for_all_attention()
         compress_config.calculate_compress_ratio_list(4095, 4096)
-    if "Qwen" not in args.model:
+    if "Llama" in args.model:
         model = LlamaForCausalLMNew.from_pretrained(
             args.model,
             config=config,
@@ -201,7 +202,7 @@ def load_model_tokenizer(args):
             cache_dir="../cache",
             compress_config=compress_config,
         )
-    else:
+    elif "Qwen" in args.model:
         from models import QWenLMHeadModel
         model = QWenLMHeadModel.from_pretrained(
             args.model,
@@ -211,6 +212,16 @@ def load_model_tokenizer(args):
             compress_config=compress_config,
             trust_remote_code=True,
         )
+        
+    elif "Mistral" in args.model:
+        from models import MistralForCausalLM
+        model = MistralForCausalLM.from_pretrained(
+            args.model,
+            config=config,
+            **model_kwargs,
+            cache_dir="../cache",
+            compress_config=compress_config,
+        )
     tokenizer = transformers.AutoTokenizer.from_pretrained(
         args.model,
         token=args.hf_token,
@@ -218,11 +229,9 @@ def load_model_tokenizer(args):
         model_max_length=args.model_max_length,
         cache_dir="../cache",
         trust_remote_code=True,
-        pad_token="<|endoftext|>",
     )
-    if "Qwen" in args.model:
-        tokenizer.add_special_tokens({"eos_token": "<|endoftext|>"})
-    tokenizer.pad_token = tokenizer.eos_token
+    if "Mistral" in args.model:
+        tokenizer.pad_token = tokenizer.eos_token
     # model = model.to('cuda')
     return model, tokenizer
 

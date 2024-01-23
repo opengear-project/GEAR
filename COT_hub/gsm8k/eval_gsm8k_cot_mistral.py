@@ -187,7 +187,7 @@ class StoppingCriteriaSub(transformers.StoppingCriteria):
             if tokenizer.decode(stop) == tokenizer.decode(last_token):
                 return True
         return False
-
+    
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate GSM8K Dataset")
@@ -267,19 +267,21 @@ if __name__ == "__main__":
 
     # Load Model and Tokenizer
     model_kwargs = {}
+    model_kwargs["torch_dtype"] = torch.float16
+    model_kwargs["device_map"] = "auto"
+    model_kwargs["token"] = args.hf_token
+    model_kwargs["cache_dir"] = "../cache"
     logging.info("Loading Model and Tokenizer.")
-    if "Llama-2" or "Qwen" or "Mistral" in args.model:
-        model_kwargs["torch_dtype"] = torch.float16
-        model_kwargs["device_map"] = "auto"
-        model_kwargs["token"] = args.hf_token
-        model_kwargs["cache_dir"] = "../cache"
-
-    config = transformers.AutoConfig.from_pretrained(
-        args.model, use_auth_token=True, token=args.hf_token, use_flash_attn=False,trust_remote_code=True
-    )
-    from transformers import LlamaTokenizer
+    from transformers import AutoTokenizer
+    from models import MistralForCausalLM,MistralConfig
+    # config = MistralConfig.from_pretrained(
+    #     args.model,
+    #     use_auth_token=True,
+    #     token=args.hf_token,
+    #     use_flash_attn=False,
+    #     trust_remote_code=True,
+    # )
     from models import GPT2CompressConfig
-
     compress_config = (
         None
         if args.compress_method == "None"
@@ -308,94 +310,23 @@ if __name__ == "__main__":
     if compress_config is not None:
         compress_config.copy_for_all_attention()
         compress_config.calculate_compress_ratio_list(4095, 4096)
-    if "Llama-2" in args.model:
-        if args.compress_method == "h2o":
-            from models import H2OLlamaForCausalLM, LlamaConfig
-            
-            config = LlamaConfig.from_pretrained(
-                args.model,
-                use_auth_token=True,
-                token=args.hf_token,
-                use_flash_attn=False,
-            )
-            config.hh_size = 400
-            config.recent_size = 50
-            model = H2OLlamaForCausalLM.from_pretrained(
-                args.model, config=config, **model_kwargs
-            )
-        else:
-            model = LlamaForCausalLMNew.from_pretrained(
-                args.model,
-                config=config,
-                **model_kwargs,
-                compress_config=compress_config,
-            )
-        tokenizer = LlamaTokenizer.from_pretrained(
-            args.model,
-            token=args.hf_token,
-            padding_side="left",
-            model_max_length=args.model_max_length,
-            use_fast=False,
-            cache_dir="../cache",
-        )
-        tokenizer.pad_token = tokenizer.eos_token
-    elif "Qwen" in args.model:
-        from models import QWenLMHeadModel
-        from transformers import AutoTokenizer
-
-        model = QWenLMHeadModel.from_pretrained(
-            args.model,
-            config=config,
-            **model_kwargs,
-            compress_config=compress_config,
-            trust_remote_code=True,
-            # use_cahce = True,
-        )
-        tokenizer = AutoTokenizer.from_pretrained(
-            args.model,
-            token=args.hf_token,
-            padding_side="left",
-            model_max_length=args.model_max_length,
-            use_fast=False,
-            cache_dir="../cache",
-            trust_remote_code=True,
-            pad_token="<|endoftext|>",
-            use_flash_attn=False,
-        )
-        
-        # if "Qwen" in args.model:
-        #     tokenizer.add_special_tokens({"eos_token": "<|endoftext|>"})
-        #     tokenizer.pad_token = tokenizer.eos_token
-    # model = model.to('cuda')
-    elif "Mistral" in args.model:
-        # from models import MixTralForCausalLM, MixtralConfig
-        from transformers import AutoTokenizer
-        from transformers import MistralForCausalLM,MistralConfig
-        config = MistralConfig.from_pretrained(
-            args.model,
-            use_auth_token=True,
-            token=args.hf_token,
-            use_flash_attn=False,
-            trust_remote_code=True,
-        )
-        model = MistralForCausalLM.from_pretrained(
-            args.model,
-            config=config,
-            **model_kwargs,
-            trust_remote_code=True,
-            # compress_config=compress_config,
-        )
-        tokenizer = AutoTokenizer.from_pretrained(
-            args.model,
-            token=args.hf_token,
-            padding_side="left",
-            model_max_length=args.model_max_length,
-            use_fast=False,
-            cache_dir="../cache",
-            trust_remote_code=True,
-        )
-        tokenizer.add_special_tokens({'pad_token': '[PAD]'})
-        pass
+    model = MistralForCausalLM.from_pretrained(
+        args.model,
+        # config=config,
+        **model_kwargs,
+        trust_remote_code=True,
+        compress_config=compress_config,
+    )
+    tokenizer = AutoTokenizer.from_pretrained(
+        args.model,
+        token=args.hf_token,
+        padding_side="left",
+        model_max_length=args.model_max_length,
+        use_fast=False,
+        cache_dir="../cache",
+        trust_remote_code=True,
+    )
+    tokenizer.pad_token = tokenizer.eos_token
     logging.info("Preprocessing the dataset.")
     with open(f"lib_prompt/{args.prompt_file}", "r") as handle:
         prompt_cot = handle.read()
@@ -413,6 +344,7 @@ if __name__ == "__main__":
         prompts = [
             prompt_cot + "\nQuestion: " + question + "\n" for question in questions
         ]
+        
 
         inputs = tokenizer(
             prompts,
@@ -420,13 +352,13 @@ if __name__ == "__main__":
             padding="longest",
             truncation=True,
         )
-        # inputs = inputs.to("cuda")
+        inputs = inputs.to("cuda")
         generate_kwargs = dict(
             return_dict_in_generate=True,
             max_length=args.max_length,
             max_new_tokens=args.max_new_tokens,
             output_scores=True,
-            pad_token_id=tokenizer.eos_token_id,
+            # pad_token_id=tokenizer.eos_token_id,
             use_cache=True,
         )
         if args.do_sample:

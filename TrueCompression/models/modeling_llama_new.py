@@ -975,9 +975,6 @@ class LlamaSdpaAttention(LlamaAttention):
                             past_key_value.__setitem__(
                                 self.layer_idx, (past_key, past_value)
                             )
-                            # print("update",seq_len)
-                        else:
-                            key_states, value_states = past_key, past_value
                         self.prefill = False
                         
 

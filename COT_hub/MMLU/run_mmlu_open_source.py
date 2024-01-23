@@ -194,7 +194,7 @@ def load(args):
     if compress_config is not None:
         compress_config.copy_for_all_attention()
         compress_config.calculate_compress_ratio_list(4095, 4096)
-    if "Qwen" not in args.model:
+    if "Llama" in args.model:
         model = LlamaForCausalLMNew.from_pretrained(
             args.model,
             config=config,
@@ -202,9 +202,19 @@ def load(args):
             cache_dir="../cache",
             compress_config=compress_config,
         )
-    else:
+    elif "Qwen" in args.model:
         from models import QWenLMHeadModel
         model = QWenLMHeadModel.from_pretrained(
+            args.model,
+            config=config,
+            **model_kwargs,
+            cache_dir="../cache",
+            compress_config=compress_config,
+            trust_remote_code=True,
+        )
+    elif "Mistral" in args.model:
+        from models import MistralForCausalLM
+        model = MistralForCausalLM.from_pretrained(
             args.model,
             config=config,
             **model_kwargs,
@@ -219,11 +229,10 @@ def load(args):
         model_max_length=args.model_max_length,
         cache_dir="../cache",
         trust_remote_code=True,
-        pad_token="<|endoftext|>",
+        # pad_token="<|endoftext|>",
     )
-    if "Qwen" in args.model:
-        tokenizer.add_special_tokens({"eos_token": "<|endoftext|>"})
-    tokenizer.pad_token = tokenizer.eos_token
+    if "Qwen" or "Mistral" in args.model:
+        tokenizer.pad_token = tokenizer.eos_token
     # model = model.to('cuda')
     return model, tokenizer
 
