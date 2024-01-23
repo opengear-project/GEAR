@@ -135,7 +135,7 @@ def test_answer_mmlu_(pred_str, ans):
 
 def load_model_tokenizer(args):
     model_kwargs = {}
-    from .models import LlamaForCausalLMNew,QWenLMHeadModel, GPT2CompressConfig
+    from models import LlamaForCausalLMNew,QWenLMHeadModel, GPT2CompressConfig
     # add compression compression config
     compress_config = (
         None
