@@ -310,7 +310,7 @@ if __name__ == "__main__":
         compress_config.calculate_compress_ratio_list(4095, 4096)
     if "Llama-2" in args.model:
         if args.compress_method == "h2o":
-            from models import LlamaForCausalLMH2O, LlamaConfig
+            from models import H2OLlamaForCausalLM, LlamaConfig
             
             config = LlamaConfig.from_pretrained(
                 args.model,
@@ -320,7 +320,7 @@ if __name__ == "__main__":
             )
             config.hh_size = 400
             config.recent_size = 50
-            model = LlamaForCausalLMH2O.from_pretrained(
+            model = H2OLlamaForCausalLM.from_pretrained(
                 args.model, config=config, **model_kwargs
             )
         else:
