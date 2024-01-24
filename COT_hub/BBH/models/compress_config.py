@@ -20,8 +20,8 @@ class GPT2CompressConfig(dict):
         streaming_gap=0,
         iter=0,
         # h2o setings
-        heavy_ratio=0.0,
-        recent_ratio=0.0,
+        heavy_size=0,
+        recent_size=0,
     ):
         self.compress_method = compress_method
         self.quantize_bit = quantize_bit
@@ -40,8 +40,8 @@ class GPT2CompressConfig(dict):
         self.locality_saving = locality_saving
         self.token_preserving = token_preserving
         self.iter = iter
-        self.heavy_ratio = heavy_ratio
-        self.recent_ratio = recent_ratio
+        self.heavy_size = heavy_size
+        self.recent_size = recent_size
         self.streaming = streaming
         self.streaming_gap = streaming_gap
 
@@ -66,8 +66,8 @@ class GPT2CompressConfig(dict):
         self.locality_saving = self.create_attention_config(self.locality_saving)
         self.token_preserving = self.create_attention_config(self.token_preserving)
         self.iter = self.create_attention_config(self.iter)
-        self.heavy_ratio = self.create_attention_config(self.heavy_ratio)
-        self.recent_ratio = self.create_attention_config(self.recent_ratio)
+        self.heavy_size = self.create_attention_config(self.heavy_size)
+        self.recent_size = self.create_attention_config(self.recent_size)
         self.streaming = self.create_attention_config(self.streaming)
         self.streaming_gap = self.create_attention_config(self.streaming_gap)
 

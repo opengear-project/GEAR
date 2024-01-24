@@ -165,7 +165,7 @@ def load_model_tokenizer(args):
     if compress_config is not None:
         compress_config.copy_for_all_attention()
         compress_config.calculate_compress_ratio_list(4095, 4096)
-    if "Llama-2" in args.model:
+    if "Llama-2" or "Mistral" in args.model:
         model_kwargs["torch_dtype"] = torch.float16 
         model_kwargs["device_map"] = "auto"
         model_kwargs["token"] = args.hf_token
@@ -174,16 +174,30 @@ def load_model_tokenizer(args):
     config = transformers.AutoConfig.from_pretrained(
         args.model, use_auth_token=True, token=args.hf_token,
     )
-    model = LlamaForCausalLMNew.from_pretrained(
-        args.model, config=config, **model_kwargs,compress_config=compress_config,
-    )
-    tokenizer = transformers.AutoTokenizer.from_pretrained(
-        args.model,
-        token=args.hf_token,
-        padding_side="left",
-        model_max_length=args.model_max_length,
-        cache_dir="../cache",
-    )
+    if "Llama" in args.model:
+        model = LlamaForCausalLMNew.from_pretrained(
+            args.model, config=config, **model_kwargs,compress_config=compress_config,
+        )
+        tokenizer = transformers.AutoTokenizer.from_pretrained(
+            args.model,
+            token=args.hf_token,
+            padding_side="left",
+            model_max_length=args.model_max_length,
+            cache_dir="../cache",
+        )
+    else:
+        # mistral
+        from models import MistralForCausalLM
+        model = MistralForCausalLM.from_pretrained(
+            args.model, config=config, **model_kwargs,compress_config=compress_config,
+        )
+        tokenizer = transformers.AutoTokenizer.from_pretrained(
+            args.model,
+            token=args.hf_token,
+            padding_side="left",
+            model_max_length=args.model_max_length,
+            cache_dir="../cache",
+        )
     tokenizer.pad_token = tokenizer.eos_token
     # model = model.to('cuda')
     return model, tokenizer

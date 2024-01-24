@@ -1,39 +1,38 @@
-{
-    "cells": [
-        {
-            "cell_type": "code",
-            "execution_count": null,
-            "metadata": {},
-            "outputs": [],
-            "source": [
-                "from modeling_llama_h2o import LlamaForCausalLMH2O\n",
-                "from transformers import AutoTokenizer",
-            ],
-        },
-        {
-            "cell_type": "code",
-            "execution_count": null,
-            "metadata": {},
-            "outputs": [],
-            "source": [],
-        },
-    ],
-    "metadata": {
-        "kernelspec": {
-            "display_name": "Python 3",
-            "language": "python",
-            "name": "python3",
-        },
-        "language_info": {
-            "codemirror_mode": {"name": "ipython", "version": 3},
-            "file_extension": ".py",
-            "mimetype": "text/x-python",
-            "name": "python",
-            "nbconvert_exporter": "python",
-            "pygments_lexer": "ipython3",
-            "version": "3.10.13",
-        },
-    },
-    "nbformat": 4,
-    "nbformat_minor": 2,
-}
+from h2o_llama_self_written import LlamaForCausalLMH2O
+from compress_config import GPT2CompressConfig
+from transformers import AutoTokenizer
+
+
+model_id = "meta-llama/Llama-2-7b-hf"
+config = GPT2CompressConfig(
+    compress_method="h2o",
+)
+
+model = LlamaForCausalLMH2O.from_pretrained(
+    model_id,
+    # config=config,
+    cache_dir="../cache",
+    compress_config=config,
+    device_map = "cpu",
+)
+tokenizer = AutoTokenizer.from_pretrained(
+    model_id,
+    token=None,
+    padding_side="left",
+    model_max_length=256,
+    use_fast=False,
+    cache_dir="../cache",
+)
+tokenizer.pad_token = tokenizer.eos_token
+
+Question = ["what is this thing mainly about?"]
+inputs = tokenizer(
+    Question,
+    return_tensors="pt",
+    padding="longest",
+    truncation=True,
+)
+inputs["input_ids"] = inputs["input_ids"]
+generated = model.generate(**inputs, max_length=256)
+results = tokenizer.batch_decode(generated, skip_special_tokens=True)
+print(results)

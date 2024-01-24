@@ -64,3 +64,5 @@ python eval_bbh_cot.py --model meta-llama/Llama-2-7b-hf --batch_size 6 --max_new
 python eval_bbh_cot.py --model meta-llama/Llama-2-7b-hf --batch_size 6 --max_new_tokens 256 --compress_method outquantize_with_lrap --attention_number 40 --quantize_bit 8 --left 0.02 --rank 0.05 --rankv 0.05 --loop 3 --streaming --streaming_gap 40 --model_max_length 2048 --root_output_dir /mnt/t-qingrzhang/DataLog/GEAR/COT/BBH > /mnt/t-qingrzhang/DataLog/GEAR/COT/BBH/OutlierQLRAP8_0.02_0.05.txt
 python eval_bbh_cot.py --model meta-llama/Llama-2-7b-hf --batch_size 6 --max_new_tokens 256 --compress_method outquantize_with_lrap --attention_number 40 --quantize_bit 6 --left 0.02 --rank 0.05 --rankv 0.05 --loop 3 --streaming --streaming_gap 40 --model_max_length 2048 --root_output_dir /mnt/t-qingrzhang/DataLog/GEAR/COT/BBH > /mnt/t-qingrzhang/DataLog/GEAR/COT/BBH/OutlierQLRAP6_0.02_0.05.txt
 
+
+
