@@ -241,11 +241,12 @@ def main(args):
     tasks = args.tasks
 
     root_output_dir = Path(args.root_output_dir)
-    output_dir = "cot_{name}_bit-{bit}_attnum-{attnum}_len-{max_new_tokens}".format(
+    output_dir = "cot_{name}_bit-{bit}_attnum-{attnum}_len-{max_new_tokens}_stream-{streaming_gap}".format(
         name=get_method_name(args),
         bit=args.quantize_bit, 
         attnum=args.attention_number, 
         max_new_tokens=args.max_new_tokens,
+        streaming_gap=args.streaming_gap, 
     )
     if args.example_subset is not None:
         output_dir += f"_subset-{args.example_subset}"
