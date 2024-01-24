@@ -111,7 +111,7 @@ class H2OKVCache_LayerWise:
 
         mask = torch.zeros(self.hh_score.shape, dtype=torch.bool).to(past_key_values[0].device)
         mask = mask.scatter(-1, keep_idx, 1)
-
+        # print(mask.shape, past_key_values[0].squeeze().shape)
         k_hh_recent = past_key_values[0].squeeze()[mask].view(bsz, num_heads, -1, head_dim)
         v_hh_recent = past_key_values[1].squeeze()[mask].view(bsz, num_heads, -1, head_dim)
 
@@ -238,7 +238,8 @@ class H2OLlamaAttention(nn.Module):
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
 
         bsz, q_len, _ = hidden_states.size()
-
+        if q_len > 1:
+            self._clean_cache()
         if self.config.pretraining_tp > 1:
             key_value_slicing = (
                 self.num_key_value_heads * self.head_dim
