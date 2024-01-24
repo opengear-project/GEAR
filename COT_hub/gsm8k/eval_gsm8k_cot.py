@@ -420,7 +420,7 @@ if __name__ == "__main__":
             padding="longest",
             truncation=True,
         )
-        # inputs = inputs.to("cuda")
+        inputs = inputs.to("cuda")
         generate_kwargs = dict(
             return_dict_in_generate=True,
             max_length=args.max_length,
