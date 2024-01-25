@@ -1,7 +1,5 @@
 from typing import Any, Dict, List, Optional, Tuple
-
 import torch
-
 
 class Cache:
     """
@@ -120,7 +118,7 @@ class DynamicCache(Cache):
         key_states: torch.Tensor,
         value_states: torch.Tensor,
         layer_idx: int,
-        cache_kwargs: Optional[Dict[str, Any]] = None,
+        compress_kwarges: Optional[Dict[str, Any]] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Updates the cache with the new `key_states` and `value_states` for the layer `layer_idx`.
@@ -144,6 +142,7 @@ class DynamicCache(Cache):
 
         # Update the cache
         if len(self.key_cache) <= layer_idx:
+            # apply compress here if needed
             self.key_cache.append(key_states)
             self.value_cache.append(value_states)
         else:
