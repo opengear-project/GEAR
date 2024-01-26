@@ -229,6 +229,7 @@ def fake_poweriteration(input: torch.Tensor, loop, rank, device, p_base, q_base)
         p_base[0] = p_base[0].float()
         q_base[0] = q_base[0].float()
     else:
+
         p_base = [torch.rand(sep_dim * num_head, rank).to(input.device)]
         q_base = [torch.rand(batch * seq_len, rank).to(input.device)]
     # 3 calculation = loop * (matmul) + 2 * qrO(n^2)
@@ -684,6 +685,17 @@ def compress_insert_function(
                 compress_config.left[layer_idx],
             )
     return previous_key, previous_value
+def fake_outquant_with_lrap_svd(tensor, quantize_bit, rank, loop, left):
+    tensor_quantized = fake_dense_sparse_uniformquantization(tensor, quantize_bit, left)
+    tensor_error = tensor - tensor_quantized
+    tensor_error = tensor_error.float()
+    bsz,num_head,seq_len,sep_dim = tensor_error.shape
+    tensor_error = tensor_error.permute(0,2,1,3).reshape(bsz*seq_len,num_head*sep_dim)
+    U,S,V = torch.svd_lowrank(tensor_error,q=rank)
+    tensor_error_lrap = U @ torch.diag_embed(S) @ V.transpose(-1,-2)
+    tensor_error_lrap = tensor_error_lrap.reshape(bsz,seq_len,num_head,sep_dim).permute(0,2,1,3)
+    tensor_return = tensor_quantized + tensor_error_lrap
+    return tensor_return
 
 
 def fake_outquant_with_lrap(tensor, quantize_bit, rank, loop, left):

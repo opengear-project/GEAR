@@ -138,7 +138,6 @@ def true_gear_decompress(input: torch.Tensor, quantize_bit,shape,min,step,dtype,
     input = true_uniform_quantization_decompress(input, quantize_bit,shape,min,step,dtype)
     input = input.reshape(-1)
     input[indices] = values
-    print(input)
     input = input.reshape(shape)
     error = q_base[0] @ torch.transpose(p_base[0], 1, 2)
     batch, num_head, seq_len, sep_dim = input.shape

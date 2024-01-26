@@ -21,6 +21,7 @@ class CompressedUnion():
         self.left = compress_kwargs["left"]
         self.rank = compress_kwargs["rank"]
         self.loop = compress_kwargs["loop"]
+        self.streaming_gap = compress_kwargs["streaming_gap"]
         self.dtype = None
         self.shape = None
         self.is_compressed = False
@@ -29,38 +30,56 @@ class CompressedUnion():
         self.indices = None
         self.p_base = None
         self.q_base = None
+        self.buffer = None
+        self.counter = 0
     def set_cache(self,input: torch.Tensor):
-        self.cache = input
+        if self.counter == 0 or self.counter % self.streaming_gap == 0:
+            self.cache = input
+            self.buffer = None
+            self.counter == 0
+        else:
+            self.buffer = input[:,:,:,-self.counter:]
+            self.cache = input[:,:,:,:-self.counter]
+        self.counter = self.counter + 1
     def get_cache(self):
-        return self.cache
+        if self.buffer is not None:
+            return torch.cat([self.cache,self.buffer],dim=-1)
+        else:
+            return self.cache
     def compress(self):
-        input = self.cache
+        
         self.dtype = input.dtype
         self.is_compressed = True
-        if self.compress_mode == "uniform":
-            output,shape,min,step = compress_function[self.compress_mode](input,self.quantize_bit)
-            self.cache = output
-            self.min = min
-            self.step = step
-            self.shape = shape
-        elif self.compress_mode == "outlier":
-            output,shape,min,step,values,indices = compress_function[self.compress_mode](input,self.quantize_bit,self.left)
-            self.cache = output
-            self.min = min
-            self.step = step
-            self.shape = shape
-            self.values = values
-            self.indices = indices
-        elif self.compress_mode == "gear":
-            output,shape,min,step,values,indices,p_base,q_base = compress_function[self.compress_mode](input,self.quantize_bit,self.left,self.rank,self.loop)
-            self.cache = output
-            self.min = min
-            self.step = step
-            self.shape = shape
-            self.values = values
-            self.indices = indices
-            self.p_base = p_base
-            self.q_base = q_base
+        if self.buffer is None:
+            input = self.cache
+            if self.buffer is not None:
+                input = torch.cat([input,self.buffer],dim=-1) 
+            if self.compress_mode == "uniform":
+                output,shape,min,step = compress_function[self.compress_mode](input,self.quantize_bit)
+                self.cache = output
+                self.min = min
+                self.step = step
+                self.shape = shape
+            elif self.compress_mode == "outlier":
+                output,shape,min,step,values,indices = compress_function[self.compress_mode](input,self.quantize_bit,self.left)
+                self.cache = output
+                self.min = min
+                self.step = step
+                self.shape = shape
+                self.values = values
+                self.indices = indices
+            elif self.compress_mode == "gear":
+                output,shape,min,step,values,indices,p_base,q_base = compress_function[self.compress_mode](input,self.quantize_bit,self.left,self.rank,self.loop)
+                self.cache = output
+                self.min = min
+                self.step = step
+                self.shape = shape
+                self.values = values
+                self.indices = indices
+                self.p_base = p_base
+                self.q_base = q_base
+        else:
+            #TODO
     def decompress(self):
         self.is_compressed = False
         if self.compress_mode == "uniform":
