@@ -357,5 +357,8 @@ if __name__ == "__main__":
     )
     parser.add_argument('--data_dir', type=str, default='data/')
     args = parser.parse_args()
-
+    if args.debug:
+        import ipdb
+        ipdb.set_trace()
+    
     main(args)

@@ -290,7 +290,7 @@ def main(args):
         if not args.zeroshot: 
             instruction_prompt = open('lib_prompt/%s.txt' % task, 'r').read()
         else:
-            instruction_prompt = "\nAnswer the following question. First think step by step and then answer the final number starting from 'the answer is'.\n"
+            instruction_prompt = "\nAnswer the following question.\n"
         with generation_file.open("w") as fd:
             for batch in tqdm(dataloader, desc=f"Evaluate {task}"):
                 questions = batch["input"]
@@ -299,8 +299,9 @@ def main(args):
                         instruction_prompt+"\n\nQ: "+question+"\nA: Let's think step by step." for question in questions
                     ]
                 else:
+                    beg_answer_prompt = "\nA: the answer is" if task in MULTIPLE_CHOICE_TASKS else ""
                     prompts = [
-                        instruction_prompt+"\n\nQ: "+question+"\nA: Let's think step by step." for question in questions
+                        instruction_prompt+"\n\nQ: "+question+beg_answer_prompt for question in questions
                     ]
                 targets = batch["target"]
 
