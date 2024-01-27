@@ -241,7 +241,8 @@ def main(args):
     tasks = args.tasks
 
     root_output_dir = Path(args.root_output_dir)
-    output_dir = "cot_{name}_bit-{bit}_attnum-{attnum}_len-{max_new_tokens}_stream-{streaming_gap}".format(
+    output_dir = "{prompt}_{name}_bit-{bit}_attnum-{attnum}_len-{max_new_tokens}_stream-{streaming_gap}".format(
+        prompt="cot" if not args.zeroshot else "zeroshot",
         name=get_method_name(args),
         bit=args.quantize_bit, 
         attnum=args.attention_number, 
@@ -286,13 +287,21 @@ def main(args):
 
         all_samples = []
         # prompt_cot = mmlu_prompt[task]
-        prompt_cot = open('lib_prompt/%s.txt' % task, 'r').read()
+        if not args.zeroshot: 
+            instruction_prompt = open('lib_prompt/%s.txt' % task, 'r').read()
+        else:
+            instruction_prompt = "\nAnswer the following question. First think step by step and then answer the final number starting from 'the answer is'.\n"
         with generation_file.open("w") as fd:
             for batch in tqdm(dataloader, desc=f"Evaluate {task}"):
                 questions = batch["input"]
-                prompts = [
-                    prompt_cot+"\n\nQ: "+question+"\nA: Let's think step by step." for question in questions
-                ]
+                if not args.zeroshot:
+                    prompts = [
+                        instruction_prompt+"\n\nQ: "+question+"\nA: Let's think step by step." for question in questions
+                    ]
+                else:
+                    prompts = [
+                        instruction_prompt+"\n\nQ: "+question+"\nA: Let's think step by step." for question in questions
+                    ]
                 targets = batch["target"]
 
                 inputs = tokenizer(
@@ -389,6 +398,7 @@ if __name__ == '__main__':
     parser.add_argument("--temperature", type=float, default=0.8, help="")
     parser.add_argument("--top_k", type=int, default=50, help="")
     parser.add_argument("--top_p", type=float, default=0.95, help="")
+    parser.add_argument("--zeroshot", action="store_true", default=False, help="")
     parser.add_argument("--dataset_split", type=str, default="test", help="")
     parser.add_argument("--example_subset", type=str, default=None, help="")
     parser.add_argument("--hf_token", type=str, default=None, help="")
