@@ -436,9 +436,7 @@ class LlamaAttention(nn.Module):
             warnings.warn(
                 "Passing `padding_mask` is deprecated and will be removed in v4.37. Please make sure use `attention_mask` instead.`"
             )
-
         bsz, q_len, _ = hidden_states.size()
-
         if self.config.pretraining_tp > 1:
             key_value_slicing = (
                 self.num_key_value_heads * self.head_dim
@@ -481,7 +479,6 @@ class LlamaAttention(nn.Module):
         value_states = value_states.view(
             bsz, q_len, self.num_key_value_heads, self.head_dim
         ).transpose(1, 2)
-
         kv_seq_len = key_states.shape[-2]
         if past_key_value is not None:
             if self.layer_idx is None:
@@ -497,7 +494,11 @@ class LlamaAttention(nn.Module):
         )
 
         if past_key_value is not None:
-            cache_kwargs = {"sin": sin, "cos": cos}  # Specific to RoPE models
+            # TODO : add compress_config and compress functions
+            # cache_kwargs = {"sin": sin, "cos": cos}  # Specific to RoPE models
+            cache_kwargs =self.compress_config if self.compress_config is not None else {}
+            cache_kwargs["sin"] = sin
+            cache_kwargs["cos"] = cos
             key_states, value_states = past_key_value.update(
                 key_states, value_states, self.layer_idx, cache_kwargs
             )
@@ -507,31 +508,13 @@ class LlamaAttention(nn.Module):
         attn_weights = torch.matmul(
             query_states, key_states.transpose(2, 3)
         ) / math.sqrt(self.head_dim)
-        if (
-            self.compress_config is not None
-            and self.compress_config.compress_method[self.layer_idx] == "H2O"
-        ):
-            key_states, value_states, query_states = self.h2ocache.selection(
-                attn_weights, key_states, value_states, query_states
-            )
-            kv_tuple = (key_states, value_states)
-            past_key_value = past_key_value.__setitem__(self.layer_idx, kv_tuple)
         # print("query shape",query_states.shape)
         # print("key shape",key_states.shape)
         # print("value shape",value_states.shape)
         # torch.save(key_states,"key_states" +str(self.layer_idx)+".pt")
         # torch.save(value_states,"value_states" +str(self.layer_idx)+".pt")
 
-        if (
-            self.compress_config is not None
-            and self.compress_config.compress_method[self.layer_idx] == "H2O"
-        ):
-            if q_seq_len > 1:
-                batch, q_seq_len, sep_dim = query_states.shape
-                attn_weights = torch.matmul(query_states, key_states.transpose(2, 3))
-                print("attn weights shape", attn_weights.shape)
-                print("head dim", self.head_dim)
-                attn_weights = attn_weights / math.sqrt(self.head_dim)
+       
         if attn_weights.size() != (bsz, self.num_heads, q_len, kv_seq_len):
             raise ValueError(
                 f"Attention weights should be of size {(bsz, self.num_heads, q_len, kv_seq_len)}, but is"
@@ -563,6 +546,9 @@ class LlamaAttention(nn.Module):
         attn_output = attn_output.transpose(1, 2).contiguous()
 
         attn_output = attn_output.reshape(bsz, q_len, self.hidden_size)
+
+        if self.compress_config is not None:
+            past_key_value.compress(self.layer_idx)
 
         if self.config.pretraining_tp > 1:
             attn_output = attn_output.split(
@@ -861,7 +847,6 @@ class LlamaSdpaAttention(LlamaAttention):
                 output_attentions=output_attentions,
                 use_cache=use_cache,
             )
-
         bsz, q_len, _ = hidden_states.size()
 
         query_states = self.q_proj(hidden_states)
@@ -892,14 +877,14 @@ class LlamaSdpaAttention(LlamaAttention):
         if past_key_value is not None:
             # TODO : add compress_config and compress functions
             # cache_kwargs = {"sin": sin, "cos": cos}  # Specific to RoPE models
-            cache_kwargs =self.compress_config
+            cache_kwargs =self.compress_config if self.compress_config is not None else {}
+            cache_kwargs["sin"] = sin
+            cache_kwargs["cos"] = cos
             key_states, value_states = past_key_value.update(
                 key_states, value_states, self.layer_idx, cache_kwargs
             )
-
         key_states = repeat_kv(key_states, self.num_key_value_groups)
         value_states = repeat_kv(value_states, self.num_key_value_groups)
-
         if attention_mask is not None:
             if attention_mask.size() != (bsz, 1, q_len, kv_seq_len):
                 raise ValueError(
@@ -943,6 +928,7 @@ class LlamaDecoderLayer(nn.Module):
     def __init__(self, config: LlamaConfig, layer_idx: int, compress_config=None):
         super().__init__()
         self.hidden_size = config.hidden_size
+        config._attn_implementation = "eager"
         self.self_attn = LLAMA_ATTENTION_CLASSES[config._attn_implementation](
             config=config, layer_idx=layer_idx, compress_config=compress_config
         )
@@ -1146,7 +1132,7 @@ class LlamaModel(LlamaPreTrainedModel):
         super().__init__(config)
         self.padding_idx = config.pad_token_id
         self.vocab_size = config.vocab_size
-
+        self.compress_config = compress_config
         self.embed_tokens = nn.Embedding(
             config.vocab_size, config.hidden_size, self.padding_idx
         )
@@ -1221,8 +1207,15 @@ class LlamaModel(LlamaPreTrainedModel):
         past_key_values_length = 0
         if use_cache:
             use_legacy_cache = not isinstance(past_key_values, Cache)
+            # print("pastkv",past_key_values)
+            # print(use_legacy_cache)
             if use_legacy_cache:
-                past_key_values = CompressedCache.from_legacy_cache(past_key_values)
+                if self.compress_config is not None:
+
+                    past_key_values = CompressedCache.from_legacy_cache(past_key_values)
+             
+                else:
+                    past_key_values = DynamicCache.from_legacy_cache(past_key_values)
             past_key_values_length = past_key_values.get_usable_length(seq_length)
 
         if position_ids is None:
@@ -1338,7 +1331,7 @@ class TrueLlamaForCausalLMNew(LlamaPreTrainedModel):
         self.model = LlamaModel(config, compress_config)
         self.vocab_size = config.vocab_size
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
-
+        self.compress_config = compress_config
         # Initialize weights and apply final processing
         self.post_init()
 
@@ -1475,15 +1468,19 @@ class TrueLlamaForCausalLMNew(LlamaPreTrainedModel):
         attention_mask=None,
         inputs_embeds=None,
         **kwargs,
-    ):
+    ):  
         if past_key_values is not None:
+            # print(past_key_values[0][0])
             if isinstance(past_key_values, Cache):
                 cache_length = past_key_values.get_seq_length()
                 past_length = past_key_values.seen_tokens
                 max_cache_length = past_key_values.get_max_length()
             else:
+
                 cache_length = past_length = past_key_values[0][0].shape[2]
+               
                 max_cache_length = None
+
 
             # Keep only the unprocessed tokens:
             # 1 - If the length of the attention_mask exceeds the length of input_ids, then we are in a setting where

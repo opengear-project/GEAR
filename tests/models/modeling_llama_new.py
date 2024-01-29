@@ -18,6 +18,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """ PyTorch LLaMA model."""
+from compress_function import fake_uniformquantization, fake_dense_sparse_uniformquantization,fake_outquant_with_lrap
 import math
 from typing import List, Optional, Tuple, Union
 
@@ -441,20 +442,32 @@ class LlamaAttention(nn.Module):
         query_states, key_states = apply_rotary_pos_emb(
             query_states, key_states, cos, sin, position_ids
         )
-
+       
         if past_key_value is not None:
             # reuse k, v, self_attention
+            # print(past_key_value[0].shape,past_key_value[1].dtype)
+            past_key, past_value = past_key_value
+
+            rank = int(0.02* kv_seq_len)
+            past_key = fake_outquant_with_lrap(past_key,4,rank,3,0.02)
+            past_value = fake_outquant_with_lrap(past_value,4,rank,3,0.02)
+            past_key_value = (past_key, past_value)
             key_states = torch.cat([past_key_value[0], key_states], dim=2)
             value_states = torch.cat([past_key_value[1], value_states], dim=2)
         past_key_value = (key_states, value_states) if use_cache else None
         # repeat k/v heads if n_kv_heads < n_heads
         key_states = repeat_kv(key_states, self.num_key_value_groups)
         value_states = repeat_kv(value_states, self.num_key_value_groups)
-        if self.layer_idx == 10:
-            torch.save(key_states.cpu(), "key_states.pt")
-            torch.save(value_states.cpu(), "value_states.pt")
+        # torch.save(query_states.cpu(), "./ptcache/query_states_xsum"+str(self.layer_idx)+".pt")
+        # torch.save(key_states.cpu(), "./ptcache/key_states_xsum"+str(self.layer_idx)+".pt")
+        # torch.save(value_states.cpu(), "./ptcache/value_states_xsum"+str(self.layer_idx)+".pt")
+        # print(query_states.dtype,key_states.dtype,value_states.dtype)
+        query_states=query_states.half()
+        key_states=key_states.half()
+        value_states=value_states.half()
+        
         attn_weights = torch.matmul(
-            query_states, key_states.transpose(2, 3)
+            query_states.half(), key_states.half().transpose(2, 3)
         ) / math.sqrt(self.head_dim)
         if attn_weights.size() != (bsz, self.num_heads, q_len, kv_seq_len):
             raise ValueError(

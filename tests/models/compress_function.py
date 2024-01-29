@@ -59,6 +59,7 @@ def fake_svd_lowrank(input: torch.Tensor, q):
 def fake_uniformquantization(input: torch.Tensor, quantize_bit):
     shape = input.shape
     input = input.reshape(-1)
+    dtype = input.dtype
     input = input.float()  # convert to 32bits to avoid max - min = inf
     min, max = input.min(), input.max()
     step = (max - min) / (pow(2, quantize_bit) - 1)
@@ -68,7 +69,7 @@ def fake_uniformquantization(input: torch.Tensor, quantize_bit):
     # print("quantized isnan:",torch.any(torch.isnan(quantized_input)))
     dequantized_input = (quantized_input * step) + min
     returning_input = dequantized_input.reshape(shape)
-    returning_input = returning_input.type(torch.bfloat16)
+    returning_input = returning_input.type(dtype)
     # print("isnan:",torch.any(torch.isnan(returning_input)))
     # while(True):
     #     pass

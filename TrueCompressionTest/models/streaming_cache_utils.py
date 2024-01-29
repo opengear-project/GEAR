@@ -2,15 +2,22 @@ from typing import Any, Dict, List, Optional, Tuple
 from .cache_utils import Cache
 import torch
 from .TrueCompressFunction import true_uniform_quantization_compress,true_uniform_quantization_decompress,true_outlier_quantization_compress,true_outlier_quantization_decompress,true_gear_compress,true_gear_decompress
+from .TrueCompressFunction import true_uniform_quantization_compress_batchwise,true_uniform_quantization_decompress_batchwise,true_outlier_quantization_compress_batchwise,true_outlier_quantization_decompress_batchwise,true_gear_compress,true_gear_decompress_batchwise,true_gear_compress_batchwise
 compress_function = {
     "uniform":true_uniform_quantization_compress,
     "outlier":true_outlier_quantization_compress,
-    "gear":true_gear_compress
+    "gear":true_gear_compress,
+    "uniform_batch":true_uniform_quantization_compress_batchwise,
+    "outlier_batch":true_outlier_quantization_compress_batchwise,
+    "gear_batch":true_gear_compress_batchwise,
 }
 decompress_function = {
     "uniform":true_uniform_quantization_decompress,
     "outlier":true_outlier_quantization_decompress,
-    "gear":true_gear_decompress
+    "gear":true_gear_decompress,
+    "uniform_batch":true_uniform_quantization_decompress_batchwise,
+    "outlier_batch":true_outlier_quantization_decompress_batchwise,
+    "gear_batch":true_gear_decompress_batchwise,
 }
 class CompressedUnion():
     def __init__(self,compress_kwargs:Optional[Dict[str,Any]] = None):
@@ -21,7 +28,6 @@ class CompressedUnion():
         self.left = compress_kwargs["left"]
         self.rank = compress_kwargs["rank"]
         self.loop = compress_kwargs["loop"]
-        self.streaming_gap = compress_kwargs["streaming_gap"]
         self.dtype = None
         self.shape = None
         self.is_compressed = False
@@ -30,56 +36,69 @@ class CompressedUnion():
         self.indices = None
         self.p_base = None
         self.q_base = None
-        self.buffer = None
         self.counter = 0
+        # self.kvcache_shape = None
     def set_cache(self,input: torch.Tensor):
-        if self.counter == 0 or self.counter % self.streaming_gap == 0:
-            self.cache = input
-            self.buffer = None
-            self.counter == 0
-        else:
-            self.buffer = input[:,:,:,-self.counter:]
-            self.cache = input[:,:,:,:-self.counter]
-        self.counter = self.counter + 1
+        self.counter += 1
+        # has_inf = torch.isinf(input)
+        # has_nan = torch.isnan(input)
+        # print(self.counter,has_inf.any(),has_nan.any())
+        self.cache = input
+        self.kvcache_shape = input.shape
     def get_cache(self):
-        if self.buffer is not None:
-            return torch.cat([self.cache,self.buffer],dim=-1)
-        else:
-            return self.cache
+        return self.cache
     def compress(self):
-        
+        input = self.cache
         self.dtype = input.dtype
         self.is_compressed = True
-        if self.buffer is None:
-            input = self.cache
-            if self.buffer is not None:
-                input = torch.cat([input,self.buffer],dim=-1) 
-            if self.compress_mode == "uniform":
-                output,shape,min,step = compress_function[self.compress_mode](input,self.quantize_bit)
-                self.cache = output
-                self.min = min
-                self.step = step
-                self.shape = shape
-            elif self.compress_mode == "outlier":
-                output,shape,min,step,values,indices = compress_function[self.compress_mode](input,self.quantize_bit,self.left)
-                self.cache = output
-                self.min = min
-                self.step = step
-                self.shape = shape
-                self.values = values
-                self.indices = indices
-            elif self.compress_mode == "gear":
-                output,shape,min,step,values,indices,p_base,q_base = compress_function[self.compress_mode](input,self.quantize_bit,self.left,self.rank,self.loop)
-                self.cache = output
-                self.min = min
-                self.step = step
-                self.shape = shape
-                self.values = values
-                self.indices = indices
-                self.p_base = p_base
-                self.q_base = q_base
-        else:
-            #TODO
+        if self.compress_mode == "uniform":
+            output,shape,min,step = compress_function[self.compress_mode](input,self.quantize_bit)
+            self.cache = output
+            self.min = min
+            self.step = step
+            self.shape = shape
+        elif self.compress_mode == "outlier":
+            output,shape,min,step,values,indices = compress_function[self.compress_mode](input,self.quantize_bit,self.left)
+            self.cache = output
+            self.min = min
+            self.step = step
+            self.shape = shape
+            self.values = values
+            self.indices = indices
+        elif self.compress_mode == "gear":
+            output,shape,min,step,values,indices,p_base,q_base = compress_function[self.compress_mode](input,self.quantize_bit,self.left,self.rank,self.loop)
+            self.cache = output
+            self.min = min
+            self.step = step
+            self.shape = shape
+            self.values = values
+            self.indices = indices
+            self.p_base = p_base
+            self.q_base = q_base
+        elif self.compress_mode == "uniform_batch":
+            output,shape,min,step = compress_function[self.compress_mode](input,self.quantize_bit)
+            self.cache = output
+            self.min = min
+            self.step = step
+            self.shape = shape
+        elif self.compress_mode == "outlier_batch":
+            output,shape,min,step,values,indices = compress_function[self.compress_mode](input,self.quantize_bit,self.left)
+            self.cache = output
+            self.min = min
+            self.step = step
+            self.shape = shape
+            self.values = values
+            self.indices = indices
+        elif self.compress_mode == "gear_batch":
+            output,shape,min,step,values,indices,p_base,q_base = compress_function[self.compress_mode](input,self.quantize_bit,self.left,self.rank,self.loop)
+            self.cache = output
+            self.min = min
+            self.step = step
+            self.shape = shape
+            self.values = values
+            self.indices = indices
+            self.p_base = p_base
+            self.q_base = q_base
     def decompress(self):
         self.is_compressed = False
         if self.compress_mode == "uniform":
@@ -87,6 +106,12 @@ class CompressedUnion():
         elif self.compress_mode == "outlier":
             output = decompress_function[self.compress_mode](self.cache,self.quantize_bit,self.shape,self.min,self.step,self.dtype,self.values,self.indices)
         elif self.compress_mode == "gear":
+            output = decompress_function[self.compress_mode](self.cache,self.quantize_bit,self.shape,self.min,self.step,self.dtype,self.values,self.indices,self.p_base,self.q_base)
+        elif self.compress_mode == "uniform_batch":
+            output = decompress_function[self.compress_mode](self.cache,self.quantize_bit,self.shape,self.min,self.step,self.dtype)
+        elif self.compress_mode == "outlier_batch":
+            output = decompress_function[self.compress_mode](self.cache,self.quantize_bit,self.shape,self.min,self.step,self.dtype,self.values,self.indices)
+        elif self.compress_mode == "gear_batch":
             output = decompress_function[self.compress_mode](self.cache,self.quantize_bit,self.shape,self.min,self.step,self.dtype,self.values,self.indices,self.p_base,self.q_base)
         self.clean_cache()
         return output
@@ -133,7 +158,7 @@ class CompressedCache(Cache):
             raise KeyError(
                 f"Cache only has {len(self)} layers, attempted to access layer with index {layer_idx}"
             )
-
+  
     def __iter__(self):
         """
         Support for backwards-compatible `past_key_value` iteration, e.g. `for x in past_key_value:` to iterate over
@@ -175,7 +200,7 @@ class CompressedCache(Cache):
         # Update the number of seen tokens
         if layer_idx == 0:
             self.seen_tokens += key_states.shape[-2]
-
+        # print(isinstance(key_states, Cache))
         # Update the cache
         if len(self.key_cache) <= layer_idx:
             # apply compress here if needed
@@ -255,6 +280,7 @@ class CompressedCache(Cache):
         cache = cls()
         if past_key_values is not None:
             for layer_idx in range(len(past_key_values)):
+                
                 key_states, value_states = past_key_values[layer_idx]
                 cache.update(key_states, value_states, layer_idx)
         return cache
