@@ -40,9 +40,9 @@ class StreamCompressedUnion():
         self.gap = compress_kwargs["streaming_gap"]
         self.cache_shape = None
         self.buffer = None
-        # self.kvcache_shape = None
+        self.cache_shape = None
     def set_cache(self,input: torch.Tensor):
-        self.counter += 1
+        
         self.shape = input.shape
         # # has_inf = torch.isinf(input)
         # # has_nan = torch.isnan(input)
@@ -58,17 +58,17 @@ class StreamCompressedUnion():
         #     pass
         # print("set_cache",self.counter)
         # print(self.cache.dtype)
-        if self.counter == 1 or self.counter % self.gap == 0:
+        if self.counter == 0 or self.counter % self.gap == 0:
             self.cache = input
+            self.cache_shape = input.shape
+            self.buffer = None
         else:
-            buffer_token = self.counter % self.gap - 1
+            buffer_token = self.counter % self.gap
             self.buffer = input[:,:,-buffer_token:,:].clone()
             del input
-        if self.cache is None:
-            print("set",self.counter)
         
     def get_cache(self):
-        if self.counter == 1 or self.counter % self.gap == 0:
+        if self.counter == 0 or self.counter % self.gap == 0:
             return self.cache
         else:
             return self.decompress(True)
@@ -77,19 +77,19 @@ class StreamCompressedUnion():
         input = self.cache
         self.dtype = input.dtype
         self.is_compressed = True
-        if self.counter == 1 or self.counter % self.gap == 0:
+        if self.counter == 0 or self.counter % self.gap == 0:
             if self.compress_mode == "uniform":
                 output,shape,min,step = compress_function[self.compress_mode](input,self.quantize_bit)
                 self.cache = output
                 self.min = min
                 self.step = step
-                self.shape = shape
+                 
             elif self.compress_mode == "outlier":
                 output,shape,min,step,values,indices = compress_function[self.compress_mode](input,self.quantize_bit,self.left)
                 self.cache = output
                 self.min = min
                 self.step = step
-                self.shape = shape
+                 
                 self.values = values
                 self.indices = indices
             elif self.compress_mode == "gear":
@@ -97,7 +97,7 @@ class StreamCompressedUnion():
                 self.cache = output
                 self.min = min
                 self.step = step
-                self.shape = shape
+                 
                 self.values = values
                 self.indices = indices
                 self.p_base = p_base
@@ -107,13 +107,13 @@ class StreamCompressedUnion():
                 self.cache = output
                 self.min = min
                 self.step = step
-                self.shape = shape
+                 
             elif self.compress_mode == "outlier_batch":
                 output,shape,min,step,values,indices = compress_function[self.compress_mode](input,self.quantize_bit,self.left)
                 self.cache = output
                 self.min = min
                 self.step = step
-                self.shape = shape
+                 
                 self.values = values
                 self.indices = indices
             elif self.compress_mode == "gear_batch":
@@ -121,7 +121,7 @@ class StreamCompressedUnion():
                 self.cache = output
                 self.min = min
                 self.step = step
-                self.shape = shape
+                 
                 self.values = values
                 self.indices = indices
                 self.p_base = p_base
@@ -129,31 +129,28 @@ class StreamCompressedUnion():
             self.buffer = None
         else:
             pass
-        if self.cache is None:
-            print("compress",self.counter)
         # print("compress",self.counter)
         # print(self.cache.dtype)
     def decompress(self,flag = False):
         self.is_compressed = flag
         # print("decompress",self.counter)
         # print(self.cache.dtype)
-        if self.cache is None:
-            print("decompress",self.counter)
         if self.compress_mode == "uniform":
-            output = decompress_function[self.compress_mode](self.cache,self.quantize_bit,self.shape,self.min,self.step,self.dtype)
+            output = decompress_function[self.compress_mode](self.cache,self.quantize_bit,self.cache_shape,self.min,self.step,self.dtype)
         elif self.compress_mode == "outlier":
-            output = decompress_function[self.compress_mode](self.cache,self.quantize_bit,self.shape,self.min,self.step,self.dtype,self.values,self.indices)
+            output = decompress_function[self.compress_mode](self.cache,self.quantize_bit,self.cache_shape,self.min,self.step,self.dtype,self.values,self.indices)
         elif self.compress_mode == "gear":
-            output = decompress_function[self.compress_mode](self.cache,self.quantize_bit,self.shape,self.min,self.step,self.dtype,self.values,self.indices,self.p_base,self.q_base)
+            output = decompress_function[self.compress_mode](self.cache,self.quantize_bit,self.cache_shape,self.min,self.step,self.dtype,self.values,self.indices,self.p_base,self.q_base)
         elif self.compress_mode == "uniform_batch":
-            output = decompress_function[self.compress_mode](self.cache,self.quantize_bit,self.shape,self.min,self.step,self.dtype)
+            output = decompress_function[self.compress_mode](self.cache,self.quantize_bit,self.cache_shape,self.min,self.step,self.dtype)
         elif self.compress_mode == "outlier_batch":
-            output = decompress_function[self.compress_mode](self.cache,self.quantize_bit,self.shape,self.min,self.step,self.dtype,self.values,self.indices)
+            output = decompress_function[self.compress_mode](self.cache,self.quantize_bit,self.cache_shape,self.min,self.step,self.dtype,self.values,self.indices)
         elif self.compress_mode == "gear_batch":
-            output = decompress_function[self.compress_mode](self.cache,self.quantize_bit,self.shape,self.min,self.step,self.dtype,self.values,self.indices,self.p_base,self.q_base)
+            output = decompress_function[self.compress_mode](self.cache,self.quantize_bit,self.cache_shape,self.min,self.step,self.dtype,self.values,self.indices,self.p_base,self.q_base)
         # self.clean_cache()
         if self.buffer is not None:
             output = torch.cat([output,self.buffer],dim=2)
+        # print(self.counter,output.shape)
         return output
     def clean_cache(self):
         self.is_compressed = False
@@ -173,6 +170,9 @@ class StreamCompressedCache(Cache):
         self.seen_tokens = (
             0  # Used in `generate` to keep tally of how many tokens the cache has seen
         )
+    def increase_idx(self,layer_idx):
+        self.key_cache[layer_idx].counter += 1
+        self.value_cache[layer_idx].counter += 1
 
     def __setitem__(
         self, layer_idx: int, key_value_states: Tuple[torch.Tensor, torch.Tensor]

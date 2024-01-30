@@ -230,7 +230,7 @@ def load_model_tokenizer(args):
         cache_dir="../cache",
         trust_remote_code=True,
     )
-    if "Mistral" in args.model:
+    if "Mistral" or "Llama-2-13b" in args.model:
         tokenizer.pad_token = tokenizer.eos_token
     # model = model.to('cuda')
     return model, tokenizer

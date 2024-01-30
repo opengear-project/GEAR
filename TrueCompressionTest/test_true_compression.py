@@ -6,7 +6,7 @@ seed = 2345
 torch.manual_seed(seed)
 torch.cuda.manual_seed_all(seed)
 compress_config = {}
-compress_config["compress_mode"] = "uniform"
+compress_config["compress_mode"] = "gear_batch"
 compress_config["quantize_bit"] = 4
 compress_config["left"] = 0.02
 compress_config["rank"] = 20
@@ -14,25 +14,26 @@ compress_config["loop"] = 0
 compress_config["stream"] = True
 compress_config["streaming_gap"] = 20
 model = TrueLlamaForCausalLMNew.from_pretrained(
-    "meta-llama/Llama-2-7b-hf",
+    "meta-llama/Llama-2-13b-hf",
     cache_dir="../cache",
     device_map = "auto",
     compress_config = compress_config,
+    torch_dtype = torch.float16,
     # torch_dtype = torch.float16,
 )
 tokenizer = AutoTokenizer.from_pretrained(
-    "meta-llama/Llama-2-7b-hf",
+    "meta-llama/Llama-2-13b-hf",
     token=None,
     padding_side="left",
-    model_max_length=1000,
+    model_max_length=2000,
     use_fast=False,
     cache_dir="../cache",
-    max_length=1000,
+    max_length=2000,
 )
 tokenizer.pad_token = tokenizer.eos_token
 sentence = "what is this thing mainly about?"
 sentence_group = []
-for i in range(24):
+for i in range(30):
     sentence_group.append(sentence)
 inputs = tokenizer(
     sentence_group,
@@ -44,9 +45,7 @@ inputs = inputs.to("cuda")
 print(inputs["input_ids"].shape)
 import time
 start = time.time()
-# from torch.cuda.amp import autocast
-# with autocast():
-outputs = model.generate(**inputs, max_length=1100,use_cache=True)
+outputs = model.generate(**inputs, max_length=2100,use_cache=True)
 torch.cuda.synchronize()
 end = time.time()
 results = tokenizer.decode(outputs[0],skip_special_tokens=True)

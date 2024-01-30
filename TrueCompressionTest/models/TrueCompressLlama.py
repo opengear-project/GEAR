@@ -550,6 +550,8 @@ class LlamaAttention(nn.Module):
 
         if self.compress_config is not None:
             past_key_value.compress(self.layer_idx)
+            if self.compress_config["stream"] is True:
+                past_key_value.increase_idx(self.layer_idx)
 
         if self.config.pretraining_tp > 1:
             attn_output = attn_output.split(

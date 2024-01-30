@@ -23,3 +23,6 @@ python eval_mmlu_cot.py --model mistralai/Mistral-7B-v0.1  --batch_size 12 --max
 
 python eval_mmlu_cot.py --model mistralai/Mistral-7B-v0.1  --batch_size 12 --max_new_tokens 256 --attention_number 40 --root_output_dir outputs  --compress_method outquantize_with_lrap --quantize_bit 4 --left 0.02  --rank 0.02 --rankv 0.02 --loop 3 --streaming --streaming_gap 20 > mistral_mmlucot_outlierQ_4_0.02_gap20_lrap_0.02.txt
 python eval_mmlu_cot.py --model mistralai/Mistral-7B-v0.1  --batch_size 12 --max_new_tokens 256 --attention_number 40 --root_output_dir outputs  --compress_method outquantize_with_lrap --quantize_bit 6 --left 0.02  --rank 0.02 --rankv 0.02 --loop 3 --streaming --streaming_gap 20 > mistral_mmlucot_outlierQ_6_0.02_gap20_lrap_0.02.txt
+
+
+python eval_mmlu_cot.py --model meta-llama/Llama-2-13b-hf  --batch_size 12 --max_new_tokens 256 --attention_number 40 --root_output_dir outputs
