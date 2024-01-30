@@ -1,0 +1,4 @@
+Loading Model and Tokenizer.
+We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+Preprocessing the dataset.
+Accuracy: 0.19863532979529946

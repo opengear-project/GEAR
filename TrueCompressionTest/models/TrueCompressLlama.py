@@ -31,6 +31,7 @@ from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
 from transformers.activations import ACT2FN
 from .cache_utils import Cache, DynamicCache
 from .compressed_cache_utils import CompressedCache
+from .streaming_cache_utils import StreamCompressedCache
 from transformers.modeling_attn_mask_utils import (
     AttentionMaskConverter,
     _prepare_4d_attention_mask,
@@ -1211,9 +1212,10 @@ class LlamaModel(LlamaPreTrainedModel):
             # print(use_legacy_cache)
             if use_legacy_cache:
                 if self.compress_config is not None:
-
-                    past_key_values = CompressedCache.from_legacy_cache(past_key_values)
-             
+                    if self.compress_config["stream"] is False:
+                        past_key_values = CompressedCache.from_legacy_cache(past_key_values)
+                    else:
+                        past_key_values = StreamCompressedCache.from_legacy_cache(past_key_values)
                 else:
                     past_key_values = DynamicCache.from_legacy_cache(past_key_values)
             past_key_values_length = past_key_values.get_usable_length(seq_length)

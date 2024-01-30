@@ -234,6 +234,7 @@ if __name__ == "__main__":
     parser.add_argument("--recent_size", type=int, default=0, help="")
     parser.add_argument("--streaming", action="store_true", default=False, help="")
     parser.add_argument("--streaming_gap", type=int, default=0, help="")
+    parser.add_argument("--zero_shot", action="store_true", default=False, help="")
     args = parser.parse_args()
 
     if args.debug:
@@ -370,7 +371,8 @@ if __name__ == "__main__":
     elif "Mistral" in args.model:
         # from models import MixTralForCausalLM, MixtralConfig
         from transformers import AutoTokenizer
-        from transformers import MistralForCausalLM,MistralConfig
+        # from transformers import MistralForCausalLM,MistralConfig
+        from models import MistralForCausalLM,MistralConfig
         config = MistralConfig.from_pretrained(
             args.model,
             use_auth_token=True,
@@ -383,7 +385,7 @@ if __name__ == "__main__":
             config=config,
             **model_kwargs,
             trust_remote_code=True,
-            # compress_config=compress_config,
+            compress_config=compress_config,
         )
         tokenizer = AutoTokenizer.from_pretrained(
             args.model,
@@ -394,7 +396,8 @@ if __name__ == "__main__":
             cache_dir="../cache",
             trust_remote_code=True,
         )
-        tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+        # tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+        tokenizer.pad_token = tokenizer.eos_token
         pass
     logging.info("Preprocessing the dataset.")
     with open(f"lib_prompt/{args.prompt_file}", "r") as handle:
@@ -410,9 +413,15 @@ if __name__ == "__main__":
     for batch in tqdm(dataloader, desc="Evaluate GSM8K"):
         questions = batch["question"]
         answers = batch["answer"]
-        prompts = [
-            prompt_cot + "\nQuestion: " + question + "\n" for question in questions
-        ]
+        if args.zero_shot is True:
+            prompt_cot = "answer the question through the form of The answer is xxx. Do not generate others."
+            prompts = [
+                prompt_cot + "\nQuestion: " + question + "\n" for question in questions
+            ]
+        else:
+            prompts = [
+                prompt_cot + "\nQuestion: " + question + "\n" for question in questions
+            ]
 
         inputs = tokenizer(
             prompts,

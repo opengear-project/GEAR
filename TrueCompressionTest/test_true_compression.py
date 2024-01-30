@@ -6,11 +6,13 @@ seed = 2345
 torch.manual_seed(seed)
 torch.cuda.manual_seed_all(seed)
 compress_config = {}
-compress_config["compress_mode"] = "uniform_batch"
+compress_config["compress_mode"] = "uniform"
 compress_config["quantize_bit"] = 4
 compress_config["left"] = 0.02
 compress_config["rank"] = 20
 compress_config["loop"] = 0
+compress_config["stream"] = True
+compress_config["streaming_gap"] = 20
 model = TrueLlamaForCausalLMNew.from_pretrained(
     "meta-llama/Llama-2-7b-hf",
     cache_dir="../cache",
@@ -30,7 +32,7 @@ tokenizer = AutoTokenizer.from_pretrained(
 tokenizer.pad_token = tokenizer.eos_token
 sentence = "what is this thing mainly about?"
 sentence_group = []
-for i in range(108):
+for i in range(24):
     sentence_group.append(sentence)
 inputs = tokenizer(
     sentence_group,
