@@ -215,7 +215,7 @@ def evaluation(model_args, data_args, compress_args):
         
         model = LlamaForCausalLM.from_pretrained(
             model_args.model_name_or_path,
-            torch_dtype=torch.bfloat16,  # you may change it with different models
+            torch_dtype=torch.float16,  # you may change it with different models
             token=model_args.token,
             device_map=model_args.device_map,
             cache_dir="./cache",

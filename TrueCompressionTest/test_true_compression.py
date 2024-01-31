@@ -6,15 +6,15 @@ seed = 2345
 torch.manual_seed(seed)
 torch.cuda.manual_seed_all(seed)
 compress_config = {}
-compress_config["compress_mode"] = "gear_batch"
+compress_config["compress_mode"] = "outlier_batch"
 compress_config["quantize_bit"] = 4
-compress_config["left"] = 0.02
+compress_config["left"] = 0.10
 compress_config["rank"] = 20
 compress_config["loop"] = 0
 compress_config["stream"] = True
 compress_config["streaming_gap"] = 20
 model = TrueLlamaForCausalLMNew.from_pretrained(
-    "meta-llama/Llama-2-13b-hf",
+    "meta-llama/Llama-2-7b-hf",
     cache_dir="../cache",
     device_map = "auto",
     compress_config = compress_config,
@@ -22,7 +22,7 @@ model = TrueLlamaForCausalLMNew.from_pretrained(
     # torch_dtype = torch.float16,
 )
 tokenizer = AutoTokenizer.from_pretrained(
-    "meta-llama/Llama-2-13b-hf",
+    "meta-llama/Llama-2-7b-hf",
     token=None,
     padding_side="left",
     model_max_length=2000,
