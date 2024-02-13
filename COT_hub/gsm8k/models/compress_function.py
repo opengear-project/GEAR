@@ -903,7 +903,7 @@ def compress_insert_function(
             )    
             
     # SK: TODO take a look at this
-    if compress_config.compress_method[layer_idx] == "group_kc_vt_with_lrap_iter":
+    if compress_config.compress_method[layer_idx] == "group_kc_vt_with_lrap":
         smaller_dim = seq_len if seq_len <= num_head * sep_dim else num_head * sep_dim
         smaller_dim = int(smaller_dim)
         rank_k = int(smaller_dim * compress_config.rank[layer_idx])
