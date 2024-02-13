@@ -900,6 +900,30 @@ def compress_insert_function(
                 compress_config.loop[layer_idx],
                 compress_config.left[layer_idx],
                 compress_config.iter[layer_idx],
+            )    
+            
+    # SK: TODO take a look at this
+    if compress_config.compress_method[layer_idx] == "group_kc_vt_with_lrap_iter":
+        smaller_dim = seq_len if seq_len <= num_head * sep_dim else num_head * sep_dim
+        smaller_dim = int(smaller_dim)
+        rank_k = int(smaller_dim * compress_config.rank[layer_idx])
+        rank_v = int(smaller_dim * compress_config.rankv[layer_idx])
+        previous_key = fake_group_channel_quant_with_lrap(
+            previous_key,
+            compress_config.quantize_bit[layer_idx],
+            rank_k,
+            compress_config.loop[layer_idx],
+            compress_config.left[layer_idx],
+            compress_config.iter[layer_idx],
+        )
+        if previous_value is not None:
+            previous_value = fake_group_token_quant_with_lrap(
+                previous_value,
+                compress_config.quantize_bit[layer_idx],
+                rank_v,
+                compress_config.loop[layer_idx],
+                compress_config.left[layer_idx],
+                compress_config.iter[layer_idx],
             )
     return previous_key, previous_value
 
@@ -935,6 +959,24 @@ def fake_outquant_with_lrap(tensor, quantize_bit, rank, loop, left):
 
 def fake_quant_with_lrap(tensor, quantize_bit, rank, loop):
     tensor_quantized = fake_uniformquantization(tensor, quantize_bit)
+    tensor_error = tensor - tensor_quantized
+    tensor_error_lrap = fake_poweriteration(
+        tensor_error, loop, rank, tensor_quantized.device, None, None
+    )
+    tensor_return = tensor_quantized + tensor_error_lrap
+    return tensor_return
+
+def fake_group_channel_quant_with_lrap(tensor, quantize_bit, rank, loop):
+    tensor_quantized = fake_groupwise_channel_asymmetric_quantization(tensor, quantize_bit)
+    tensor_error = tensor - tensor_quantized
+    tensor_error_lrap = fake_poweriteration(
+        tensor_error, loop, rank, tensor_quantized.device, None, None
+    )
+    tensor_return = tensor_quantized + tensor_error_lrap
+    return tensor_return
+
+def fake_group_token_quant_with_lrap(tensor, quantize_bit, rank, loop):
+    tensor_quantized = fake_groupwise_token_asymmetric_quantization(tensor, quantize_bit)
     tensor_error = tensor - tensor_quantized
     tensor_error_lrap = fake_poweriteration(
         tensor_error, loop, rank, tensor_quantized.device, None, None
