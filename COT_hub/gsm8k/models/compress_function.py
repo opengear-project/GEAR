@@ -601,6 +601,7 @@ def compress_insert_function(
                 compress_config.quantize_bit[layer_idx],
             )
             
+    #SK: TODO take a look at this: idea merged from KIVI, token grouping does reasonably well on GSM8k-CoT at 4-bit, around ~13%      
     if compress_config.compress_method[layer_idx] == "groupquantization_token":
         previous_key[
             :, :, starting_idx:-locality_idx, :
@@ -617,7 +618,8 @@ def compress_insert_function(
                 compress_config.quantize_bit[layer_idx],
                 128
             )
-
+            
+    #SK: TODO take a look at this: idea merged from KIVI, this channel grouping does better tha what was implemented earlier, Please check the code!
     if compress_config.compress_method[layer_idx] == "groupquantization_channel":
         previous_key[
             :, :, starting_idx:-locality_idx, :
@@ -634,7 +636,8 @@ def compress_insert_function(
                 compress_config.quantize_bit[layer_idx],
                 128
             )
-
+            
+    #SK: TODO take a look at this: idea merged from KIVI
     if compress_config.compress_method[layer_idx] == "groupquantization_kc_vt":
         previous_key[
             :, :, starting_idx:-locality_idx, :
@@ -905,7 +908,7 @@ def compress_insert_function(
                 compress_config.iter[layer_idx],
             )    
             
-    # SK: TODO take a look at this
+    # SK: TODO take a look at this: idea merged from KIVI
     if compress_config.compress_method[layer_idx] == "group_kc_vt_with_lrap":
         smaller_dim = seq_len if seq_len <= num_head * sep_dim else num_head * sep_dim
         smaller_dim = int(smaller_dim)
@@ -916,8 +919,6 @@ def compress_insert_function(
             compress_config.quantize_bit[layer_idx],
             rank_k,
             compress_config.loop[layer_idx],
-            compress_config.left[layer_idx],
-            compress_config.iter[layer_idx],
         )
         if previous_value is not None:
             previous_value = fake_group_token_quant_with_lrap(
@@ -925,8 +926,6 @@ def compress_insert_function(
                 compress_config.quantize_bit[layer_idx],
                 rank_v,
                 compress_config.loop[layer_idx],
-                compress_config.left[layer_idx],
-                compress_config.iter[layer_idx],
             )
     return previous_key, previous_value
 
