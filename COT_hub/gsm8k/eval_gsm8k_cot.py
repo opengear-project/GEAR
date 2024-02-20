@@ -19,7 +19,7 @@ from dataclasses_json import DataClassJsonMixin
 from torch.utils.tensorboard import SummaryWriter
 from models import LlamaForCausalLMNew
 from transformers import LlamaForCausalLM
-
+from models.utils import create_compress_config
 IGNORE_INDEX = -100
 DEFAULT_PAD_TOKEN = "[PAD]"
 DEFAULT_EOS_TOKEN = "</s>"
@@ -235,6 +235,8 @@ if __name__ == "__main__":
     parser.add_argument("--streaming", action="store_true", default=False, help="")
     parser.add_argument("--streaming_gap", type=int, default=0, help="")
     parser.add_argument("--zero_shot", action="store_true", default=False, help="")
+    
+    parser.add_argument("--weight-compress", action="store_true", default=False, help="")
     args = parser.parse_args()
 
     if args.debug:
@@ -274,6 +276,11 @@ if __name__ == "__main__":
         model_kwargs["device_map"] = "auto"
         model_kwargs["token"] = args.hf_token
         model_kwargs["cache_dir"] = "../cache"
+        if args.weight_compress:
+            print("weight compress")
+            model_kwargs["quantization_config"] = create_compress_config(
+                None
+            )
 
     config = transformers.AutoConfig.from_pretrained(
         args.model, use_auth_token=True, token=args.hf_token, use_flash_attn=False,trust_remote_code=True

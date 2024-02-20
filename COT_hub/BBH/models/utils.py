@@ -1,8 +1,14 @@
 from typing import Optional, Tuple
-
+from transformers import BitsAndBytesConfig
 import torch
 from torch import Tensor
 
+def create_compress_config(weight_compress_bits):
+
+
+    return BitsAndBytesConfig(
+        load_in_8bit=True, bnb_8bit_compute_dtype=torch.bfloat16
+    )
 
 def get_approximate_basis(
     A: Tensor, q: int, niter: Optional[int] = 2, M: Optional[Tensor] = None

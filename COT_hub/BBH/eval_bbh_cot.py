@@ -20,6 +20,7 @@ from dataclasses_json import DataClassJsonMixin
 from datasets import load_dataset
 from torch.utils.tensorboard import SummaryWriter
 
+from models.utils import create_compress_config
 logger = logging.getLogger(__name__)
 
 MULTIPLE_CHOICE_TASKS = [
@@ -168,7 +169,11 @@ def load_model_tokenizer(args):
         model_kwargs["device_map"] = "auto"
         model_kwargs["token"] = args.hf_token
         model_kwargs["cache_dir"] = "../cache"
-    
+        if args.weight_compress:
+            print("weight compress")
+            model_kwargs["quantization_config"] = create_compress_config(
+                None
+            )
     config = transformers.AutoConfig.from_pretrained(
         args.model, use_auth_token=True, token=args.hf_token,
     )
@@ -423,6 +428,7 @@ if __name__ == '__main__':
     )
     parser.add_argument("--streaming", action="store_true", default=False, help="")
     parser.add_argument("--streaming_gap", type=int, default=0, help="")
+    parser.add_argument("--weight-compress", action="store_true", default=False, help="")
     args = parser.parse_args()
     if args.debug:
         import ipdb
