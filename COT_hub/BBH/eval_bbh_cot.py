@@ -169,11 +169,15 @@ def load_model_tokenizer(args):
         model_kwargs["device_map"] = "auto"
         model_kwargs["token"] = args.hf_token
         model_kwargs["cache_dir"] = "../cache"
-        if args.weight_compress:
+        if args.weight_compress == "uniform":
             print("weight compress")
             model_kwargs["quantization_config"] = create_compress_config(
                 None
             )
+        elif args.weight_compress =="GPTQ":
+            print("GPTQ")
+            #change branch
+            model_kwargs["revision"] = "gptq-8bit-128g-actorder_False"
     config = transformers.AutoConfig.from_pretrained(
         args.model, use_auth_token=True, token=args.hf_token,
     )
@@ -428,7 +432,7 @@ if __name__ == '__main__':
     )
     parser.add_argument("--streaming", action="store_true", default=False, help="")
     parser.add_argument("--streaming_gap", type=int, default=0, help="")
-    parser.add_argument("--weight-compress", action="store_true", default=False, help="")
+    parser.add_argument("--weight-compress", type=str,choices=["uniform","GPTQ","AWQ"], default=False, help="")
     args = parser.parse_args()
     if args.debug:
         import ipdb

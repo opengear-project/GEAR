@@ -95,7 +95,7 @@ class H2OCache:
         #     else:
         # return key, value
 
-
+# channel-batch wise quantization written Hao
 def fake_groupwise_asymmetric_quantization(input: torch.Tensor, quantize_bit):
     # what flexgen uses
     batch, num_head, seq_len, sep_dim = input.shape
@@ -119,7 +119,7 @@ def fake_groupwise_asymmetric_quantization(input: torch.Tensor, quantize_bit):
     input = input.permute(1, 2, 3, 0)
     input = input.type(dtype)
     return input
-
+#group size fixed quantization compression by Souvik
 def fake_groupwise_token_asymmetric_quantization(input: torch.Tensor, quantize_bit, group_size=128):
     batch, num_head, seq_len, sep_dim = input.shape
     dtype = input.dtype
@@ -146,7 +146,7 @@ def fake_groupwise_token_asymmetric_quantization(input: torch.Tensor, quantize_b
     dequantized_input = dequantized_input.type(dtype)
     return dequantized_input
 
-
+# channel wise by Souvik
 def fake_groupwise_channel_asymmetric_quantization(input: torch.Tensor, quantize_bit, group_size=128):
     batch, num_head, seq_len, sep_dim = input.shape
     dtype = input.dtype

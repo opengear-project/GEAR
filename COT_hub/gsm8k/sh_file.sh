@@ -46,3 +46,6 @@ python eval_gsm8k_cot.py --model meta-llama/Llama-2-13b-hf --prompt_file prompt_
 # python eval_gsm8k_cot.py --model meta-llama/Llama-2-7b-hf --prompt_file prompt_original.txt --batch_size 4 --max_new_tokens 256 --compress_method h2o --attention_number 40 --heavy_ratio 0.4 --recent_ratio 0.05
 
 # python eval_gsm8k_cot.py --model meta-llama/Llama-2-7b-hf --prompt_file prompt_original.txt --batch_size 2 --max_new_tokens 256 --compress_method uniformquantization --attention_number 40 --quantize_bit 8
+python eval_gsm8k_cot.py --model meta-llama/Llama-2-7b-hf --prompt_file prompt_original.txt --batch_size 8 --max_new_tokens 256
+
+python eval_gsm8k_cot.py --model TheBloke/Llama-2-7B-AWQ --prompt_file prompt_original.txt --batch_size 8 --max_new_tokens 256

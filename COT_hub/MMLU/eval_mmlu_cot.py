@@ -156,6 +156,10 @@ def load_model_tokenizer(args):
             model_kwargs["quantization_config"] = create_compress_config(
                 None
             )
+        elif args.weight_compress =="GPTQ":
+            print("GPTQ")
+            #change branch
+            model_kwargs["revision"] = "gptq-8bit-128g-actorder_False"
     if "Qwen" in args.model:
         config = transformers.AutoConfig.from_pretrained(
             args.model,
@@ -461,6 +465,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "--streaming_gap", type=int, default=0, help=""
     )
-    parser.add_argument("--weight-compress", action="store_true", default=False, help="")
+    parser.add_argument("--weight-compress", type=str,choices=["uniform","GPTQ","AWQ"], default=False, help="")
     args = parser.parse_args()
     main(args)

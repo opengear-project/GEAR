@@ -236,7 +236,7 @@ if __name__ == "__main__":
     parser.add_argument("--streaming_gap", type=int, default=0, help="")
     parser.add_argument("--zero_shot", action="store_true", default=False, help="")
     
-    parser.add_argument("--weight-compress", action="store_true", default=False, help="")
+    parser.add_argument("--weight-compress", type=str,choices=["uniform","GPTQ","AWQ"], default=False, help="")
     args = parser.parse_args()
 
     if args.debug:
@@ -276,11 +276,15 @@ if __name__ == "__main__":
         model_kwargs["device_map"] = "auto"
         model_kwargs["token"] = args.hf_token
         model_kwargs["cache_dir"] = "../cache"
-        if args.weight_compress:
+        if args.weight_compress =="uniform":
             print("weight compress")
             model_kwargs["quantization_config"] = create_compress_config(
                 None
             )
+        elif args.weight_compress =="GPTQ":
+            print("GPTQ")
+            #change branch
+            model_kwargs["revision"] = "gptq-8bit-128g-actorder_False"
 
     config = transformers.AutoConfig.from_pretrained(
         args.model, use_auth_token=True, token=args.hf_token, use_flash_attn=False,trust_remote_code=True
@@ -417,76 +421,77 @@ if __name__ == "__main__":
 
     all_samples = []
     all_question, all_generation, all_answer = [], [], []
-    for batch in tqdm(dataloader, desc="Evaluate GSM8K"):
-        questions = batch["question"]
-        answers = batch["answer"]
-        if args.zero_shot is True:
-            prompt_cot = "answer the question through the form of The answer is xxx. Do not generate others."
-            prompts = [
-                prompt_cot + "\nQuestion: " + question + "\n" for question in questions
-            ]
-        else:
-            prompts = [
-                prompt_cot + "\nQuestion: " + question + "\n" for question in questions
-            ]
+    with torch.no_grad():
+        for batch in tqdm(dataloader, desc="Evaluate GSM8K"):
+            questions = batch["question"]
+            answers = batch["answer"]
+            if args.zero_shot is True:
+                prompt_cot = "answer the question through the form of The answer is xxx. Do not generate others."
+                prompts = [
+                    prompt_cot + "\nQuestion: " + question + "\n" for question in questions
+                ]
+            else:
+                prompts = [
+                    prompt_cot + "\nQuestion: " + question + "\n" for question in questions
+                ]
 
-        inputs = tokenizer(
-            prompts,
-            return_tensors="pt",
-            padding="longest",
-            truncation=True,
-        )
-        inputs = inputs.to("cuda")
-        generate_kwargs = dict(
-            return_dict_in_generate=True,
-            max_length=args.max_length,
-            max_new_tokens=args.max_new_tokens,
-            output_scores=True,
-            pad_token_id=tokenizer.eos_token_id,
-            use_cache=True,
-        )
-        if args.do_sample:
-            generate_kwargs["do_sample"] = True
-            generate_kwargs["temperature"] = args.temperature
-            generate_kwargs["top_k"] = args.top_k
-            generate_kwargs["top_p"] = args.top_p
-        else:
-            generate_kwargs["do_sample"] = False
-            generate_kwargs["temperature"] = None
-            generate_kwargs["top_k"] = None
-            generate_kwargs["top_p"] = None
-        outputs = model.generate(**inputs, **generate_kwargs)
-        generations = tokenizer.batch_decode(
-            outputs.sequences[:, inputs.input_ids.shape[1] :],
-            skip_special_tokens=True,
-        )
-
-        all_question += questions
-        all_generation += generations
-        all_answer += answers
-
-        for question, generation, answer in zip(questions, generations, answers):
-            is_pred_true, pred, pred_list, gold, gold_list = evaluate_pred_answer(
-                generation.split(args.generation_split)[0], answer
+            inputs = tokenizer(
+                prompts,
+                return_tensors="pt",
+                padding="longest",
+                truncation=True,
             )
-            sample = EvaluationSample(
-                question=question,
-                generation=generation,
-                answer=answer,
-                list_from_pred=pred_list,
-                list_from_answer=gold_list,
-                pred=pred,
-                label=gold,
-                is_pred_true=is_pred_true,
+            inputs = inputs.to("cuda")
+            generate_kwargs = dict(
+                return_dict_in_generate=True,
+                max_length=args.max_length,
+                max_new_tokens=args.max_new_tokens,
+                output_scores=True,
+                pad_token_id=tokenizer.eos_token_id,
+                use_cache=True,
             )
-            all_samples.append(sample)
+            if args.do_sample:
+                generate_kwargs["do_sample"] = True
+                generate_kwargs["temperature"] = args.temperature
+                generate_kwargs["top_k"] = args.top_k
+                generate_kwargs["top_p"] = args.top_p
+            else:
+                generate_kwargs["do_sample"] = False
+                generate_kwargs["temperature"] = None
+                generate_kwargs["top_k"] = None
+                generate_kwargs["top_p"] = None
+            outputs = model.generate(**inputs, **generate_kwargs)
+            generations = tokenizer.batch_decode(
+                outputs.sequences[:, inputs.input_ids.shape[1] :],
+                skip_special_tokens=True,
+            )
 
-    accuracy = sum([sample.is_pred_true for sample in all_samples]) / len(all_samples)
-    evaluation_metric = EvaluationMetrics(accuracy=accuracy)
-    evaluation_result = EvaluationResults(
-        samples=all_samples,
-        metrics=evaluation_metric,
-    )
+            all_question += questions
+            all_generation += generations
+            all_answer += answers
+
+            for question, generation, answer in zip(questions, generations, answers):
+                is_pred_true, pred, pred_list, gold, gold_list = evaluate_pred_answer(
+                    generation.split(args.generation_split)[0], answer
+                )
+                sample = EvaluationSample(
+                    question=question,
+                    generation=generation,
+                    answer=answer,
+                    list_from_pred=pred_list,
+                    list_from_answer=gold_list,
+                    pred=pred,
+                    label=gold,
+                    is_pred_true=is_pred_true,
+                )
+                all_samples.append(sample)
+
+        accuracy = sum([sample.is_pred_true for sample in all_samples]) / len(all_samples)
+        evaluation_metric = EvaluationMetrics(accuracy=accuracy)
+        evaluation_result = EvaluationResults(
+            samples=all_samples,
+            metrics=evaluation_metric,
+        )
 
     tb_writter.add_scalar("accuracy", accuracy, 1)
     logging.info(f"Accuracy: {accuracy}")
