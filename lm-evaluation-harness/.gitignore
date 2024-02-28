@@ -1,7 +1,0 @@
-env
-*.pyc
-data/
-lm_cache
-.idea
-
-*.egg-info/
