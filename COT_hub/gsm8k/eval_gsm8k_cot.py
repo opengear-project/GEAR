@@ -257,7 +257,7 @@ if __name__ == "__main__":
     evaluation_result_file = output_dir / f"evaluation_gsm8k.json"
 
     split = "test" if args.example_subset is None else f"test[{args.example_subset}]"
-    eval_dataset = load_dataset("gsm8k", "main", split=split)
+    eval_dataset = load_dataset("gsm8k", "main", split=split, ignore_verifications=True)
     tb_writter = SummaryWriter(log_dir=str(output_dir.resolve()))
     logging.basicConfig(
         filename=os.path.join(output_dir.resolve(), "log.txt"),

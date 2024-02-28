@@ -5,7 +5,7 @@ from . import huggingface
 from . import textsynth
 from . import dummy
 from . import gguf
-
+from .modified_llama import LlamaForCausalLMNew
 MODEL_REGISTRY = {
     "hf": gpt2.HFLM,
     "hf-causal": gpt2.HFLM,
@@ -17,6 +17,7 @@ MODEL_REGISTRY = {
     "textsynth": textsynth.TextSynthLM,
     "dummy": dummy.DummyLM,
     "gguf": gguf.GGUFLM,
+    "meta-llama/Llama-2-7b-hf": LlamaForCausalLMNew
 }
 
 

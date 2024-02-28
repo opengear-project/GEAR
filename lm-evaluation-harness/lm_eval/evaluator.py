@@ -74,14 +74,17 @@ def simple_evaluate(
         if model_args is None:
             model_args = ""
         print(model_args)
-        lm = lm_eval.models.get_model(model).create_from_arg_string(
-            model_args,
-            {
-                "batch_size": batch_size,
-                "max_batch_size": max_batch_size,
-                "device": device,
-            },
-        )
+        if "Llama-2" in model:
+            lm = lm_eval.models.get_model(model).from_pretrained(model,cache_dir = "../cache",device_map = "cuda:0")
+        else:
+            lm = lm_eval.models.get_model(model).create_from_arg_string(
+                model_args,
+                {
+                    "batch_size": batch_size,
+                    "max_batch_size": max_batch_size,
+                    "device": device,
+                },
+            )
     elif isinstance(model, transformers.PreTrainedModel):
         lm = lm_eval.models.get_model("hf-causal")(
             pretrained=model,
