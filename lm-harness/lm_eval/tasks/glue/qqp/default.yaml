@@ -1,0 +1,15 @@
+group: glue
+task: qqp
+dataset_path: glue
+dataset_name: qqp
+output_type: multiple_choice
+training_split: train
+validation_split: validation
+doc_to_text: "\nSentence 1: {{question1}}\nSentence 2: {{question2}}\nAnswer:"
+doc_to_target: label
+doc_to_choice: ["no", "yes"]
+metric_list:
+  - metric: acc
+  - metric: f1
+metadata:
+  version: 1.0
