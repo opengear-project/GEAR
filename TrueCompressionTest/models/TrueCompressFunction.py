@@ -53,18 +53,20 @@ def true_uniform_quantization_compress(input: torch.Tensor, quantize_bit):
     if quantize_bit == 8:
         input = input.float()  # convert to 32bits to avoid max - min = inf
     min, max = input.min(), input.max()
-    step = (max - min) / (pow(2, quantize_bit) - 1)
+    # step = (max - min) / (pow(2, quantize_bit) - 1)
+    scale = (max - min) / (2 ** quantize_bit - 1)
     # print("before min max:",min,max,step)
-    quantized_input = torch.round((input - min) / step)
+    quantized_input = (input - min) / scale
     # print("after min max:",quantized_input.min(),quantized_input.max())
     # print("quantized isnan:",torch.any(torch.isnan(quantized_input)))
+    quantized_input = quantized_input.round_()
     quantized_input = quantized_input.to(torch.uint8)
     if quantize_bit == 4:
         quantized_input = transfer_8bit_to_4bit(quantized_input)
     # print("isnan:",torch.any(torch.isnan(returning_input)))
     # while(True):
     #     pass
-    return quantized_input,shape,min,step
+    return quantized_input,shape,min,scale
 
 def true_uniform_quantization_decompress(input: torch.Tensor, quantize_bit,shape,min,step,dtype):
     if quantize_bit != 8 and quantize_bit != 4:
