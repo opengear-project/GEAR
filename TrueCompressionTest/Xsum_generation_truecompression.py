@@ -8,14 +8,14 @@ seed = 2345
 torch.manual_seed(seed)
 torch.cuda.manual_seed_all(seed)
 compress_config = {}
-compress_config["compress_mode"] = "gear_batch"
+compress_config["compress_mode"] = "outlier_batch"
 compress_config["quantize_bit"] = 4
-compress_config["left"] = 0.02
-compress_config["rank"] = 0.01 # 0.01
+compress_config["left"] = 0.10
+compress_config["rank"] = 20
 compress_config["loop"] = 2
 compress_config["stream"] = True
 compress_config["streaming_gap"] = 20
-batch_size = 20
+batch_size = 10
 max_length = 2000
 max_token = 1000
 model = TrueLlamaForCausalLMNew.from_pretrained(
@@ -36,12 +36,18 @@ tokenizer = AutoTokenizer.from_pretrained(
     max_length=max_length,
 )
 tokenizer.pad_token = tokenizer.eos_token
-test = load_dataset("wikitext", "wikitext-2-raw-v1", split="train")
-text_combined = test["text"]
+test = load_dataset("EdinburghNLP/xsum", split="test")
+# print(test["document"][0])
 # print(len(text_combined[0]))
 sentence_group = []
 for i in range(batch_size):
-    sentence_group.append(str(text_combined[i*max_token:(i+1)*max_token]))
+    # print("result",text_combined[i*max_token:(i+1)*max_token][0])
+    # while True:
+    #     pass
+    sentence = str(test["document"][i])
+    if len(sentence) > max_token:
+        sentence = sentence[:max_token]
+    sentence_group.append(sentence)
 
 inputs = tokenizer(
     sentence_group,
@@ -61,28 +67,3 @@ print(end - start)
 peak_memory = torch.cuda.max_memory_allocated(device="cuda") / (1024**2)  # 转换为MB单位
 
 print(f"Peak memory usage on GPU: {peak_memory} MB")
-
-
-# sentence = "what is this thing mainly about?"
-# sentence_group = []
-# for i in range(30):
-#     sentence_group.append(sentence)
-# print(sentence_group)
-# inputs = tokenizer(
-#     sentence_group,
-#     return_tensors="pt",
-#     padding="max_length",
-#     truncation=True,
-# )
-# inputs = inputs.to("cuda")
-# print(inputs["input_ids"].shape)
-# import time
-# start = time.time()
-# outputs = model.generate(**inputs, max_length=2100,use_cache=True)
-# torch.cuda.synchronize()
-# end = time.time()
-# results = tokenizer.decode(outputs[0],skip_special_tokens=True)
-# print(end - start)
-# peak_memory = torch.cuda.max_memory_allocated(device="cuda") / (1024**2)  # 转换为MB单位
-
-# print(f"Peak memory usage on GPU: {peak_memory} MB")

@@ -284,6 +284,9 @@ def true_gear_compress_batchwise(input: torch.Tensor, quantize_bit, left, rank, 
     error, min, step = fake_quant_error_simulation_batchwise(input, quantize_bit,bsz)
     error = error.scatter_(1,indices,0.0)
     error = error.reshape(shape)
+    bsz, num_head, seq_len, sep_dim = shape
+    smaller_dim = seq_len if seq_len < sep_dim * num_head else sep_dim * num_head
+    rank = int(rank * smaller_dim)
     p_base,q_base = true_poweriteration(error, loop, rank)
     # has_inf = torch.isinf(p_base[0])
     # has_nan = torch.isnan(p_base[0])
