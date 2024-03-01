@@ -15,7 +15,7 @@ compress_config["rank"] = 0.01 # 0.01
 compress_config["loop"] = 2
 compress_config["stream"] = True
 compress_config["streaming_gap"] = 20
-batch_size = 20
+batch_size = 30
 max_length = 2000
 max_token = 1000
 model = TrueLlamaForCausalLMNew.from_pretrained(
@@ -49,7 +49,7 @@ inputs = tokenizer(
     padding="max_length",
     truncation=True,
 )
-inputs = inputs.to("cuda")
+inputs = inputs.to("cuda:0")
 print(inputs["input_ids"].shape)
 import time
 start = time.time()

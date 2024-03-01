@@ -10,12 +10,12 @@ torch.cuda.manual_seed_all(seed)
 compress_config = {}
 compress_config["compress_mode"] = "outlier_batch"
 compress_config["quantize_bit"] = 4
-compress_config["left"] = 0.10
+compress_config["left"] = 0.02
 compress_config["rank"] = 20
 compress_config["loop"] = 2
 compress_config["stream"] = True
 compress_config["streaming_gap"] = 20
-batch_size = 10
+batch_size = 20
 max_length = 2000
 max_token = 1000
 model = TrueLlamaForCausalLMNew.from_pretrained(

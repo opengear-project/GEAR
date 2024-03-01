@@ -10,6 +10,7 @@ compress_function = {
     "uniform_batch":true_uniform_quantization_compress_batchwise,
     "outlier_batch":true_outlier_quantization_compress_batchwise,
     "gear_batch":true_gear_compress_batchwise,
+    "gear_tokenwiseQ":None,
 }
 decompress_function = {
     "uniform":true_uniform_quantization_decompress,
@@ -18,6 +19,7 @@ decompress_function = {
     "uniform_batch":true_uniform_quantization_decompress_batchwise,
     "outlier_batch":true_outlier_quantization_decompress_batchwise,
     "gear_batch":true_gear_decompress_batchwise,
+    "gear_tokenwiseQ":None,
 }
 class CompressedUnion():
     def __init__(self,compress_kwargs:Optional[Dict[str,Any]] = None):
