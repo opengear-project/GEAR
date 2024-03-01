@@ -17,7 +17,7 @@ compress_config["stream"] = True
 compress_config["streaming_gap"] = 20
 batch_size = 30
 max_length = 2000
-max_token = 1000
+max_token = 2000
 model = TrueLlamaForCausalLMNew.from_pretrained(
     "meta-llama/Llama-2-7b-hf",
     cache_dir="../cache",
@@ -41,7 +41,8 @@ text_combined = test["text"]
 # print(len(text_combined[0]))
 sentence_group = []
 for i in range(batch_size):
-    sentence_group.append(str(text_combined[i*max_token:(i+1)*max_token]))
+    # sentence_group.append(str(text_combined[i*max_token:(i+1)*max_token]))
+    sentence_group.append(str(text_combined[0:max_token]))
 
 inputs = tokenizer(
     sentence_group,
