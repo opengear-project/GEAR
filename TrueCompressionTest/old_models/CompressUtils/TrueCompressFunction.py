@@ -147,6 +147,44 @@ def true_poweriteration(input: torch.Tensor, loop, rank,p_base = None, q_base = 
     q_base[0] = q_base[0].half()
     return p_base,q_base
 
+
+def true_poweriteration_quantized(input: torch.Tensor, loop, rank,p_base = None, q_base = None):
+     # input size [batch,num_head,seq_len,model_dim/num_head]
+    # -> [batch,seq_len,model_dim] -> [batch * seq_len,model_dim]
+    # p_base = torch.rand(input.shape[3] * input.shape[1], rank).to(device)
+    # q_base = torch.rand(input.shape[0] * input.shape[2], rank).to(device)
+    batch, num_head, seq_len, sep_dim = input.shape
+    input = (
+        input.permute(0, 2, 1, 3).contiguous().view(batch, seq_len, sep_dim * num_head)
+    )  # convert to 32bits for qr decomposition
+    input = input.view(batch,seq_len, sep_dim * num_head)
+    input = input.float()
+    if q_base is not None and p_base is not None:
+        p_base[0] = p_base[0].float()
+        q_base[0] = q_base[0].float()
+    else:
+        p_base = [torch.rand(batch,sep_dim * num_head, rank).to(input.device).float()]
+        q_base = [torch.rand(batch,seq_len, rank).to(input.device).float()]
+    # 3 calculation = loop * (matmul) + 2 * qrO(n^2)
+    for i in range(loop):
+        if i == loop - 1:
+            p_base[0] = torch.linalg.qr(p_base[0].float()).Q
+        q_base[0] = input @ p_base[0]
+        if i == loop - 1:
+            q_base[0] = torch.linalg.qr(q_base[0].float()).Q
+        p_base[0] = torch.transpose(input, 1, 2) @ q_base[0]
+    # input = q_base[0] @ torch.transpose(p_base[0], 0, 1)
+    # input = input.view(batch, seq_len, num_head, sep_dim)
+    # input = input.permute(0, 2, 1, 3)
+    # input = input.type(torch.bfloat16)
+    
+    # p_base[0] = p_base[0].half()
+    # q_base[0] = q_base[0].half()
+    #### compress p and q base to 8bits
+    p_base[0],shape_p,min_p,scale_p = true_uniform_quantization_compress(p_base[0], 8)
+    q_base[0],shape_q,min_q,scale_q = true_uniform_quantization_compress(q_base[0], 8)
+    return p_base,q_base,shape_p,shape_q,min_p,min_q,scale_p,scale_q
+
     
 def true_gear_compress(input: torch.Tensor, quantize_bit, left, rank, loop):
     shape = input.shape
@@ -217,6 +255,7 @@ def true_uniform_quantization_compress_batchwise(input: torch.Tensor, quantize_b
 def true_uniform_quantization_decompress_batchwise(input: torch.Tensor, quantize_bit,shape,min,step,dtype):
     if quantize_bit != 8 and quantize_bit != 4:
         raise ValueError("quantize_bit should be 8 or 4")
+
     bsz = shape[0]
     input = input.reshape(bsz,-1)
     if quantize_bit == 8:
@@ -230,6 +269,7 @@ def true_uniform_quantization_decompress_batchwise(input: torch.Tensor, quantize
         input = input.type(dtype)
         input = input * step + min
         output = input.reshape(shape)
+    
     return output
 
 
@@ -323,12 +363,14 @@ def tokenwise_quantization_compress_with_error(input: torch.Tensor, quantize_bit
     assert quantize_bit == 4
     shape = input.shape # bsz, num_head, seq_len, sep_dim
     input = input.permute(0, 2, 1, 3).contiguous().reshape(shape[0],shape[2],shape[1]*shape[3])
-    min, max = input.min(dim=-1).values, input.max(dim = -1).values
+    min, max = input.min(dim=-1).values.unsqueeze(-1), input.max(dim = -1).values.unsqueeze(-1)
     step = (max - min) / (pow(2, quantize_bit) - 1)
+
     quantized_input = (input - min) / step
     # quantized_input = F.relu(quantized_input)
     quantized_input = quantized_input.round_()
-    error = input - quantized_input * step + min
+    error = input - (quantized_input * step + min)
+
     quantized_input = quantized_input.to(torch.uint8)
     quantized_input = transfer_8bit_to_4bit_batchwise(quantized_input)
     # reshape back to original shape
@@ -338,32 +380,45 @@ def tokenwise_quantization_compress_with_error(input: torch.Tensor, quantize_bit
     error = error.permute(0, 2, 1, 3).contiguous()
     return quantized_input, error, min, step, shape
 
-def tokenwise_dequantization(quantized_input: torch.Tensor, min, step, shape):
+def tokenwise_dequantization(quantized_input: torch.Tensor,quantize_bit, min, step, shape,dtype):
     # input size bsz, seq_len, -1
-    quantized_input = transfer_4bit_to_8bit_batchwise(quantized_input)
-    quantized_input = quantized_input.to(torch.float16)
+    assert quantize_bit == 4 or quantize_bit == 8
+    if quantize_bit == 4:
+        quantized_input = transfer_4bit_to_8bit_batchwise(quantized_input)
+    quantized_input = quantized_input.to(dtype)
+    bsz, num_head, seq_len, sep_dim = shape
+    quantized_input = quantized_input * step + min
+    quantized_input = quantized_input.reshape(bsz,seq_len,num_head,sep_dim).permute(0, 2, 1, 3).contiguous()
+    
+    
     return quantized_input
     
 def true_gear_tokenwiseQ_compress(input: torch.Tensor, quantize_bit, rank, loop):
     shape = input.shape # bsz, num_head, seq_len, sep_dim
     bsz = shape[0]
     quantized_input, error, min, step, shape = tokenwise_quantization_compress_with_error(input, quantize_bit)
+    # print("min_max_error_compress:",error.min(),error.max())
     bsz, num_head, seq_len, sep_dim = shape
     smaller_dim = seq_len if seq_len < sep_dim * num_head else sep_dim * num_head
     rank = int(rank * smaller_dim)
-    p_base,q_base = true_poweriteration(error, loop, rank)
+    p_base,q_base,shape_p,shape_q,min_p,min_q,scale_p,scale_q = true_poweriteration_quantized(error, loop, rank)
     del error
-    return quantized_input, shape, min, step, p_base, q_base
+    return quantized_input, shape, min, step, p_base, q_base,shape_p,shape_q,min_p,min_q,scale_p,scale_q
 
 
 
-def true_gear_tokenwiseQ_decompress(input: torch.Tensor, quantize_bit, rank, loop):
-    bsz = shape[0]
-    quantized_input, error, min, step, shape = tokenwise_quantization_compress_with_error(input, quantize_bit)
-    bsz, num_head, seq_len, sep_dim = shape
-    smaller_dim = seq_len if seq_len < sep_dim * num_head else sep_dim * num_head
-    rank = int(rank * smaller_dim)
-    p_base,q_base = true_poweriteration(error, loop, rank)
-    del error
-    return quantized_input, shape, min, step, p_base, q_base
+def true_gear_tokenwiseQ_decompress(quantized_input,quantize_bit, shape, min, step, p_base, q_base,shape_p,shape_q,min_p,min_q,scale_p,scale_q,dtype):
+    # bsz = shape[0]
+    #### TODO
+
+    dequantized_input = tokenwise_dequantization(quantized_input,quantize_bit, min, step, shape,dtype)
+    p_base_dequantized = true_uniform_quantization_decompress(p_base[0],8,shape_p,min_p,scale_p,torch.float)
+    q_base_dequantized = true_uniform_quantization_decompress(q_base[0],8,shape_q,min_q,scale_q,torch.float)
+    error = q_base_dequantized @ torch.transpose(p_base_dequantized, 1, 2)
+    batch, num_head, seq_len, sep_dim = dequantized_input.shape
+    error = error.reshape(batch, seq_len, num_head, sep_dim)
+    error = error.permute(0, 2, 1, 3)
+    # print("min_max_error_decompress:",error.min(),error.max())
+    dequantized_input = dequantized_input + error.to(dtype)
+    return dequantized_input
     
