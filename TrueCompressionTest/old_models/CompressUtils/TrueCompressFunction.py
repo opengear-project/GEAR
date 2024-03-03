@@ -310,7 +310,7 @@ def fake_quant_error_simulation_batchwise(input: torch.Tensor, quantize_bit,bsz)
     min = min.unsqueeze(1)  # Expand min tensor shape to (bsz, 1)
     step = step.unsqueeze(1)  # Expand step tensor shape to (bsz, 1)
     # print("before min max:",min,max,step)
-    error = input - torch.round((input - min) / step)
+    error = input - (torch.round((input - min) / step) * step + min)
     return error,min,step
 
 def true_gear_compress_batchwise(input: torch.Tensor, quantize_bit, left, rank, loop):

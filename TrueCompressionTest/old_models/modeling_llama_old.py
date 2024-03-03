@@ -431,10 +431,10 @@ class LlamaAttention(nn.Module):
         
         # if self.layer_idx == 0:
         #     print("peak_usage:",torch.cuda.max_memory_allocated(device="cuda") / (1024**2)) 
-        detect_infnan(query_states,"query_states")
-        detect_infnan(key_states,"key_states")
+        # detect_infnan(query_states,"query_states")
+        # detect_infnan(key_states,"key_states")
         attn_weights = torch.matmul(query_states, key_states.transpose(2, 3)) / math.sqrt(self.head_dim)
-        detect_infnan(attn_weights,"attn weights1_"+str(self.layer_idx)+"_"+str(key_states.shape[2]))
+        # detect_infnan(attn_weights,"attn weights1_"+str(self.layer_idx)+"_"+str(key_states.shape[2]))
         # if self.layer_idx == 0:
         #     print("peak_usage:",torch.cuda.max_memory_allocated(device="cuda") / (1024**2))
        
@@ -457,7 +457,7 @@ class LlamaAttention(nn.Module):
         #     print("peak_usage:",torch.cuda.max_memory_allocated(device="cuda") / (1024**2))
         # upcast attention to fp32
         attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(query_states.dtype)
-        detect_infnan(attn_weights,"attn weights2")
+        # detect_infnan(attn_weights,"attn weights2")
         attn_output = torch.matmul(attn_weights, value_states)
         
         # if self.layer_idx == 0:
@@ -487,7 +487,7 @@ class LlamaAttention(nn.Module):
             past_key_value = None   
         
         
-        detect_infnan(attn_output,"attn output1")
+        # detect_infnan(attn_output,"attn output1")
         if attn_output.size() != (bsz, self.num_heads, q_len, self.head_dim):
             raise ValueError(
                 f"`attn_output` should be of size {(bsz, self.num_heads, q_len, self.head_dim)}, but is"
@@ -509,7 +509,7 @@ class LlamaAttention(nn.Module):
             attn_weights = None
         # peak_memory = torch.cuda.memory_allocated(device="cuda") / (1024**2) 
         # print(peak_memory)
-        detect_infnan(attn_output,"attn output2")
+        # detect_infnan(attn_output,"attn output2")
         return attn_output, attn_weights, past_key_value
 
 

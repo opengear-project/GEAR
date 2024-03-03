@@ -60,7 +60,7 @@ class CompressUnion():
         
     def compress_function(self,input_tensor:torch.Tensor):
         self.dtype = input_tensor.dtype
-        detect_infnan(input_tensor,"compress input tensor")
+        # detect_infnan(input_tensor,"compress input tensor")
         if self.compress_mode == "uniform":
             output,shape,min,step = compress_function[self.compress_mode](input_tensor,self.quantize_bit)
             self.quantize_part = output
@@ -125,9 +125,9 @@ class CompressUnion():
             self.step_p = scale_p
             self.step_q = scale_q
         # print("quantized_part_min_max:",self.quantize_part.min(),self.quantize_part.max(),"p_base_min_max:",self.min_p.min(),self.p_base[0].max(),"q_base_min_max:",self.min_q.min(),self.q_base[0].max())
-        detect_infnan(quantized_input,"compress quantized_input tensor")
-        detect_infnan(self.p_base[0],"compress p_base tensor")
-        detect_infnan(self.q_base[0],"compress q_base tensor")
+        # detect_infnan(quantized_input,"compress quantized_input tensor")
+        # detect_infnan(self.p_base[0],"compress p_base tensor")
+        # detect_infnan(self.q_base[0],"compress q_base tensor")
 
     def decompress_function(self):
         if self.compress_mode == "uniform":
@@ -144,7 +144,7 @@ class CompressUnion():
             output = decompress_function[self.compress_mode](self.quantize_part,self.quantize_bit,self.shape,self.min,self.step,self.dtype,self.values,self.indices,self.p_base,self.q_base)
         elif self.compress_mode == "gear_tokenwiseQ":
             output = decompress_function[self.compress_mode](self.quantize_part,self.quantize_bit,self.shape,self.min,self.step,self.p_base,self.q_base,self.shape_p,self.shape_q,self.min_p,self.min_q,self.step_p,self.step_q,self.dtype)
-        detect_infnan(output,"decompress")
+        # detect_infnan(output,"decompress")
         return output
     def compress(self, input_tensor):
         self.seq_length = input_tensor.shape[-2]
@@ -179,7 +179,7 @@ class CompressUnion():
         else:
             
             output = self.decompress_function()
-        detect_infnan(output,"decompress output")
+        # detect_infnan(output,"decompress output")
         return output
                
                 
