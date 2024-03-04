@@ -144,6 +144,9 @@ def fake_groupwise_token_asymmetric_quantization(input: torch.Tensor, quantize_b
     dequantized_input = dequantized_input_in_groups.view(batch, seq_len, num_head, sep_dim)
     dequantized_input = dequantized_input.permute(0, 2, 1, 3)
     dequantized_input = dequantized_input.type(dtype)
+    # reshape the input back to its original shape
+    input = input.view(batch, seq_len, num_head, sep_dim)
+    input = input.permute(0, 2, 1, 3).contiguous().type(dtype)
     return dequantized_input
 
 
@@ -159,13 +162,16 @@ def fake_groupwise_channel_asymmetric_quantization(input: torch.Tensor, quantize
     mx, mn = mx.unsqueeze(-2), mn.unsqueeze(-2)
 
     scale = (mx - mn) / (2 ** quantize_bit - 1)
-    input = (input - mn) / scale
-    input = F.relu(input)
-    rounded_input = input.round_()
+    quantized_input = (input - mn) / scale
+    quantized_input = F.relu(quantized_input)
+    rounded_input = quantized_input.round_()
     dequantized_input = rounded_input * scale + mn
     dequantized_input = dequantized_input.view(batch, seq_len, num_head, sep_dim)
     dequantized_input = dequantized_input.permute(0, 2, 1, 3)
     dequantized_input = dequantized_input.type(dtype)
+    # reshape the input back to its original shape
+    input = input.view(batch, seq_len, num_head, sep_dim)
+    input = input.permute(0, 2, 1, 3).contiguous().type(dtype)
     return dequantized_input
 
 def fake_smoothquatization(input, quantize_bit):
