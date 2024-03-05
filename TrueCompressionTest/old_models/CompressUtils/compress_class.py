@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional, Tuple
 import torch
-from .TrueCompressFunction import true_uniform_quantization_compress,true_uniform_quantization_decompress,true_outlier_quantization_compress,true_outlier_quantization_decompress,true_gear_compress,true_gear_decompress,true_gear_tokenwiseQ_compress,true_gear_tokenwiseQ_decompress
+from .TrueCompressFunction import true_uniform_quantization_compress,true_uniform_quantization_decompress,true_outlier_quantization_compress,true_outlier_quantization_decompress,true_gear_compress,true_gear_decompress,true_gear_tokenwiseQ_compress,true_gear_tokenwiseQ_decompress,true_gear_tokenwiseQ_compress_nopq,true_gear_tokenwiseQ_decompress_nopq
 from .TrueCompressFunction import true_uniform_quantization_compress_batchwise,true_uniform_quantization_decompress_batchwise,true_outlier_quantization_compress_batchwise,true_outlier_quantization_decompress_batchwise,true_gear_compress,true_gear_decompress_batchwise,true_gear_compress_batchwise
 compress_function = {
     "uniform":true_uniform_quantization_compress,
@@ -10,6 +10,8 @@ compress_function = {
     "outlier_batch":true_outlier_quantization_compress_batchwise,
     "gear_batch":true_gear_compress_batchwise,
     "gear_tokenwiseQ":true_gear_tokenwiseQ_compress,
+    "gear_tokenwiseQ_nopq":true_gear_tokenwiseQ_compress_nopq,
+    
 }
 decompress_function = {
     "uniform":true_uniform_quantization_decompress,
@@ -19,6 +21,7 @@ decompress_function = {
     "outlier_batch":true_outlier_quantization_decompress_batchwise,
     "gear_batch":true_gear_decompress_batchwise,
     "gear_tokenwiseQ":true_gear_tokenwiseQ_decompress,
+    "gear_tokenwiseQ_nopq":true_gear_tokenwiseQ_decompress_nopq,
 }
 def detect_infnan(input_tensor, string):
     if torch.isnan(input_tensor).any():
@@ -124,6 +127,14 @@ class CompressUnion():
             self.min_q = min_q
             self.step_p = scale_p
             self.step_q = scale_q
+        elif self.compress_mode == "gear_tokenwiseQ_nopq":
+            quantized_input, shape, min, step, p_base, q_base = compress_function[self.compress_mode](input_tensor,self.quantize_bit,self.rank,self.loop)
+            self.quantize_part = quantized_input
+            self.min = min
+            self.step = step
+            self.shape = shape
+            self.p_base = p_base
+            self.q_base = q_base
         # print("quantized_part_min_max:",self.quantize_part.min(),self.quantize_part.max(),"p_base_min_max:",self.min_p.min(),self.p_base[0].max(),"q_base_min_max:",self.min_q.min(),self.q_base[0].max())
         # detect_infnan(quantized_input,"compress quantized_input tensor")
         # detect_infnan(self.p_base[0],"compress p_base tensor")
@@ -144,6 +155,8 @@ class CompressUnion():
             output = decompress_function[self.compress_mode](self.quantize_part,self.quantize_bit,self.shape,self.min,self.step,self.dtype,self.values,self.indices,self.p_base,self.q_base)
         elif self.compress_mode == "gear_tokenwiseQ":
             output = decompress_function[self.compress_mode](self.quantize_part,self.quantize_bit,self.shape,self.min,self.step,self.p_base,self.q_base,self.shape_p,self.shape_q,self.min_p,self.min_q,self.step_p,self.step_q,self.dtype)
+        elif self.compress_mode == "gear_tokenwiseQ_nopq":
+            output = decompress_function[self.compress_mode](self.quantize_part,self.quantize_bit,self.shape,self.min,self.step,self.p_base,self.q_base,self.dtype)
         # detect_infnan(output,"decompress")
         return output
     def compress(self, input_tensor):

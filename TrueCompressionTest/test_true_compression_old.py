@@ -8,14 +8,14 @@ seed = 3125
 torch.manual_seed(seed)
 torch.cuda.manual_seed_all(seed)
 compress_config = {}
-compress_config["compress_mode"] = "gear_batch"
+compress_config["compress_mode"] = "gear_tokenwiseQ_nopq"
 compress_config["quantize_bit"] = 4
 compress_config["left"] = 0.02
 compress_config["rank"] = 0.02 # 0.01
 compress_config["loop"] = 3
 compress_config["stream"] = True
 compress_config["streaming_gap"] = 20
-batch_size = 10
+batch_size = 20
 max_length = 2000
 max_token = 2000
 max_generation_length = 2200

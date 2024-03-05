@@ -30,6 +30,7 @@ def register_model(*names):
 
 
 def get_model(model_name):
+    
     try:
         return MODEL_REGISTRY[model_name]
     except KeyError:

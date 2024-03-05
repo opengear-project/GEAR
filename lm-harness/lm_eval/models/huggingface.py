@@ -18,8 +18,8 @@ from transformers.models.auto.modeling_auto import (
 )
 
 #TODO modify
-from .pi4cache import LlamaForCausalLM, GPT2CompressConfig
-
+from .pi4cache import LlamaForCausalLM
+from .gear import LlamaForCausalLMNew,GPT2CompressConfig
 from lm_eval import utils
 from lm_eval.api.instance import Instance
 from lm_eval.api.model import LM
@@ -477,6 +477,8 @@ class HFLM(LM):
         attention_number:int=100,
         device_num:int=0,
         stage:int=0,
+        streaming: Optional[bool] = False,
+        streaming_gap: Optional[int] = 0,
         **kwargs,
     ) -> None:
         """
@@ -514,7 +516,35 @@ class HFLM(LM):
                             model_kwargs["bnb_4bit_compute_dtype"]
                         )
             if pretrained == "meta-llama/Llama-2-7b-hf":
-                print("model_kwarges",model_kwargs)
+            #     print("model_kwarges",model_kwargs)
+            #     compress_config = GPT2CompressConfig(
+            #         compress_method=compress_method,
+            #         rank=rank,
+            #         rankv=rankv,
+            #         loop=loop,
+            #         quantize_bit=quantize_bit,
+            #         group_num=group_num,
+            #         top_k=top_k,
+            #         left=left,
+            #         attention_number=attention_number,
+            #         device_num=device_num,
+            #         # batch_num=kwargs,
+            #         stage=stage,
+            #     )
+            #     compress_config.copy_for_all_attention()
+            #     compress_config.calculate_compress_ratio_list(4095, 4096)
+            #     self._model = LlamaForCausalLM.from_pretrained(
+            #         pretrained,
+            #         revision=revision,
+            #         torch_dtype=utils.get_dtype(dtype),
+            #         trust_remote_code=trust_remote_code,
+            #         use_cache=True,
+            #         compress_config=compress_config,
+            #         # quantization_config=quantization_config,
+            #         **model_kwargs,
+            #     )
+            # elif pretrained == "meta-llama/Llama-2-7b-hf-GEAR":
+                print("compress_method",compress_method,quantize_bit)
                 compress_config = GPT2CompressConfig(
                     compress_method=compress_method,
                     rank=rank,
@@ -528,10 +558,12 @@ class HFLM(LM):
                     device_num=device_num,
                     # batch_num=kwargs,
                     stage=stage,
+                    streaming=streaming,
+                    streaming_gap=streaming_gap,
                 )
                 compress_config.copy_for_all_attention()
                 compress_config.calculate_compress_ratio_list(4095, 4096)
-                self._model = LlamaForCausalLM.from_pretrained(
+                self._model = LlamaForCausalLMNew.from_pretrained(
                     pretrained,
                     revision=revision,
                     torch_dtype=utils.get_dtype(dtype),
@@ -541,6 +573,7 @@ class HFLM(LM):
                     # quantization_config=quantization_config,
                     **model_kwargs,
                 )
+                
             else:
                 self._model = self.AUTO_MODEL_CLASS.from_pretrained(
                     pretrained,
