@@ -58,7 +58,9 @@ class TaskConfig(dict):
     training_split: str = None
     validation_split: str = None
     test_split: str = None
-    fewshot_split: str = None  # TODO: assert that this not None if num_fewshot > 0. (?) assert if this is same split as one evaling (?)
+    fewshot_split: str = (
+        None  # TODO: assert that this not None if num_fewshot > 0. (?) assert if this is same split as one evaling (?)
+    )
     # formatting / prompting options.
     # see docs/advanced_task_guide.md for more info
     process_docs: Callable = None
@@ -82,9 +84,9 @@ class TaskConfig(dict):
     should_decontaminate: bool = False
     doc_to_decontamination_query: str = None
 
-    metadata: Union[
-        str, list
-    ] = None  # by default, not used in the code. allows for users to pass arbitrary info to tasks
+    metadata: Union[str, list] = (
+        None  # by default, not used in the code. allows for users to pass arbitrary info to tasks
+    )
 
     def __post_init__(self) -> None:
         if self.dataset_path and os.path.exists(os.path.dirname(self.dataset_path)):
@@ -111,9 +113,11 @@ class TaskConfig(dict):
             if self.output_type == "generate_until":
                 # ensure that we greedily generate in absence of explicit arguments otherwise
                 self.generation_kwargs = {
-                    "until": None
-                    if self.fewshot_delimiter is None
-                    else [self.fewshot_delimiter],
+                    "until": (
+                        None
+                        if self.fewshot_delimiter is None
+                        else [self.fewshot_delimiter]
+                    ),
                     "do_sample": False,
                 }
 
@@ -339,7 +343,9 @@ class Task(abc.ABC):
         elif self.has_validation_docs():
             docs = self.validation_docs()
         else:
-            assert False, f"Task dataset (path={self.DATASET_PATH}, name={self.DATASET_NAME}) must have valid or test docs!"
+            assert (
+                False
+            ), f"Task dataset (path={self.DATASET_PATH}, name={self.DATASET_NAME}) must have valid or test docs!"
 
         eval_logger.info(f"Building contexts for task on rank {rank}...")
 
@@ -660,7 +666,9 @@ class ConfigurableTask(Task):
         elif self.has_validation_docs():
             self.task_docs = self.validation_docs()
         else:
-            assert False, f"Task dataset (path={self.DATASET_PATH}, name={self.DATASET_NAME}) must have valid or test docs!"
+            assert (
+                False
+            ), f"Task dataset (path={self.DATASET_PATH}, name={self.DATASET_NAME}) must have valid or test docs!"
 
         # Test One Doc
         self.features = list(self.task_docs.features.keys())
@@ -1161,7 +1169,9 @@ class ConfigurableTask(Task):
                             predictions=[result],
                             **self._metric_fn_kwargs[metric],
                         )
-                    except TypeError:  # needed for now in order to use a different interface between our own metrics and HF Evaluate metrics
+                    except (
+                        TypeError
+                    ):  # needed for now in order to use a different interface between our own metrics and HF Evaluate metrics
                         result_score = self._metric_fn_list[metric]([gold, result])
                     if isinstance(result_score, dict):
                         # TODO: this handles the case where HF evaluate returns a dict.

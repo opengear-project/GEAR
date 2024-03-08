@@ -4,6 +4,7 @@ import os
 import time
 
 import pandas as pd
+
 # import tensor_parallel as tp
 import torch
 from tqdm import tqdm
@@ -16,6 +17,7 @@ from transformers import (
 import transformers
 
 from models.utils import create_compress_config
+
 TASKS = [
     "abstract_algebra",
     "anatomy",
@@ -154,15 +156,13 @@ def load(args):
         model_kwargs["token"] = args.hf_token
         if args.weight_compress:
             print("weight compress")
-            model_kwargs["quantization_config"] = create_compress_config(
-                None
-            )
+            model_kwargs["quantization_config"] = create_compress_config(None)
     if "Qwen" in args.model:
         config = transformers.AutoConfig.from_pretrained(
             args.model,
             use_auth_token=True,
             token=args.hf_token,
-            use_flash_attn = False,
+            use_flash_attn=False,
             trust_remote_code=True,
         )
     else:
@@ -211,6 +211,7 @@ def load(args):
         )
     elif "Qwen" in args.model:
         from models import QWenLMHeadModel
+
         model = QWenLMHeadModel.from_pretrained(
             args.model,
             config=config,
@@ -221,6 +222,7 @@ def load(args):
         )
     elif "Mistral" in args.model:
         from models import MistralForCausalLM
+
         model = MistralForCausalLM.from_pretrained(
             args.model,
             config=config,
@@ -272,7 +274,7 @@ def batch_infer(model, tokenizer, prompts, args):
 
 def main(args):
     run_results = {}
-    output_filename = "run_results_%s_%sb.json" % (args.model,args.compress_method)
+    output_filename = "run_results_%s_%sb.json" % (args.model, args.compress_method)
 
     model, tokenizer = load(args)
     start_time = time.time()
@@ -353,20 +355,15 @@ if __name__ == "__main__":
     parser.add_argument(
         "--token_preserving", action="store_true", default=False, help=""
     )
-    parser.add_argument(
-        "--streaming", action="store_true", default=False, help=""
-    )
-    parser.add_argument(
-        "--streaming_gap", type=int, default=0, help=""
-    )
-    parser.add_argument(
-        "--ntrain", type=int, default=0, help=""
-    )
-    parser.add_argument('--data_dir', type=str, default='data/')
-    parser.add_argument('--weight_compress', action='store_true', default=False)
+    parser.add_argument("--streaming", action="store_true", default=False, help="")
+    parser.add_argument("--streaming_gap", type=int, default=0, help="")
+    parser.add_argument("--ntrain", type=int, default=0, help="")
+    parser.add_argument("--data_dir", type=str, default="data/")
+    parser.add_argument("--weight_compress", action="store_true", default=False)
     args = parser.parse_args()
     if args.debug:
         import ipdb
+
         ipdb.set_trace()
-    
+
     main(args)

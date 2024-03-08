@@ -274,7 +274,7 @@ class FlashSelfAttention(torch.nn.Module):
 
 
 class QWenAttention(nn.Module):
-    def __init__(self, config,layer_idx=0,compress_config = None):
+    def __init__(self, config, layer_idx=0, compress_config=None):
         super().__init__()
         self.layer_idx = layer_idx
         self.compress_config = compress_config
@@ -373,17 +373,23 @@ class QWenAttention(nn.Module):
                 shape = query.shape[:-1] + (qk.shape[-2],)
                 attn_weights = torch.zeros(shape, dtype=torch.float16, device=device)
                 self.cache_kernels.vecquant8matmul_batched_faster_old(
-                    query.contiguous()
-                    if query.dtype == torch.float16
-                    else query.to(torch.float16).contiguous(),
+                    (
+                        query.contiguous()
+                        if query.dtype == torch.float16
+                        else query.to(torch.float16).contiguous()
+                    ),
                     qk.transpose(-1, -2).contiguous(),
                     attn_weights,
-                    qk_scale.contiguous()
-                    if qk_scale.dtype == torch.float16
-                    else qk_scale.to(torch.float16).contiguous(),
-                    qk_zero.contiguous()
-                    if qk_zero.dtype == torch.float16
-                    else qk_zero.to(torch.float16).contiguous(),
+                    (
+                        qk_scale.contiguous()
+                        if qk_scale.dtype == torch.float16
+                        else qk_scale.to(torch.float16).contiguous()
+                    ),
+                    (
+                        qk_zero.contiguous()
+                        if qk_zero.dtype == torch.float16
+                        else qk_zero.to(torch.float16).contiguous()
+                    ),
                 )
                 # attn_weights = attn_weights.to(query.dtype).contiguous()
             else:
@@ -425,17 +431,23 @@ class QWenAttention(nn.Module):
                 shape = attn_weights.shape[:-1] + (query.shape[-1],)
                 attn_output = torch.zeros(shape, dtype=torch.float16, device=device)
                 self.cache_kernels.vecquant8matmul_batched_column_compression_faster_old(
-                    attn_weights.contiguous()
-                    if attn_weights.dtype == torch.float16
-                    else attn_weights.to(torch.float16).contiguous(),
+                    (
+                        attn_weights.contiguous()
+                        if attn_weights.dtype == torch.float16
+                        else attn_weights.to(torch.float16).contiguous()
+                    ),
                     qv.contiguous(),  # dtype: int32
                     attn_output,
-                    qv_scale.contiguous()
-                    if qv_scale.dtype == torch.float16
-                    else qv_scale.to(torch.float16).contiguous(),
-                    qv_zero.contiguous()
-                    if qv_zero.dtype == torch.float16
-                    else qv_zero.to(torch.float16).contiguous(),
+                    (
+                        qv_scale.contiguous()
+                        if qv_scale.dtype == torch.float16
+                        else qv_scale.to(torch.float16).contiguous()
+                    ),
+                    (
+                        qv_zero.contiguous()
+                        if qv_zero.dtype == torch.float16
+                        else qv_zero.to(torch.float16).contiguous()
+                    ),
                 )
                 if attn_output.dtype != query.dtype:
                     attn_output = attn_output.to(query.dtype)
@@ -504,7 +516,7 @@ class QWenAttention(nn.Module):
                     key_list += [apply_rotary_pos_emb(key[i : i + 1, :, :], k_pos_emb)]
                 query = torch.cat(query_list, dim=0)
                 key = torch.cat(key_list, dim=0)
-        
+
         bsz, seq_len_q, num_heads, head_dim = query.shape
         if seq_len_q > 1:
             self.prefill = True
@@ -691,7 +703,7 @@ class QWenMLP(nn.Module):
 
 
 class QWenBlock(nn.Module):
-    def __init__(self, config,layer_idx,compress_config = None):
+    def __init__(self, config, layer_idx, compress_config=None):
         super().__init__()
         hidden_size = config.hidden_size
         self.bf16 = config.bf16
@@ -700,7 +712,9 @@ class QWenBlock(nn.Module):
             hidden_size,
             eps=config.layer_norm_epsilon,
         )
-        self.attn = QWenAttention(config,layer_idx = layer_idx,compress_config = compress_config)
+        self.attn = QWenAttention(
+            config, layer_idx=layer_idx, compress_config=compress_config
+        )
         self.ln_2 = RMSNorm(
             hidden_size,
             eps=config.layer_norm_epsilon,
@@ -794,7 +808,7 @@ class QWenPreTrainedModel(PreTrainedModel):
 class QWenModel(QWenPreTrainedModel):
     _keys_to_ignore_on_load_missing = ["attn.masked_bias"]
 
-    def __init__(self, config,compress_config = None):
+    def __init__(self, config, compress_config=None):
         super().__init__(config)
         self.vocab_size = config.vocab_size
         self.num_hidden_layers = config.num_hidden_layers
@@ -825,7 +839,10 @@ class QWenModel(QWenPreTrainedModel):
         self.is_fp32 = not (config.bf16 or config.fp16)
 
         self.h = nn.ModuleList(
-            [QWenBlock(config,layer_idx = i,compress_config = compress_config) for i in range(config.num_hidden_layers)]
+            [
+                QWenBlock(config, layer_idx=i, compress_config=compress_config)
+                for i in range(config.num_hidden_layers)
+            ]
         )
         self.ln_f = RMSNorm(
             self.embed_dim,
@@ -1101,7 +1118,7 @@ class QWenLMHeadModel(QWenPreTrainedModel):
         if config.use_flash_attn:
             _import_flash_attn()
 
-        self.transformer = QWenModel(config,compress_config = compress_config)
+        self.transformer = QWenModel(config, compress_config=compress_config)
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
 
         if config.bf16:

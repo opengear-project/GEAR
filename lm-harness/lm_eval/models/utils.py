@@ -1,6 +1,8 @@
 from transformers.models.llama.modeling_llama import LlamaForCausalLM
 from typing import List, Literal, Optional, Tuple, Union
 import torch
+
+
 def self_define_model(
     self,
     pretrained: str,
@@ -25,7 +27,6 @@ def self_define_model(
         pretrained,
         revision=revision,
         trust_remote_code=trust_remote_code,
-        device_map = "auto",
+        device_map="auto",
         **model_kwargs,
-        
     )

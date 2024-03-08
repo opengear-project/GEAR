@@ -11,6 +11,7 @@
 # value = torch.rand(2,32,13,1024)
 # returned_key,returned_value = cache.update(hidden_states,key,value)
 # print(returned_key.shape, returned_value.shape)
-from compress_function import fake_group_channel_quant_with_lrap, fake_group_token_quant_with_lrap
-
-
+from compress_function import (
+    fake_group_channel_quant_with_lrap,
+    fake_group_token_quant_with_lrap,
+)

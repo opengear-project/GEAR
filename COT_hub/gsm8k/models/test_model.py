@@ -13,7 +13,7 @@ model = LlamaForCausalLMH2O.from_pretrained(
     # config=config,
     cache_dir="../cache",
     compress_config=config,
-    device_map = "cpu",
+    device_map="cpu",
 )
 tokenizer = AutoTokenizer.from_pretrained(
     model_id,

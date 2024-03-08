@@ -970,13 +970,12 @@ class LlamaSdpaAttention(LlamaAttention):
                             pbase2=self.pbase2,
                             qbase2=self.qbase2,
                         )
-                        
+
                         if self.prefill is False:
                             past_key_value.__setitem__(
                                 self.layer_idx, (past_key, past_value)
                             )
                         self.prefill = False
-                        
 
             key_states, value_states = past_key_value.update(
                 key_states, value_states, self.layer_idx, cache_kwargs
@@ -1269,6 +1268,7 @@ class LlamaModel(LlamaPreTrainedModel):
 
     def set_input_embeddings(self, value):
         self.embed_tokens = value
+
     def scheduler(
         self,
         input_ids: torch.LongTensor = None,
@@ -1369,7 +1369,7 @@ class LlamaModel(LlamaPreTrainedModel):
         all_self_attns = () if output_attentions else None
         next_decoder_cache = None
         for decoder_layer in self.layers:
-            print(hidden_states.shape,attention_mask.shape)
+            print(hidden_states.shape, attention_mask.shape)
             if output_hidden_states:
                 all_hidden_states += (hidden_states,)
 
@@ -1383,7 +1383,6 @@ class LlamaModel(LlamaPreTrainedModel):
             )
 
             hidden_states = layer_outputs[0]
-            
 
     @add_start_docstrings_to_model_forward(LLAMA_INPUTS_DOCSTRING)
     def forward(
@@ -1580,7 +1579,7 @@ class LlamaForCausalLMNew(LlamaPreTrainedModel):
         output_type=CausalLMOutputWithPast, config_class=_CONFIG_FOR_DOC
     )
     def scheduler(
-         self,
+        self,
         input_ids: torch.LongTensor = None,
         attention_mask: Optional[torch.Tensor] = None,
         position_ids: Optional[torch.LongTensor] = None,
@@ -1593,7 +1592,6 @@ class LlamaForCausalLMNew(LlamaPreTrainedModel):
         return_dict: Optional[bool] = None,
         chunk: Optional[int] = 1,
         device: Optional[int] = 0,
-        
     ) -> Union[Tuple, CausalLMOutputWithPast]:
         pass
         output_attentions = (
@@ -1609,7 +1607,7 @@ class LlamaForCausalLMNew(LlamaPreTrainedModel):
         return_dict = (
             return_dict if return_dict is not None else self.config.use_return_dict
         )
-        
+
         outputs = self.model.scheduler(
             input_ids=input_ids,
             attention_mask=attention_mask,
@@ -1620,15 +1618,15 @@ class LlamaForCausalLMNew(LlamaPreTrainedModel):
             output_attentions=output_attentions,
             output_hidden_states=output_hidden_states,
             return_dict=return_dict,
-            chunk = chunk,
-            device = device,
+            chunk=chunk,
+            device=device,
         )
-        
+
         # to device
         hidden_states = outputs[0]
         hidden_states = hidden_states.to(device)
         self.lm_head = self.lm_head.to(device)
-        
+
         if self.config.pretraining_tp > 1:
             lm_head_slices = self.lm_head.weight.split(
                 self.vocab_size // self.config.pretraining_tp, dim=0
@@ -1666,6 +1664,7 @@ class LlamaForCausalLMNew(LlamaPreTrainedModel):
             hidden_states=outputs.hidden_states,
             attentions=outputs.attentions,
         )
+
     def forward(
         self,
         input_ids: torch.LongTensor = None,

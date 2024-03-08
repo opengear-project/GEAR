@@ -742,12 +742,16 @@ def main():
         tokenizer=tokenizer,
         # Data collator will default to DataCollatorWithPadding, so we change it.
         data_collator=default_data_collator,
-        compute_metrics=compute_metrics
-        if training_args.do_eval and not is_torch_tpu_available()
-        else None,
-        preprocess_logits_for_metrics=preprocess_logits_for_metrics
-        if training_args.do_eval and not is_torch_tpu_available()
-        else None,
+        compute_metrics=(
+            compute_metrics
+            if training_args.do_eval and not is_torch_tpu_available()
+            else None
+        ),
+        preprocess_logits_for_metrics=(
+            preprocess_logits_for_metrics
+            if training_args.do_eval and not is_torch_tpu_available()
+            else None
+        ),
     )
 
     # Training
@@ -802,9 +806,9 @@ def main():
         kwargs["dataset_tags"] = data_args.dataset_name
         if data_args.dataset_config_name is not None:
             kwargs["dataset_args"] = data_args.dataset_config_name
-            kwargs[
-                "dataset"
-            ] = f"{data_args.dataset_name} {data_args.dataset_config_name}"
+            kwargs["dataset"] = (
+                f"{data_args.dataset_name} {data_args.dataset_config_name}"
+            )
         else:
             kwargs["dataset"] = data_args.dataset_name
 

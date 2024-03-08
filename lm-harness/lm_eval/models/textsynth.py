@@ -11,6 +11,7 @@ Example usage:
 
 Homepage: https://textsynth.com/index.html
 """
+
 import logging
 import os
 

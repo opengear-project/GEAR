@@ -495,9 +495,9 @@ class H2OLlamaAttention(nn.Module):
         attention_mask = _make_causal_mask(
             bsz=bsz,
             tgt_len=q_len,
-            past_key_values_length=past_key_value[0].shape[-2]
-            if past_key_value is not None
-            else 0,
+            past_key_values_length=(
+                past_key_value[0].shape[-2] if past_key_value is not None else 0
+            ),
             dtype=query_states.dtype,
             device=query_states.device,
         )
@@ -729,9 +729,9 @@ class H2OLlamaAttention_streaming(nn.Module):
         attention_mask = _make_causal_mask(
             bsz=bsz,
             tgt_len=q_len,
-            past_key_values_length=past_key_value[0].shape[-2]
-            if past_key_value is not None
-            else 0,
+            past_key_values_length=(
+                past_key_value[0].shape[-2] if past_key_value is not None else 0
+            ),
             dtype=query_states.dtype,
             device=query_states.device,
         )

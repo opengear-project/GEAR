@@ -120,14 +120,17 @@ def fake_groupwise_asymmetric_quantization(input: torch.Tensor, quantize_bit):
     input = input.type(dtype)
     return input
 
-def fake_groupwise_token_asymmetric_quantization(input: torch.Tensor, quantize_bit, group_size=128):
+
+def fake_groupwise_token_asymmetric_quantization(
+    input: torch.Tensor, quantize_bit, group_size=128
+):
     batch, num_head, seq_len, sep_dim = input.shape
     dtype = input.dtype
     group_size = 128
     input = (
         input.permute(0, 2, 1, 3).contiguous().view(batch, seq_len, sep_dim * num_head)
-    ) 
-    num_groups = (sep_dim*num_head) // group_size
+    )
+    num_groups = (sep_dim * num_head) // group_size
     if num_groups * group_size != input.shape[-1]:
         raise ValueError("group_size should be a factor of the last dimension size")
 
@@ -136,12 +139,14 @@ def fake_groupwise_token_asymmetric_quantization(input: torch.Tensor, quantize_b
     mx, mn = input_in_groups.max(dim=-1)[0], input_in_groups.min(dim=-1)[0]
     mx, mn = mx.unsqueeze(-1), mn.unsqueeze(-1)
 
-    scale = (mx - mn) / (2 ** quantize_bit - 1)
+    scale = (mx - mn) / (2**quantize_bit - 1)
     input_in_groups = (input_in_groups - mn) / scale
     input_in_groups = F.relu(input_in_groups)
     rounded_input_in_groups = input_in_groups.round_()
     dequantized_input_in_groups = rounded_input_in_groups * scale + mn
-    dequantized_input = dequantized_input_in_groups.view(batch, seq_len, num_head, sep_dim)
+    dequantized_input = dequantized_input_in_groups.view(
+        batch, seq_len, num_head, sep_dim
+    )
     dequantized_input = dequantized_input.permute(0, 2, 1, 3)
     dequantized_input = dequantized_input.type(dtype)
     # reshape the input back to its original shape
@@ -150,18 +155,20 @@ def fake_groupwise_token_asymmetric_quantization(input: torch.Tensor, quantize_b
     return dequantized_input
 
 
-def fake_groupwise_channel_asymmetric_quantization(input: torch.Tensor, quantize_bit, group_size=128):
+def fake_groupwise_channel_asymmetric_quantization(
+    input: torch.Tensor, quantize_bit, group_size=128
+):
     batch, num_head, seq_len, sep_dim = input.shape
     dtype = input.dtype
     group_size = 128
     input = (
         input.permute(0, 2, 1, 3).contiguous().view(batch, seq_len, sep_dim * num_head)
-    ) 
+    )
 
     mx, mn = input.max(dim=-2)[0], input.min(dim=-2)[0]
     mx, mn = mx.unsqueeze(-2), mn.unsqueeze(-2)
 
-    scale = (mx - mn) / (2 ** quantize_bit - 1)
+    scale = (mx - mn) / (2**quantize_bit - 1)
     quantized_input = (input - mn) / scale
     quantized_input = F.relu(quantized_input)
     rounded_input = quantized_input.round_()
@@ -173,6 +180,7 @@ def fake_groupwise_channel_asymmetric_quantization(input: torch.Tensor, quantize
     input = input.view(batch, seq_len, num_head, sep_dim)
     input = input.permute(0, 2, 1, 3).contiguous().type(dtype)
     return dequantized_input
+
 
 def fake_smoothquatization(input, quantize_bit):
     pass
@@ -593,74 +601,74 @@ def compress_insert_function(
             )
 
     if compress_config.compress_method[layer_idx] == "groupquantization":
-        previous_key[
-            :, :, starting_idx:-locality_idx, :
-        ] = fake_groupwise_asymmetric_quantization(
-            previous_key[:, :, starting_idx:-locality_idx, :],
-            compress_config.quantize_bit[layer_idx],
-        )
-        if previous_value is not None:
-            previous_value[
-                :, :, starting_idx:-locality_idx, :
-            ] = fake_groupwise_asymmetric_quantization(
-                previous_value[:, :, starting_idx:-locality_idx, :],
+        previous_key[:, :, starting_idx:-locality_idx, :] = (
+            fake_groupwise_asymmetric_quantization(
+                previous_key[:, :, starting_idx:-locality_idx, :],
                 compress_config.quantize_bit[layer_idx],
             )
-            
-    #SK: TODO take a look at this: idea merged from KIVI, token grouping does reasonably well on GSM8k-CoT at 4-bit, around ~13%      
+        )
+        if previous_value is not None:
+            previous_value[:, :, starting_idx:-locality_idx, :] = (
+                fake_groupwise_asymmetric_quantization(
+                    previous_value[:, :, starting_idx:-locality_idx, :],
+                    compress_config.quantize_bit[layer_idx],
+                )
+            )
+
+    # SK: TODO take a look at this: idea merged from KIVI, token grouping does reasonably well on GSM8k-CoT at 4-bit, around ~13%
     if compress_config.compress_method[layer_idx] == "groupquantization_token":
-        previous_key[
-            :, :, starting_idx:-locality_idx, :
-        ] = fake_groupwise_token_asymmetric_quantization(
-            previous_key[:, :, starting_idx:-locality_idx, :],
-            compress_config.quantize_bit[layer_idx],
-            128
+        previous_key[:, :, starting_idx:-locality_idx, :] = (
+            fake_groupwise_token_asymmetric_quantization(
+                previous_key[:, :, starting_idx:-locality_idx, :],
+                compress_config.quantize_bit[layer_idx],
+                128,
+            )
         )
         if previous_value is not None:
-            previous_value[
-                :, :, starting_idx:-locality_idx, :
-            ] = fake_groupwise_token_asymmetric_quantization(
-                previous_value[:, :, starting_idx:-locality_idx, :],
-                compress_config.quantize_bit[layer_idx],
-                128
+            previous_value[:, :, starting_idx:-locality_idx, :] = (
+                fake_groupwise_token_asymmetric_quantization(
+                    previous_value[:, :, starting_idx:-locality_idx, :],
+                    compress_config.quantize_bit[layer_idx],
+                    128,
+                )
             )
-            
-    #SK: TODO take a look at this: idea merged from KIVI, this channel grouping does better tha what was implemented earlier, Please check the code!
+
+    # SK: TODO take a look at this: idea merged from KIVI, this channel grouping does better tha what was implemented earlier, Please check the code!
     if compress_config.compress_method[layer_idx] == "groupquantization_channel":
-        previous_key[
-            :, :, starting_idx:-locality_idx, :
-        ] = fake_groupwise_channel_asymmetric_quantization(
-            previous_key[:, :, starting_idx:-locality_idx, :],
-            compress_config.quantize_bit[layer_idx],
-            128
+        previous_key[:, :, starting_idx:-locality_idx, :] = (
+            fake_groupwise_channel_asymmetric_quantization(
+                previous_key[:, :, starting_idx:-locality_idx, :],
+                compress_config.quantize_bit[layer_idx],
+                128,
+            )
         )
         if previous_value is not None:
-            previous_value[
-                :, :, starting_idx:-locality_idx, :
-            ] = fake_groupwise_channel_asymmetric_quantization(
-                previous_value[:, :, starting_idx:-locality_idx, :],
-                compress_config.quantize_bit[layer_idx],
-                128
+            previous_value[:, :, starting_idx:-locality_idx, :] = (
+                fake_groupwise_channel_asymmetric_quantization(
+                    previous_value[:, :, starting_idx:-locality_idx, :],
+                    compress_config.quantize_bit[layer_idx],
+                    128,
+                )
             )
-            
-    #SK: TODO take a look at this: idea merged from KIVI
+
+    # SK: TODO take a look at this: idea merged from KIVI
     if compress_config.compress_method[layer_idx] == "groupquantization_kc_vt":
-        previous_key[
-            :, :, starting_idx:-locality_idx, :
-        ] = fake_groupwise_channel_asymmetric_quantization(
-            previous_key[:, :, starting_idx:-locality_idx, :],
-            compress_config.quantize_bit[layer_idx],
-            128
+        previous_key[:, :, starting_idx:-locality_idx, :] = (
+            fake_groupwise_channel_asymmetric_quantization(
+                previous_key[:, :, starting_idx:-locality_idx, :],
+                compress_config.quantize_bit[layer_idx],
+                128,
+            )
         )
         if previous_value is not None:
-            previous_value[
-                :, :, starting_idx:-locality_idx, :
-            ] = fake_groupwise_token_asymmetric_quantization(
-                previous_value[:, :, starting_idx:-locality_idx, :],
-                compress_config.quantize_bit[layer_idx],
-                128
+            previous_value[:, :, starting_idx:-locality_idx, :] = (
+                fake_groupwise_token_asymmetric_quantization(
+                    previous_value[:, :, starting_idx:-locality_idx, :],
+                    compress_config.quantize_bit[layer_idx],
+                    128,
+                )
             )
-    
+
     if compress_config.compress_method[layer_idx] == "uniformquantization":
         # print("begin uniquant",starting_idx,locality_idx,compress_config.quantize_bit[layer_idx])
         previous_key[:, :, starting_idx:-locality_idx, :] = fake_uniformquantization(
@@ -668,11 +676,11 @@ def compress_insert_function(
             compress_config.quantize_bit[layer_idx],
         )
         if previous_value is not None:
-            previous_value[
-                :, :, starting_idx:-locality_idx, :
-            ] = fake_uniformquantization(
-                previous_value[:, :, starting_idx:-locality_idx, :],
-                compress_config.quantize_bit[layer_idx],
+            previous_value[:, :, starting_idx:-locality_idx, :] = (
+                fake_uniformquantization(
+                    previous_value[:, :, starting_idx:-locality_idx, :],
+                    compress_config.quantize_bit[layer_idx],
+                )
             )
     if compress_config.compress_method[layer_idx] == "poweriteration":
         previous_key = fake_poweriteration(
@@ -749,15 +757,15 @@ def compress_insert_function(
                 qbase1,
             )
             if previous_value is not None and compress_config.rankv[layer_idx] != 0.0:
-                previous_value[
-                    :, :, starting_idx:-locality_idx, :
-                ] = fake_poweriteration(
-                    previous_value[:, :, starting_idx:-locality_idx, :],
-                    compress_config.loop[layer_idx],
-                    rank_v,
-                    compress_config.device_num[layer_idx],
-                    pbase2,
-                    qbase2,
+                previous_value[:, :, starting_idx:-locality_idx, :] = (
+                    fake_poweriteration(
+                        previous_value[:, :, starting_idx:-locality_idx, :],
+                        compress_config.loop[layer_idx],
+                        rank_v,
+                        compress_config.device_num[layer_idx],
+                        pbase2,
+                        qbase2,
+                    )
                 )
     if compress_config.compress_method[layer_idx] == "pt+outlier":
         previous_key = fake_poweriteration_with_outlierquant(
@@ -823,20 +831,20 @@ def compress_insert_function(
             )
     if compress_config.compress_method[layer_idx] == "densesparseuniformquantization":
         # print("seqlen:",seq_len,"starting_idx:",starting_idx,"locality_idx:",locality_idx)
-        previous_key[
-            :, :, starting_idx:-locality_idx, :
-        ] = fake_dense_sparse_uniformquantization(
-            previous_key[:, :, starting_idx:-locality_idx, :],
-            compress_config.quantize_bit[layer_idx],
-            compress_config.left[layer_idx],
-        )
-        if previous_value is not None:
-            previous_value[
-                :, :, starting_idx:-locality_idx, :
-            ] = fake_dense_sparse_uniformquantization(
-                previous_value[:, :, starting_idx:-locality_idx, :],
+        previous_key[:, :, starting_idx:-locality_idx, :] = (
+            fake_dense_sparse_uniformquantization(
+                previous_key[:, :, starting_idx:-locality_idx, :],
                 compress_config.quantize_bit[layer_idx],
                 compress_config.left[layer_idx],
+            )
+        )
+        if previous_value is not None:
+            previous_value[:, :, starting_idx:-locality_idx, :] = (
+                fake_dense_sparse_uniformquantization(
+                    previous_value[:, :, starting_idx:-locality_idx, :],
+                    compress_config.quantize_bit[layer_idx],
+                    compress_config.left[layer_idx],
+                )
             )
     if compress_config.compress_method[layer_idx] == "densesparsesortquantization":
         previous_key = fake_dense_sparse_sortquantization(
@@ -912,8 +920,8 @@ def compress_insert_function(
                 compress_config.loop[layer_idx],
                 compress_config.left[layer_idx],
                 compress_config.iter[layer_idx],
-            )    
-    
+            )
+
     # SK: TODO take a look at this: idea merged from KIVI
     if compress_config.compress_method[layer_idx] == "group_channel_with_lrap":
         smaller_dim = seq_len if seq_len <= num_head * sep_dim else num_head * sep_dim
@@ -1014,8 +1022,11 @@ def fake_quant_with_lrap(tensor, quantize_bit, rank, loop):
     tensor_return = tensor_quantized + tensor_error_lrap
     return tensor_return
 
+
 def fake_group_channel_quant_with_lrap(tensor, quantize_bit, rank, loop):
-    tensor_quantized = fake_groupwise_channel_asymmetric_quantization(tensor, quantize_bit, 128)
+    tensor_quantized = fake_groupwise_channel_asymmetric_quantization(
+        tensor, quantize_bit, 128
+    )
     tensor_error = tensor - tensor_quantized
     tensor_error_lrap = fake_poweriteration(
         tensor_error, loop, rank, tensor_quantized.device, None, None
@@ -1023,8 +1034,11 @@ def fake_group_channel_quant_with_lrap(tensor, quantize_bit, rank, loop):
     tensor_return = tensor_quantized + tensor_error_lrap
     return tensor_return
 
+
 def fake_group_token_quant_with_lrap(tensor, quantize_bit, rank, loop):
-    tensor_quantized = fake_groupwise_token_asymmetric_quantization(tensor, quantize_bit, 128)
+    tensor_quantized = fake_groupwise_token_asymmetric_quantization(
+        tensor, quantize_bit, 128
+    )
     tensor_error = tensor - tensor_quantized
     tensor_error_lrap = fake_poweriteration(
         tensor_error, loop, rank, tensor_quantized.device, None, None

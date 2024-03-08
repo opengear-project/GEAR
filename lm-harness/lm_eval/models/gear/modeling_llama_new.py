@@ -945,7 +945,7 @@ class LlamaSdpaAttention(LlamaAttention):
             # TODO : add compress_config and compress functions
             cache_kwargs = {"sin": sin, "cos": cos}  # Specific to RoPE models
             if self.compress_config is not None:
-                
+
                 if self.compress_config.streaming[self.layer_idx] is True:
                     if len(past_key_value) >= self.layer_idx + 1:
                         past_key, past_value = past_key_value[self.layer_idx]
@@ -957,7 +957,7 @@ class LlamaSdpaAttention(LlamaAttention):
                         or seq_len % self.compress_config.streaming_gap[self.layer_idx]
                         == 0
                     ):
-                        
+
                         # not streaming compress is compress every geneartion
                         (
                             past_key,
@@ -972,13 +972,12 @@ class LlamaSdpaAttention(LlamaAttention):
                             pbase2=self.pbase2,
                             qbase2=self.qbase2,
                         )
-                        
+
                         if self.prefill is False:
                             past_key_value.__setitem__(
                                 self.layer_idx, (past_key, past_value)
                             )
                         self.prefill = False
-                        
 
             key_states, value_states = past_key_value.update(
                 key_states, value_states, self.layer_idx, cache_kwargs

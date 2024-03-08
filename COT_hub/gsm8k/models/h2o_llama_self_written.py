@@ -70,6 +70,7 @@ _CONFIG_FOR_DOC = "LlamaConfig"
 #     mask.masked_fill_(mask_cond < (mask_cond + 1).view(mask.size(-1), 1), 0)
 #     mask = mask.to(dtype)
 
+
 #     if past_key_values_length > 0:
 #         mask = torch.cat(
 #             [
@@ -84,7 +85,12 @@ _CONFIG_FOR_DOC = "LlamaConfig"
 #         bsz, 1, tgt_len, tgt_len + past_key_values_length
 #     )
 def _make_causal_mask(
-    bsz: int, tgt_len: int, past_key_values_length: int, dtype: torch.dtype, device: torch.device):
+    bsz: int,
+    tgt_len: int,
+    past_key_values_length: int,
+    dtype: torch.dtype,
+    device: torch.device,
+):
     """
     Make causal mask used for bi-directional self-attention.
     """
@@ -94,8 +100,19 @@ def _make_causal_mask(
     mask = mask.to(dtype)
 
     if past_key_values_length > 0:
-        mask = torch.cat([torch.zeros(tgt_len, past_key_values_length, dtype=dtype, device=device), mask], dim=-1)
-    return mask[None, None, :, :].expand(bsz, 1, tgt_len, tgt_len + past_key_values_length)
+        mask = torch.cat(
+            [
+                torch.zeros(
+                    tgt_len, past_key_values_length, dtype=dtype, device=device
+                ),
+                mask,
+            ],
+            dim=-1,
+        )
+    return mask[None, None, :, :].expand(
+        bsz, 1, tgt_len, tgt_len + past_key_values_length
+    )
+
 
 # Copied from transformers.models.bart.modeling_bart._expand_mask
 def _expand_mask(mask: torch.Tensor, dtype: torch.dtype, tgt_len: Optional[int] = None):
@@ -213,73 +230,103 @@ class LlamaMLP(nn.Module):
     def forward(self, x):
         return self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))
 
-class H2OCache():
-    def __init__(self,hh_size,recent_size):
+
+class H2OCache:
+    def __init__(self, hh_size, recent_size):
         self.hh_size = hh_size
         self.recent_size = recent_size
 
-    def update(self,hidden_states,key,value):
-        bsz,num_heads,seq_len_q,seq_len = hidden_states.shape
+    def update(self, hidden_states, key, value):
+        bsz, num_heads, seq_len_q, seq_len = hidden_states.shape
         if seq_len_q > 1:
-            hidden_states = hidden_states[:,:,0:-self.recent_size,0:-self.recent_size]
+            hidden_states = hidden_states[
+                :, :, 0 : -self.recent_size, 0 : -self.recent_size
+            ]
         else:
-            hidden_states = hidden_states[:,:,:,0:-self.recent_size]
-        bsz, num_heads,seq_len_q,seq_len = hidden_states.shape
+            hidden_states = hidden_states[:, :, :, 0 : -self.recent_size]
+        bsz, num_heads, seq_len_q, seq_len = hidden_states.shape
         # calculate the score
         head_score = hidden_states.sum(dim=1)
         hh_score = head_score.sum(dim=1)
         device = hh_score.device
         if seq_len_q > 1:
-            #prefill clean the score
-            self.score = torch.zeros(bsz,self.hh_size+1).to(device)
+            # prefill clean the score
+            self.score = torch.zeros(bsz, self.hh_size + 1).to(device)
             # hh_score is bsz,seq_len
             if seq_len <= self.hh_size:
-                self.score[:,0:seq_len] = self.score[:,0:seq_len] + hh_score
-                return key,value
+                self.score[:, 0:seq_len] = self.score[:, 0:seq_len] + hh_score
+                return key, value
             else:
-                selected_value ,selected_idx = torch.topk(hh_score,self.hh_size,dim=1)
+                selected_value, selected_idx = torch.topk(hh_score, self.hh_size, dim=1)
                 # bsz, hhsize
-                #sort the index and prefill
+                # sort the index and prefill
                 selected_idx = selected_idx.sort(dim=1)[0]
                 for i in range(bsz):
-                    self.score[i,:-1] = self.score[i,:-1] + hh_score[i,:].index_select(0,selected_idx[i,:])
-                    
+                    self.score[i, :-1] = self.score[i, :-1] + hh_score[
+                        i, :
+                    ].index_select(0, selected_idx[i, :])
+
         else:
-            #decode
+            # decode
             if seq_len <= self.hh_size:
-                self.score[:,0:seq_len] = self.score[:,0:seq_len] + hh_score
-                return key,value
+                self.score[:, 0:seq_len] = self.score[:, 0:seq_len] + hh_score
+                return key, value
             else:
                 self.score = self.score + hh_score
-                selected_value ,selected_idx = torch.topk(self.score,self.hh_size,dim=1)
+                selected_value, selected_idx = torch.topk(
+                    self.score, self.hh_size, dim=1
+                )
                 selected_idx = selected_idx.sort(dim=1)[0]
                 for i in range(bsz):
-                    self.score[i,:-1] = self.score[i,:].index_select(0,selected_idx[i,:])
-                self.score[:,-1] = 0.0
-        key_without_recent = key[:,:,0:-self.recent_size,:]
-        value_without_recent = value[:,:,0:-self.recent_size,:]
-        key_recent = key[:,:,-self.recent_size:,:]
-        value_recent = value[:,:,-self.recent_size:,:]
-        # select key and value 
+                    self.score[i, :-1] = self.score[i, :].index_select(
+                        0, selected_idx[i, :]
+                    )
+                self.score[:, -1] = 0.0
+        key_without_recent = key[:, :, 0 : -self.recent_size, :]
+        value_without_recent = value[:, :, 0 : -self.recent_size, :]
+        key_recent = key[:, :, -self.recent_size :, :]
+        value_recent = value[:, :, -self.recent_size :, :]
+        # select key and value
         for i in range(bsz):
             if i == 0:
                 # idx = 1 since key_without_recent is numhead,seq_len,model_dim
-                selected_key_cache = key_without_recent[i,:,:,:].index_select(1,selected_idx[i,:]).unsqueeze(0)
-                selected_value_cahce = value_without_recent[i,:,:,:].index_select(1,selected_idx[i,:]).unsqueeze(0)
-                
+                selected_key_cache = (
+                    key_without_recent[i, :, :, :]
+                    .index_select(1, selected_idx[i, :])
+                    .unsqueeze(0)
+                )
+                selected_value_cahce = (
+                    value_without_recent[i, :, :, :]
+                    .index_select(1, selected_idx[i, :])
+                    .unsqueeze(0)
+                )
+
             else:
-                selected_key = key_without_recent[i,:,:,:].index_select(1,selected_idx[i,:]).unsqueeze(0)
-                selected_value = value_without_recent[i,:,:,:].index_select(1,selected_idx[i,:]).unsqueeze(0)
-                selected_key_cache = torch.cat((selected_key_cache,selected_key),dim=0)
-                selected_value_cahce = torch.cat((selected_value_cahce,selected_value),dim=0)
+                selected_key = (
+                    key_without_recent[i, :, :, :]
+                    .index_select(1, selected_idx[i, :])
+                    .unsqueeze(0)
+                )
+                selected_value = (
+                    value_without_recent[i, :, :, :]
+                    .index_select(1, selected_idx[i, :])
+                    .unsqueeze(0)
+                )
+                selected_key_cache = torch.cat(
+                    (selected_key_cache, selected_key), dim=0
+                )
+                selected_value_cahce = torch.cat(
+                    (selected_value_cahce, selected_value), dim=0
+                )
         # print(selected_key_cache.shape)
         # print(key_recent.shape)
-        selected_key = torch.cat((selected_key_cache,key_recent),dim=2)
-        selected_value = torch.cat((selected_value_cahce,value_recent),dim=2)
-        
-        return selected_key,selected_value
+        selected_key = torch.cat((selected_key_cache, key_recent), dim=2)
+        selected_value = torch.cat((selected_value_cahce, value_recent), dim=2)
 
-def   apply_rotary_pos_emb_single(x, cos, sin, position_ids):
+        return selected_key, selected_value
+
+
+def apply_rotary_pos_emb_single(x, cos, sin, position_ids):
     # The first two dimensions of cos and sin are always 1, so we can `squeeze` them.
     cos = cos.squeeze(1).squeeze(0)  # [seq_len, dim]
     sin = sin.squeeze(1).squeeze(0)  # [seq_len, dim]
@@ -288,7 +335,8 @@ def   apply_rotary_pos_emb_single(x, cos, sin, position_ids):
     x_embed = (x * cos) + (rotate_half(x) * sin)
     return x_embed
 
-class  LlamaAttention(nn.Module):
+
+class LlamaAttention(nn.Module):
     """Multi-headed attention from 'Attention Is All You Need' paper"""
 
     def __init__(self, config: LlamaConfig, compress_config=None, layer_id=0):
@@ -322,7 +370,10 @@ class  LlamaAttention(nn.Module):
             self.head_dim, max_position_embeddings=self.max_position_embeddings
         )
         if self.compress_config is not None:
-            self.h2o_cache = H2OCache(self.compress_config[layer_id].heavy_size,self.compress_config[layer_id].recent_size)
+            self.h2o_cache = H2OCache(
+                self.compress_config[layer_id].heavy_size,
+                self.compress_config[layer_id].recent_size,
+            )
         else:
             self.h2o_cache = None
 
@@ -358,22 +409,24 @@ class  LlamaAttention(nn.Module):
             .view(bsz, q_len, self.num_heads, self.head_dim)
             .transpose(1, 2)
         )
-        
+
         # remake casual_mask
         attention_mask = _make_causal_mask(
             bsz=bsz,
             tgt_len=q_len,
-            past_key_values_length=past_key_value[0].shape[-2] if past_key_value is not None else 0,
+            past_key_values_length=(
+                past_key_value[0].shape[-2] if past_key_value is not None else 0
+            ),
             dtype=query_states.dtype,
             device=query_states.device,
         )
-        
-            # print(key_states.shape)
-            
+
+        # print(key_states.shape)
+
         kv_seq_len = key_states.shape[-2]
         if past_key_value is not None:
             kv_seq_len += past_key_value[0].shape[-2]
-            
+
         if not position_ids.nelement() > 1:
             position_ids[0][0] = kv_seq_len - 1
         cos, sin = self.rotary_emb(value_states, seq_len=kv_seq_len)
@@ -390,7 +443,9 @@ class  LlamaAttention(nn.Module):
             value_states = torch.cat([past_key_value[1], value_states], dim=2)
 
         past_key_value = (key_states, value_states) if use_cache else None
-        key_position_ids = torch.arange(kv_seq_len, device=position_ids.device).unsqueeze(0)
+        key_position_ids = torch.arange(
+            kv_seq_len, device=position_ids.device
+        ).unsqueeze(0)
         key_states = apply_rotary_pos_emb_single(key_states, cos, sin, key_position_ids)
         attn_weights = torch.matmul(
             query_states, key_states.transpose(2, 3)
@@ -410,19 +465,20 @@ class  LlamaAttention(nn.Module):
             attn_weights = torch.max(
                 attn_weights, torch.tensor(torch.finfo(attn_weights.dtype).min)
             )
-        
+
         # upcast attention to fp32
         attn_weights = nn.functional.softmax(
             attn_weights, dim=-1, dtype=torch.float32
         ).to(query_states.dtype)
-        
+
         # apply h2o batchwise
         attn_output = torch.matmul(attn_weights, value_states)
         if self.h2o_cache is not None:
-            key_states,value_states = self.h2o_cache.update(attn_weights.clone().detach(),key_states,value_states)
-            
+            key_states, value_states = self.h2o_cache.update(
+                attn_weights.clone().detach(), key_states, value_states
+            )
+
             past_key_value = (key_states, value_states) if use_cache else None
-        
 
         if attn_output.size() != (bsz, self.num_heads, q_len, self.head_dim):
             raise ValueError(
@@ -676,11 +732,11 @@ class LlamaModel(LlamaPreTrainedModel):
         bsz, seq_len = input_shape
         if input_shape[-1] > 1:
             combined_attention_mask = _make_causal_mask(
-                bsz = bsz,
+                bsz=bsz,
                 tgt_len=seq_len,
                 device=inputs_embeds.device,
                 past_key_values_length=past_key_values_length,
-                dtype = inputs_embeds.dtype,
+                dtype=inputs_embeds.dtype,
             )
 
         if attention_mask is not None:

@@ -970,13 +970,12 @@ class LlamaSdpaAttention(LlamaAttention):
                             pbase2=self.pbase2,
                             qbase2=self.qbase2,
                         )
-                        
+
                         if self.prefill is False:
                             past_key_value.__setitem__(
                                 self.layer_idx, (past_key, past_value)
                             )
                         self.prefill = False
-                        
 
             key_states, value_states = past_key_value.update(
                 key_states, value_states, self.layer_idx, cache_kwargs

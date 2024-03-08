@@ -537,18 +537,18 @@ def compress_insert_function(
             )
 
     if compress_config.compress_method[layer_idx] == "groupquantization":
-        previous_key[
-            :, :, starting_idx:-locality_idx, :
-        ] = fake_groupwise_asymmetric_quantization(
-            previous_key[:, :, starting_idx:-locality_idx, :],
-            compress_config.quantize_bit[layer_idx],
+        previous_key[:, :, starting_idx:-locality_idx, :] = (
+            fake_groupwise_asymmetric_quantization(
+                previous_key[:, :, starting_idx:-locality_idx, :],
+                compress_config.quantize_bit[layer_idx],
+            )
         )
         if previous_value is not None:
-            previous_value[
-                :, :, starting_idx:-locality_idx, :
-            ] = fake_groupwise_asymmetric_quantization(
-                previous_value[:, :, starting_idx:-locality_idx, :],
-                compress_config.quantize_bit[layer_idx],
+            previous_value[:, :, starting_idx:-locality_idx, :] = (
+                fake_groupwise_asymmetric_quantization(
+                    previous_value[:, :, starting_idx:-locality_idx, :],
+                    compress_config.quantize_bit[layer_idx],
+                )
             )
     if compress_config.compress_method[layer_idx] == "uniformquantization":
         # print("begin uniquant",starting_idx,locality_idx,compress_config.quantize_bit[layer_idx])
@@ -557,11 +557,11 @@ def compress_insert_function(
             compress_config.quantize_bit[layer_idx],
         )
         if previous_value is not None:
-            previous_value[
-                :, :, starting_idx:-locality_idx, :
-            ] = fake_uniformquantization(
-                previous_value[:, :, starting_idx:-locality_idx, :],
-                compress_config.quantize_bit[layer_idx],
+            previous_value[:, :, starting_idx:-locality_idx, :] = (
+                fake_uniformquantization(
+                    previous_value[:, :, starting_idx:-locality_idx, :],
+                    compress_config.quantize_bit[layer_idx],
+                )
             )
     if compress_config.compress_method[layer_idx] == "poweriteration":
         previous_key = fake_poweriteration(
@@ -638,15 +638,15 @@ def compress_insert_function(
                 qbase1,
             )
             if previous_value is not None and compress_config.rankv[layer_idx] != 0.0:
-                previous_value[
-                    :, :, starting_idx:-locality_idx, :
-                ] = fake_poweriteration(
-                    previous_value[:, :, starting_idx:-locality_idx, :],
-                    compress_config.loop[layer_idx],
-                    rank_v,
-                    compress_config.device_num[layer_idx],
-                    pbase2,
-                    qbase2,
+                previous_value[:, :, starting_idx:-locality_idx, :] = (
+                    fake_poweriteration(
+                        previous_value[:, :, starting_idx:-locality_idx, :],
+                        compress_config.loop[layer_idx],
+                        rank_v,
+                        compress_config.device_num[layer_idx],
+                        pbase2,
+                        qbase2,
+                    )
                 )
     if compress_config.compress_method[layer_idx] == "pt+outlier":
         previous_key = fake_poweriteration_with_outlierquant(
@@ -712,20 +712,20 @@ def compress_insert_function(
             )
     if compress_config.compress_method[layer_idx] == "densesparseuniformquantization":
         # print("seqlen:",seq_len,"starting_idx:",starting_idx,"locality_idx:",locality_idx)
-        previous_key[
-            :, :, starting_idx:-locality_idx, :
-        ] = fake_dense_sparse_uniformquantization(
-            previous_key[:, :, starting_idx:-locality_idx, :],
-            compress_config.quantize_bit[layer_idx],
-            compress_config.left[layer_idx],
-        )
-        if previous_value is not None:
-            previous_value[
-                :, :, starting_idx:-locality_idx, :
-            ] = fake_dense_sparse_uniformquantization(
-                previous_value[:, :, starting_idx:-locality_idx, :],
+        previous_key[:, :, starting_idx:-locality_idx, :] = (
+            fake_dense_sparse_uniformquantization(
+                previous_key[:, :, starting_idx:-locality_idx, :],
                 compress_config.quantize_bit[layer_idx],
                 compress_config.left[layer_idx],
+            )
+        )
+        if previous_value is not None:
+            previous_value[:, :, starting_idx:-locality_idx, :] = (
+                fake_dense_sparse_uniformquantization(
+                    previous_value[:, :, starting_idx:-locality_idx, :],
+                    compress_config.quantize_bit[layer_idx],
+                    compress_config.left[layer_idx],
+                )
             )
     if compress_config.compress_method[layer_idx] == "densesparsesortquantization":
         previous_key = fake_dense_sparse_sortquantization(

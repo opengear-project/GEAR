@@ -187,7 +187,7 @@ class StoppingCriteriaSub(transformers.StoppingCriteria):
             if tokenizer.decode(stop) == tokenizer.decode(last_token):
                 return True
         return False
-    
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate GSM8K Dataset")
@@ -273,7 +273,8 @@ if __name__ == "__main__":
     model_kwargs["cache_dir"] = "../cache"
     logging.info("Loading Model and Tokenizer.")
     from transformers import AutoTokenizer
-    from models import MistralForCausalLM,MistralConfig
+    from models import MistralForCausalLM, MistralConfig
+
     # config = MistralConfig.from_pretrained(
     #     args.model,
     #     use_auth_token=True,
@@ -282,6 +283,7 @@ if __name__ == "__main__":
     #     trust_remote_code=True,
     # )
     from models import GPT2CompressConfig
+
     compress_config = (
         None
         if args.compress_method == "None"
@@ -344,7 +346,6 @@ if __name__ == "__main__":
         prompts = [
             prompt_cot + "\nQuestion: " + question + "\n" for question in questions
         ]
-        
 
         inputs = tokenizer(
             prompts,

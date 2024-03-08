@@ -269,9 +269,11 @@ def postprocess_qa_predictions(
         )
         nbest_file = os.path.join(
             output_dir,
-            "nbest_predictions.json"
-            if prefix is None
-            else f"{prefix}_nbest_predictions.json",
+            (
+                "nbest_predictions.json"
+                if prefix is None
+                else f"{prefix}_nbest_predictions.json"
+            ),
         )
         if version_2_with_negative:
             null_odds_file = os.path.join(
@@ -505,9 +507,11 @@ def postprocess_qa_predictions_with_beam_search(
         )
         nbest_file = os.path.join(
             output_dir,
-            "nbest_predictions.json"
-            if prefix is None
-            else f"{prefix}_nbest_predictions.json",
+            (
+                "nbest_predictions.json"
+                if prefix is None
+                else f"{prefix}_nbest_predictions.json"
+            ),
         )
         if version_2_with_negative:
             null_odds_file = os.path.join(

@@ -116,9 +116,7 @@ def simple_evaluate(
             use_cache
             # each rank receives a different cache db.
             # necessary to avoid multiple writes to cache at once
-            + "_rank"
-            + str(lm.rank)
-            + ".db",
+            + "_rank" + str(lm.rank) + ".db",
         )
 
     task_dict = lm_eval.tasks.get_task_dict(tasks)
@@ -161,14 +159,14 @@ def simple_evaluate(
     if lm.rank == 0:
         # add info about the model and few shot config
         results["config"] = {
-            "model": model
-            if isinstance(model, str)
-            else model.model.config._name_or_path,
+            "model": (
+                model if isinstance(model, str) else model.model.config._name_or_path
+            ),
             "model_args": model_args,
             "batch_size": batch_size,
-            "batch_sizes": list(lm.batch_sizes.values())
-            if hasattr(lm, "batch_sizes")
-            else [],
+            "batch_sizes": (
+                list(lm.batch_sizes.values()) if hasattr(lm, "batch_sizes") else []
+            ),
             "device": device,
             "use_cache": use_cache,
             "limit": limit,
@@ -457,9 +455,11 @@ def evaluate(
             if bootstrap_iters > 0:
                 stderr = lm_eval.api.metrics.stderr_for_metric(
                     metric=task.aggregation()[metric],
-                    bootstrap_iters=min(bootstrap_iters, 100)
-                    if metric in ["bleu", "chrf", "ter"]
-                    else bootstrap_iters,
+                    bootstrap_iters=(
+                        min(bootstrap_iters, 100)
+                        if metric in ["bleu", "chrf", "ter"]
+                        else bootstrap_iters
+                    ),
                 )
 
                 if stderr is not None and len(items) > 1:
@@ -512,7 +512,9 @@ def evaluate(
                                 ) + total_size * current_size / (
                                     (total_size + current_size)
                                     * (total_size + current_size - 1)
-                                ) * (results[group][metric] - metric_score) ** 2
+                                ) * (
+                                    results[group][metric] - metric_score
+                                ) ** 2
                             else:
                                 results[group][metric] = metric_score
                                 results[group][stderr] = var_score

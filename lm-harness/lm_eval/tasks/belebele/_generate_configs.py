@@ -1,6 +1,7 @@
 """
 Take in a YAML, and output all other splits with this YAML
 """
+
 import os
 import yaml
 import argparse
@@ -45,9 +46,11 @@ if __name__ == "__main__":
     for lang in tqdm(languages):
         yaml_dict = {
             "include": base_yaml_name,
-            "task": f"belebele_{args.task_prefix}_{lang}"
-            if args.task_prefix != ""
-            else f"belebele_{lang}",
+            "task": (
+                f"belebele_{args.task_prefix}_{lang}"
+                if args.task_prefix != ""
+                else f"belebele_{lang}"
+            ),
             "dataset_name": lang,
         }
 

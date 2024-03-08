@@ -1,6 +1,7 @@
 """
 Take in a YAML, and output all other splits with this YAML
 """
+
 import os
 import yaml
 import argparse
@@ -98,9 +99,11 @@ if __name__ == "__main__":
 
         yaml_dict = {
             "include": base_yaml_name,
-            "task": f"ceval-valid_{args.task_prefix}_{subject_eng}"
-            if args.task_prefix != ""
-            else f"ceval-valid_{subject_eng}",
+            "task": (
+                f"ceval-valid_{args.task_prefix}_{subject_eng}"
+                if args.task_prefix != ""
+                else f"ceval-valid_{subject_eng}"
+            ),
             "dataset_name": subject_eng,
             "description": description,
         }

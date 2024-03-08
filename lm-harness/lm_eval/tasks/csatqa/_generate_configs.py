@@ -1,6 +1,7 @@
 """
 Take in a YAML, and output all other splits with this YAML
 """
+
 import os
 import yaml
 import argparse
@@ -31,9 +32,11 @@ if __name__ == "__main__":
     for name in tqdm(SUBSETS):
         yaml_dict = {
             "include": base_yaml_name,
-            "task": f"csatqa_{args.task_prefix}_{name}"
-            if args.task_prefix != ""
-            else f"csatqa_{name.lower()}",
+            "task": (
+                f"csatqa_{args.task_prefix}_{name}"
+                if args.task_prefix != ""
+                else f"csatqa_{name.lower()}"
+            ),
             "dataset_name": name,
         }
 

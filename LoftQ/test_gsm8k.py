@@ -104,12 +104,8 @@ class CompressArguments:
     token_preserving: bool = field(
         default=False, metadata={"help": "Evaluation batch size."}
     )
-    streaming: bool = field(
-        default=False, metadata={"help": "Evaluation batch size."}
-    )
-    streaming_gap: int = field(
-        default=0, metadata={"help": "Evaluation batch size."}
-    )
+    streaming: bool = field(default=False, metadata={"help": "Evaluation batch size."})
+    streaming_gap: int = field(default=0, metadata={"help": "Evaluation batch size."})
 
 
 def smart_tokenizer_and_embedding_resize(
@@ -212,7 +208,7 @@ def evaluation(model_args, data_args, compress_args):
         compress_config.copy_for_all_attention()
         compress_config.calculate_compress_ratio_list(4095, 4096)
     if "Qwen" not in model_args.model_name_or_path:
-        
+
         model = LlamaForCausalLM.from_pretrained(
             model_args.model_name_or_path,
             torch_dtype=torch.float16,  # you may change it with different models
@@ -221,13 +217,17 @@ def evaluation(model_args, data_args, compress_args):
             cache_dir="./cache",
             compress_config=compress_config,
             use_cache=True,
-
         )
     else:
         from models import QWenLMHeadModel
         from transformers import AutoModelForCausalLM
+
         config = transformers.AutoConfig.from_pretrained(
-            model_args.model_name_or_path, use_auth_token=True, token=None, use_flash_attn=False,trust_remote_code=True
+            model_args.model_name_or_path,
+            use_auth_token=True,
+            token=None,
+            use_flash_attn=False,
+            trust_remote_code=True,
         )
         model_kwargs = {}
         model_kwargs["torch_dtype"] = torch.float16
@@ -239,7 +239,7 @@ def evaluation(model_args, data_args, compress_args):
             **model_kwargs,
             compress_config=compress_config,
             trust_remote_code=True,
-            config = config
+            config=config,
         )
     # print(model)
     # model = model.half()
@@ -257,19 +257,19 @@ def evaluation(model_args, data_args, compress_args):
         trust_remote_code=True,
     )
     special_tokens_dict = dict()
-    
+
     if "Qwen" in model_args.model_name_or_path:
         tokenizer = AutoTokenizer.from_pretrained(
             model_args.model_name_or_path,
-            token = None,
-            padding_side='left',
+            token=None,
+            padding_side="left",
             model_max_length=model_args.model_max_length,
             use_fast=False,
             cache_dir="../cache",
             trust_remote_code=True,
-            pad_token='<|endoftext|>',
+            pad_token="<|endoftext|>",
             use_flash_attn=False,
-            # eos_token='<|endoftext|>',    
+            # eos_token='<|endoftext|>',
         )
         # special_tokens_dict["pad_token"] = "<|endoftext|>"
         # special_tokens_dict["eos_token"] = "<|endoftext|>"
@@ -342,7 +342,7 @@ def evaluation(model_args, data_args, compress_args):
 
     model.eval()
     if "Qwen" not in model_args.model_name_or_path:
-        #Llama2-7b
+        # Llama2-7b
         gen_kwargs = {
             "max_new_tokens": 256,
             "temperature": 0.8,
@@ -353,6 +353,7 @@ def evaluation(model_args, data_args, compress_args):
         }
     else:
         from transformers.generation import GenerationConfig
+
         model.generation_config = GenerationConfig.from_pretrained(
             model_args.model_name_or_path, trust_remote_code=True
         )
@@ -365,12 +366,16 @@ def evaluation(model_args, data_args, compress_args):
         with torch.no_grad():
             if "Qwen" not in model_args.model_name_or_path:
                 gen_kwargs["input_ids"] = batch["input_ids"].to(compress_args.gpu)
-                gen_kwargs["attention_mask"] = batch["attention_mask"].to(compress_args.gpu)
+                gen_kwargs["attention_mask"] = batch["attention_mask"].to(
+                    compress_args.gpu
+                )
                 start = time.time()
                 generated_tokens = model.generate(**gen_kwargs)
             else:
                 start = time.time()
-                generated_tokens = model.generate(input_ids=batch["input_ids"].to(compress_args.gpu))
+                generated_tokens = model.generate(
+                    input_ids=batch["input_ids"].to(compress_args.gpu)
+                )
             torch.cuda.synchronize()
             end = time.time()
 

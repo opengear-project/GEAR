@@ -20,6 +20,7 @@ from torch.utils.tensorboard import SummaryWriter
 from models import LlamaForCausalLMNew
 from transformers import LlamaForCausalLM
 from models.utils import create_compress_config
+
 IGNORE_INDEX = -100
 DEFAULT_PAD_TOKEN = "[PAD]"
 DEFAULT_EOS_TOKEN = "</s>"
@@ -235,8 +236,14 @@ if __name__ == "__main__":
     parser.add_argument("--streaming", action="store_true", default=False, help="")
     parser.add_argument("--streaming_gap", type=int, default=0, help="")
     parser.add_argument("--zero_shot", action="store_true", default=False, help="")
-    
-    parser.add_argument("--weight-compress", type=str,choices=["uniform","GPTQ","AWQ"], default=False, help="")
+
+    parser.add_argument(
+        "--weight-compress",
+        type=str,
+        choices=["uniform", "GPTQ", "AWQ"],
+        default=False,
+        help="",
+    )
     args = parser.parse_args()
 
     if args.debug:
@@ -276,18 +283,20 @@ if __name__ == "__main__":
         model_kwargs["device_map"] = "auto"
         model_kwargs["token"] = args.hf_token
         model_kwargs["cache_dir"] = "../cache"
-        if args.weight_compress =="uniform":
+        if args.weight_compress == "uniform":
             print("weight compress")
-            model_kwargs["quantization_config"] = create_compress_config(
-                None
-            )
-        elif args.weight_compress =="GPTQ":
+            model_kwargs["quantization_config"] = create_compress_config(None)
+        elif args.weight_compress == "GPTQ":
             print("GPTQ")
-            #change branch
+            # change branch
             model_kwargs["revision"] = "gptq-8bit-128g-actorder_False"
 
     config = transformers.AutoConfig.from_pretrained(
-        args.model, use_auth_token=True, token=args.hf_token, use_flash_attn=False,trust_remote_code=True
+        args.model,
+        use_auth_token=True,
+        token=args.hf_token,
+        use_flash_attn=False,
+        trust_remote_code=True,
     )
     from transformers import LlamaTokenizer
     from models import GPT2CompressConfig
@@ -323,7 +332,7 @@ if __name__ == "__main__":
     if "Llama-2" in args.model:
         if args.compress_method == "h2o":
             from models import H2OLlamaForCausalLM, LlamaConfig
-            
+
             config = LlamaConfig.from_pretrained(
                 args.model,
                 use_auth_token=True,
@@ -374,7 +383,7 @@ if __name__ == "__main__":
             pad_token="<|endoftext|>",
             use_flash_attn=False,
         )
-        
+
         # if "Qwen" in args.model:
         #     tokenizer.add_special_tokens({"eos_token": "<|endoftext|>"})
         #     tokenizer.pad_token = tokenizer.eos_token
@@ -382,8 +391,10 @@ if __name__ == "__main__":
     elif "Mistral" in args.model:
         # from models import MixTralForCausalLM, MixtralConfig
         from transformers import AutoTokenizer
+
         # from transformers import MistralForCausalLM,MistralConfig
-        from models import MistralForCausalLM,MistralConfig
+        from models import MistralForCausalLM, MistralConfig
+
         config = MistralConfig.from_pretrained(
             args.model,
             use_auth_token=True,
@@ -428,11 +439,13 @@ if __name__ == "__main__":
             if args.zero_shot is True:
                 prompt_cot = "answer the question through the form of The answer is xxx. Do not generate others."
                 prompts = [
-                    prompt_cot + "\nQuestion: " + question + "\n" for question in questions
+                    prompt_cot + "\nQuestion: " + question + "\n"
+                    for question in questions
                 ]
             else:
                 prompts = [
-                    prompt_cot + "\nQuestion: " + question + "\n" for question in questions
+                    prompt_cot + "\nQuestion: " + question + "\n"
+                    for question in questions
                 ]
 
             inputs = tokenizer(
@@ -486,7 +499,9 @@ if __name__ == "__main__":
                 )
                 all_samples.append(sample)
 
-        accuracy = sum([sample.is_pred_true for sample in all_samples]) / len(all_samples)
+        accuracy = sum([sample.is_pred_true for sample in all_samples]) / len(
+            all_samples
+        )
         evaluation_metric = EvaluationMetrics(accuracy=accuracy)
         evaluation_result = EvaluationResults(
             samples=all_samples,

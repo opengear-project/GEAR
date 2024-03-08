@@ -71,9 +71,11 @@ def gen_lang_yamls(output_dir: str, overwrite: bool) -> None:
                                 "include": "wmt_common_yaml",
                                 "group": groups,
                                 "dataset_path": lang,
-                                "dataset_name": dataset_name
-                                if not (lang == "iwslt2017")
-                                else "iwslt2017-" + dataset_name,
+                                "dataset_name": (
+                                    dataset_name
+                                    if not (lang == "iwslt2017")
+                                    else "iwslt2017-" + dataset_name
+                                ),
                                 "task": f"{lang}-{lang_pair}",
                                 "doc_to_text": f"{source} phrase: "
                                 + "{{translation["

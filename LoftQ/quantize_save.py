@@ -204,14 +204,12 @@ def quantize_and_save():
     lora_model_dir = os.path.join(args.save_dir, model_name, "loft_init")
 
     # save lora adapters first
-    lora_model.base_model.peft_config[
-        "default"
-    ].base_model_name_or_path = (
+    lora_model.base_model.peft_config["default"].base_model_name_or_path = (
         base_model_dir  # This can be a local path or Hub model id
     )
-    lora_model.base_model.peft_config[
-        "default"
-    ].init_lora_weights = True  # Don't apply LoftQ when loading again
+    lora_model.base_model.peft_config["default"].init_lora_weights = (
+        True  # Don't apply LoftQ when loading again
+    )
 
     lora_model.save_pretrained(lora_model_dir)
     print_model(lora_model, "lora_model")

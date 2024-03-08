@@ -48,12 +48,14 @@ class ContextSampler:
                     + (
                         str(self.doc_to_target(doc)[0])
                         if isinstance(self.doc_to_target(doc), list)
-                        else self.doc_to_target(doc)
-                        if (
-                            self.config.doc_to_choice is None
-                            or isinstance(self.doc_to_target(doc), str)
+                        else (
+                            self.doc_to_target(doc)
+                            if (
+                                self.config.doc_to_choice is None
+                                or isinstance(self.doc_to_target(doc), str)
+                            )
+                            else str(self.doc_to_choice(doc)[self.doc_to_target(doc)])
                         )
-                        else str(self.doc_to_choice(doc)[self.doc_to_target(doc)])
                     )
                     for doc in selected_docs
                 ]
@@ -77,8 +79,8 @@ class FirstNSampler(ContextSampler):
         Draw the first `n` samples in order from the specified split.
         Used for tasks with "canonical" ordered fewshot examples, such as MMLU and CMMLU.
         """
-        assert (
-            n <= len(self.docs)
+        assert n <= len(
+            self.docs
         ), f"Error: number of fewshot samples requested exceeds the {len(self.docs)} that are available."
         return self.docs[:n]
 

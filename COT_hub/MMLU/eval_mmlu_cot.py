@@ -153,19 +153,17 @@ def load_model_tokenizer(args):
         model_kwargs["token"] = args.hf_token
         if args.weight_compress:
             print("weight compress")
-            model_kwargs["quantization_config"] = create_compress_config(
-                None
-            )
-        elif args.weight_compress =="GPTQ":
+            model_kwargs["quantization_config"] = create_compress_config(None)
+        elif args.weight_compress == "GPTQ":
             print("GPTQ")
-            #change branch
+            # change branch
             model_kwargs["revision"] = "gptq-8bit-128g-actorder_False"
     if "Qwen" in args.model:
         config = transformers.AutoConfig.from_pretrained(
             args.model,
             use_auth_token=True,
             token=args.hf_token,
-            use_flash_attn = False,
+            use_flash_attn=False,
             trust_remote_code=True,
         )
     else:
@@ -174,7 +172,7 @@ def load_model_tokenizer(args):
             use_auth_token=True,
             token=args.hf_token,
             trust_remote_code=True,
-            use_flash_attn = False,
+            use_flash_attn=False,
         )
     from models import LlamaForCausalLMNew
     from models import GPT2CompressConfig
@@ -215,6 +213,7 @@ def load_model_tokenizer(args):
         )
     elif "Qwen" in args.model:
         from models import QWenLMHeadModel
+
         model = QWenLMHeadModel.from_pretrained(
             args.model,
             config=config,
@@ -223,9 +222,10 @@ def load_model_tokenizer(args):
             compress_config=compress_config,
             trust_remote_code=True,
         )
-        
+
     elif "Mistral" in args.model:
         from models import MistralForCausalLM
+
         model = MistralForCausalLM.from_pretrained(
             args.model,
             config=config,
@@ -312,8 +312,10 @@ def main(args):
     for task in tasks:
         acc = 0
         eval_dataset = load_dataset(
-            "lukaemon/mmlu", task, split=split, #cache_dir="../cache",
-            download_mode='force_redownload',
+            "lukaemon/mmlu",
+            task,
+            split=split,  # cache_dir="../cache",
+            download_mode="force_redownload",
         )
         eval_dataset = eval_dataset.map(
             prepare_example_prompt,
@@ -459,12 +461,14 @@ if __name__ == "__main__":
     parser.add_argument(
         "--token_preserving", action="store_true", default=False, help=""
     )
+    parser.add_argument("--streaming", action="store_true", default=False, help="")
+    parser.add_argument("--streaming_gap", type=int, default=0, help="")
     parser.add_argument(
-        "--streaming", action="store_true", default=False, help=""
+        "--weight-compress",
+        type=str,
+        choices=["uniform", "GPTQ", "AWQ"],
+        default=False,
+        help="",
     )
-    parser.add_argument(
-        "--streaming_gap", type=int, default=0, help=""
-    )
-    parser.add_argument("--weight-compress", type=str,choices=["uniform","GPTQ","AWQ"], default=False, help="")
     args = parser.parse_args()
     main(args)

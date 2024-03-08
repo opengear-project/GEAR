@@ -812,9 +812,9 @@ def main():
                 if args.with_tracking:
                     print(
                         {
-                            "accuracy"
-                            if args.task_name is not None
-                            else "glue": eval_metric,
+                            (
+                                "accuracy" if args.task_name is not None else "glue"
+                            ): eval_metric,
                             "train_loss": total_loss.item() / len(train_dataloader),
                             "epoch": epoch,
                             "step": completed_steps,

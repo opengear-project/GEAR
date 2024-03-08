@@ -18,14 +18,22 @@ from transformers.models.llama.modeling_llama import (
     apply_rotary_pos_emb,
     # LlamaForCausalLM,
 )
+
 # need to change to old version
 from .modeling_llama import LlamaAttention, LlamaForCausalLM
 import types
 
-__all__ = ["H2OLlamaForCausalLM", "H2OLlamaAttention",
-            "StreamllmLlamaForCausalLM", "StreamllmLlamaAttention",
-            "H2OLlamaAttention_absolute_position", "H2OLlamaForCausalLM_absolute_position",
-            "StreamllmLlamaAttention_absolute_position", "StreamllmLlamaForCausalLM_absolute_position"]
+__all__ = [
+    "H2OLlamaForCausalLM",
+    "H2OLlamaAttention",
+    "StreamllmLlamaForCausalLM",
+    "StreamllmLlamaAttention",
+    "H2OLlamaAttention_absolute_position",
+    "H2OLlamaForCausalLM_absolute_position",
+    "StreamllmLlamaAttention_absolute_position",
+    "StreamllmLlamaForCausalLM_absolute_position",
+]
+
 
 def slice2d(x, start, end):
     return x[:, :, start:end, ...]
@@ -45,8 +53,14 @@ DIM_TO_SLICE = {
     3: slice3d,
 }
 
+
 def _make_causal_mask(
-    bsz: int, tgt_len: int, past_key_values_length: int, dtype: torch.dtype, device: torch.device):
+    bsz: int,
+    tgt_len: int,
+    past_key_values_length: int,
+    dtype: torch.dtype,
+    device: torch.device,
+):
     """
     Make causal mask used for bi-directional self-attention.
     """
@@ -56,10 +70,21 @@ def _make_causal_mask(
     mask = mask.to(dtype)
 
     if past_key_values_length > 0:
-        mask = torch.cat([torch.zeros(tgt_len, past_key_values_length, dtype=dtype, device=device), mask], dim=-1)
-    return mask[None, None, :, :].expand(bsz, 1, tgt_len, tgt_len + past_key_values_length)
+        mask = torch.cat(
+            [
+                torch.zeros(
+                    tgt_len, past_key_values_length, dtype=dtype, device=device
+                ),
+                mask,
+            ],
+            dim=-1,
+        )
+    return mask[None, None, :, :].expand(
+        bsz, 1, tgt_len, tgt_len + past_key_values_length
+    )
 
-def   apply_rotary_pos_emb_single(x, cos, sin, position_ids):
+
+def apply_rotary_pos_emb_single(x, cos, sin, position_ids):
     # The first two dimensions of cos and sin are always 1, so we can `squeeze` them.
     cos = cos.squeeze(1).squeeze(0)  # [seq_len, dim]
     sin = sin.squeeze(1).squeeze(0)  # [seq_len, dim]
@@ -67,7 +92,6 @@ def   apply_rotary_pos_emb_single(x, cos, sin, position_ids):
     sin = sin[position_ids].unsqueeze(1)  # [bs, 1, seq_len, dim]
     x_embed = (x * cos) + (rotate_half(x) * sin)
     return x_embed
-
 
 
 class H2OKVCache_LayerWise:
@@ -101,21 +125,29 @@ class H2OKVCache_LayerWise:
         # hh-selection
         bsz, num_heads, _, head_dim = past_key_values[0].shape
 
-        select_hh_scores = self.hh_score[:, :seq_len - self.recent_size]
+        select_hh_scores = self.hh_score[:, : seq_len - self.recent_size]
         _, keep_topk = torch.topk(select_hh_scores, self.hh_size, dim=-1)
         keep_topk = keep_topk.sort().values
 
         # keep_recent = torch.arange(seq_len - self.recent_size, seq_len).expand(keep_topk.shape[0], 1).to(keep_topk.device)
-        keep_recent = torch.arange(seq_len - self.recent_size, seq_len, device=keep_topk.device).repeat(keep_topk.shape[0], 1)
+        keep_recent = torch.arange(
+            seq_len - self.recent_size, seq_len, device=keep_topk.device
+        ).repeat(keep_topk.shape[0], 1)
         keep_idx = torch.cat([keep_topk, keep_recent], dim=-1)
 
-        mask = torch.zeros(self.hh_score.shape, dtype=torch.bool).to(past_key_values[0].device)
+        mask = torch.zeros(self.hh_score.shape, dtype=torch.bool).to(
+            past_key_values[0].device
+        )
         mask = mask.scatter(-1, keep_idx, 1)
         # print(mask.shape, past_key_values[0].squeeze().shape)
-        k_hh_recent = past_key_values[0].squeeze()[mask].view(bsz, num_heads, -1, head_dim)
-        v_hh_recent = past_key_values[1].squeeze()[mask].view(bsz, num_heads, -1, head_dim)
+        k_hh_recent = (
+            past_key_values[0].squeeze()[mask].view(bsz, num_heads, -1, head_dim)
+        )
+        v_hh_recent = (
+            past_key_values[1].squeeze()[mask].view(bsz, num_heads, -1, head_dim)
+        )
 
-        self.hh_score= self.hh_score[mask].view(num_heads, self.cache_size)
+        self.hh_score = self.hh_score[mask].view(num_heads, self.cache_size)
 
         return (k_hh_recent, v_hh_recent)
 
@@ -129,21 +161,29 @@ class H2OKVCache_LayerWise:
         # hh-selection
         bsz, num_heads, _, head_dim = past_key_values[0].shape
 
-        select_hh_scores = self.hh_score[:, :seq_len - self.recent_size + num_coming]
+        select_hh_scores = self.hh_score[:, : seq_len - self.recent_size + num_coming]
         _, keep_topk = torch.topk(select_hh_scores, self.hh_size, dim=-1)
         keep_topk = keep_topk.sort().values
 
         # keep_recent = torch.arange(seq_len - self.recent_size, seq_len).expand(keep_topk.shape[0], 1).to(keep_topk.device)
-        keep_recent = torch.arange(seq_len - self.recent_size + num_coming, seq_len, device=keep_topk.device).repeat(keep_topk.shape[0], 1)
+        keep_recent = torch.arange(
+            seq_len - self.recent_size + num_coming, seq_len, device=keep_topk.device
+        ).repeat(keep_topk.shape[0], 1)
         keep_idx = torch.cat([keep_topk, keep_recent], dim=-1)
 
-        mask = torch.zeros(self.hh_score.shape, dtype=torch.bool).to(past_key_values[0].device)
+        mask = torch.zeros(self.hh_score.shape, dtype=torch.bool).to(
+            past_key_values[0].device
+        )
         mask = mask.scatter(-1, keep_idx, 1)
 
-        k_hh_recent = past_key_values[0].squeeze()[mask].view(bsz, num_heads, -1, head_dim)
-        v_hh_recent = past_key_values[1].squeeze()[mask].view(bsz, num_heads, -1, head_dim)
+        k_hh_recent = (
+            past_key_values[0].squeeze()[mask].view(bsz, num_heads, -1, head_dim)
+        )
+        v_hh_recent = (
+            past_key_values[1].squeeze()[mask].view(bsz, num_heads, -1, head_dim)
+        )
 
-        self.hh_score= self.hh_score[mask].view(num_heads, self.cache_size)
+        self.hh_score = self.hh_score[mask].view(num_heads, self.cache_size)
 
         return (k_hh_recent, v_hh_recent)
 
@@ -181,10 +221,18 @@ class H2OLlamaAttention(nn.Module):
                 f"hidden_size must be divisible by num_heads (got `hidden_size`: {self.hidden_size}"
                 f" and `num_heads`: {self.num_heads})."
             )
-        self.q_proj = nn.Linear(self.hidden_size, self.num_heads * self.head_dim, bias=False)
-        self.k_proj = nn.Linear(self.hidden_size, self.num_key_value_heads * self.head_dim, bias=False)
-        self.v_proj = nn.Linear(self.hidden_size, self.num_key_value_heads * self.head_dim, bias=False)
-        self.o_proj = nn.Linear(self.num_heads * self.head_dim, self.hidden_size, bias=False)
+        self.q_proj = nn.Linear(
+            self.hidden_size, self.num_heads * self.head_dim, bias=False
+        )
+        self.k_proj = nn.Linear(
+            self.hidden_size, self.num_key_value_heads * self.head_dim, bias=False
+        )
+        self.v_proj = nn.Linear(
+            self.hidden_size, self.num_key_value_heads * self.head_dim, bias=False
+        )
+        self.o_proj = nn.Linear(
+            self.num_heads * self.head_dim, self.hidden_size, bias=False
+        )
         self._init_rope()
 
         self.kv_cache = H2OKVCache_LayerWise(
@@ -222,7 +270,11 @@ class H2OLlamaAttention(nn.Module):
                 raise ValueError(f"Unknown RoPE scaling type {scaling_type}")
 
     def _shape(self, tensor: torch.Tensor, seq_len: int, bsz: int):
-        return tensor.view(bsz, seq_len, self.num_heads, self.head_dim).transpose(1, 2).contiguous()
+        return (
+            tensor.view(bsz, seq_len, self.num_heads, self.head_dim)
+            .transpose(1, 2)
+            .contiguous()
+        )
 
     def _clean_cache(self):
         self.kv_cache._clean_scores()
@@ -287,7 +339,9 @@ class H2OLlamaAttention(nn.Module):
         attention_mask = _make_causal_mask(
             bsz=bsz,
             tgt_len=q_len,
-            past_key_values_length=past_key_value[0].shape[-2] if past_key_value is not None else 0,
+            past_key_values_length=(
+                past_key_value[0].shape[-2] if past_key_value is not None else 0
+            ),
             dtype=query_states.dtype,
             device=query_states.device,
         )
@@ -313,7 +367,9 @@ class H2OLlamaAttention(nn.Module):
         past_key_value = (key_states, value_states) if use_cache else None
 
         ### Shift Pos: key pos is the pos in cache (Rolling KV Cache and using relative pos emb)
-        key_position_ids = torch.arange(kv_seq_len, device=position_ids.device).unsqueeze(0)
+        key_position_ids = torch.arange(
+            kv_seq_len, device=position_ids.device
+        ).unsqueeze(0)
         key_states = apply_rotary_pos_emb_single(key_states, cos, sin, key_position_ids)
         ###
 
@@ -321,9 +377,9 @@ class H2OLlamaAttention(nn.Module):
         key_states = repeat_kv(key_states, self.num_key_value_groups)
         value_states = repeat_kv(value_states, self.num_key_value_groups)
 
-        attn_weights = torch.matmul(query_states, key_states.transpose(2, 3)) / math.sqrt(
-            self.head_dim
-        )
+        attn_weights = torch.matmul(
+            query_states, key_states.transpose(2, 3)
+        ) / math.sqrt(self.head_dim)
 
         if attn_weights.size() != (bsz, self.num_heads, q_len, kv_seq_len):
             raise ValueError(
@@ -339,9 +395,9 @@ class H2OLlamaAttention(nn.Module):
             attn_weights = attn_weights + attention_mask
 
         # upcast attention to fp32
-        attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(
-            query_states.dtype
-        )
+        attn_weights = nn.functional.softmax(
+            attn_weights, dim=-1, dtype=torch.float32
+        ).to(query_states.dtype)
 
         past_key_value = self.kv_cache(past_key_value, attn_weights.detach().clone())
 
@@ -405,10 +461,18 @@ class H2OLlamaAttention_absolute_position(nn.Module):
                 f"hidden_size must be divisible by num_heads (got `hidden_size`: {self.hidden_size}"
                 f" and `num_heads`: {self.num_heads})."
             )
-        self.q_proj = nn.Linear(self.hidden_size, self.num_heads * self.head_dim, bias=False)
-        self.k_proj = nn.Linear(self.hidden_size, self.num_key_value_heads * self.head_dim, bias=False)
-        self.v_proj = nn.Linear(self.hidden_size, self.num_key_value_heads * self.head_dim, bias=False)
-        self.o_proj = nn.Linear(self.num_heads * self.head_dim, self.hidden_size, bias=False)
+        self.q_proj = nn.Linear(
+            self.hidden_size, self.num_heads * self.head_dim, bias=False
+        )
+        self.k_proj = nn.Linear(
+            self.hidden_size, self.num_key_value_heads * self.head_dim, bias=False
+        )
+        self.v_proj = nn.Linear(
+            self.hidden_size, self.num_key_value_heads * self.head_dim, bias=False
+        )
+        self.o_proj = nn.Linear(
+            self.num_heads * self.head_dim, self.hidden_size, bias=False
+        )
         self._init_rope()
 
         self.kv_cache = H2OKVCache_LayerWise(
@@ -446,7 +510,11 @@ class H2OLlamaAttention_absolute_position(nn.Module):
                 raise ValueError(f"Unknown RoPE scaling type {scaling_type}")
 
     def _shape(self, tensor: torch.Tensor, seq_len: int, bsz: int):
-        return tensor.view(bsz, seq_len, self.num_heads, self.head_dim).transpose(1, 2).contiguous()
+        return (
+            tensor.view(bsz, seq_len, self.num_heads, self.head_dim)
+            .transpose(1, 2)
+            .contiguous()
+        )
 
     def _clean_cache(self):
         self.kv_cache._clean_scores()
@@ -510,7 +578,9 @@ class H2OLlamaAttention_absolute_position(nn.Module):
         attention_mask = _make_causal_mask(
             bsz=bsz,
             tgt_len=q_len,
-            past_key_values_length=past_key_value[0].shape[-2] if past_key_value is not None else 0,
+            past_key_values_length=(
+                past_key_value[0].shape[-2] if past_key_value is not None else 0
+            ),
             dtype=query_states.dtype,
             device=query_states.device,
         )
@@ -521,8 +591,8 @@ class H2OLlamaAttention_absolute_position(nn.Module):
 
         position_length = kv_seq_len
         if not position_ids.nelement() > 1:
-            if position_length < position_ids.item()+1:
-                position_length = position_ids.item()+1
+            if position_length < position_ids.item() + 1:
+                position_length = position_ids.item() + 1
 
         cos, sin = self.rotary_emb(value_states, seq_len=position_length)
         ### Shift Pos: query pos is min(cache_size, idx)
@@ -541,9 +611,9 @@ class H2OLlamaAttention_absolute_position(nn.Module):
         key_states = repeat_kv(key_states, self.num_key_value_groups)
         value_states = repeat_kv(value_states, self.num_key_value_groups)
 
-        attn_weights = torch.matmul(query_states, key_states.transpose(2, 3)) / math.sqrt(
-            self.head_dim
-        )
+        attn_weights = torch.matmul(
+            query_states, key_states.transpose(2, 3)
+        ) / math.sqrt(self.head_dim)
 
         if attn_weights.size() != (bsz, self.num_heads, q_len, kv_seq_len):
             raise ValueError(
@@ -559,9 +629,9 @@ class H2OLlamaAttention_absolute_position(nn.Module):
             attn_weights = attn_weights + attention_mask
 
         # upcast attention to fp32
-        attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(
-            query_states.dtype
-        )
+        attn_weights = nn.functional.softmax(
+            attn_weights, dim=-1, dtype=torch.float32
+        ).to(query_states.dtype)
 
         past_key_value = self.kv_cache(past_key_value, attn_weights.detach().clone())
 
@@ -603,8 +673,9 @@ class H2OLlamaForCausalLM_absolute_position(LlamaForCausalLM):
         super().__init__(config)
         num_layers = len(self.model.layers)
         for layer_idx in range(num_layers):
-            self.model.layers[layer_idx].self_attn = H2OLlamaAttention_absolute_position(config)
-
+            self.model.layers[layer_idx].self_attn = (
+                H2OLlamaAttention_absolute_position(config)
+            )
 
 
 class StartRecentKVCache_LayerWise:
@@ -631,20 +702,26 @@ class StartRecentKVCache_LayerWise:
         if seq_len <= self.cache_size:
             return past_key_values
 
-        return (torch.cat(
-                    [
-                        self.k_slice(past_key_values[0], 0, self.start_size),
-                        self.k_slice(past_key_values[0], seq_len - self.recent_size, seq_len),
-                    ],
-                    dim=self.k_seq_dim,
-                ),
-                torch.cat(
-                    [
-                        self.v_slice(past_key_values[1], 0, self.start_size),
-                        self.v_slice(past_key_values[1], seq_len - self.recent_size, seq_len),
-                    ],
-                    dim=self.v_seq_dim,
-                ))
+        return (
+            torch.cat(
+                [
+                    self.k_slice(past_key_values[0], 0, self.start_size),
+                    self.k_slice(
+                        past_key_values[0], seq_len - self.recent_size, seq_len
+                    ),
+                ],
+                dim=self.k_seq_dim,
+            ),
+            torch.cat(
+                [
+                    self.v_slice(past_key_values[1], 0, self.start_size),
+                    self.v_slice(
+                        past_key_values[1], seq_len - self.recent_size, seq_len
+                    ),
+                ],
+                dim=self.v_seq_dim,
+            ),
+        )
 
 
 class StreamllmLlamaAttention(nn.Module):
@@ -666,10 +743,18 @@ class StreamllmLlamaAttention(nn.Module):
                 f"hidden_size must be divisible by num_heads (got `hidden_size`: {self.hidden_size}"
                 f" and `num_heads`: {self.num_heads})."
             )
-        self.q_proj = nn.Linear(self.hidden_size, self.num_heads * self.head_dim, bias=False)
-        self.k_proj = nn.Linear(self.hidden_size, self.num_key_value_heads * self.head_dim, bias=False)
-        self.v_proj = nn.Linear(self.hidden_size, self.num_key_value_heads * self.head_dim, bias=False)
-        self.o_proj = nn.Linear(self.num_heads * self.head_dim, self.hidden_size, bias=False)
+        self.q_proj = nn.Linear(
+            self.hidden_size, self.num_heads * self.head_dim, bias=False
+        )
+        self.k_proj = nn.Linear(
+            self.hidden_size, self.num_key_value_heads * self.head_dim, bias=False
+        )
+        self.v_proj = nn.Linear(
+            self.hidden_size, self.num_key_value_heads * self.head_dim, bias=False
+        )
+        self.o_proj = nn.Linear(
+            self.num_heads * self.head_dim, self.hidden_size, bias=False
+        )
         self._init_rope()
 
         self.kv_cache = StartRecentKVCache_LayerWise(
@@ -707,7 +792,11 @@ class StreamllmLlamaAttention(nn.Module):
                 raise ValueError(f"Unknown RoPE scaling type {scaling_type}")
 
     def _shape(self, tensor: torch.Tensor, seq_len: int, bsz: int):
-        return tensor.view(bsz, seq_len, self.num_heads, self.head_dim).transpose(1, 2).contiguous()
+        return (
+            tensor.view(bsz, seq_len, self.num_heads, self.head_dim)
+            .transpose(1, 2)
+            .contiguous()
+        )
 
     def forward(
         self,
@@ -718,7 +807,7 @@ class StreamllmLlamaAttention(nn.Module):
         output_attentions: bool = False,
         use_cache: bool = False,
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
-        
+
         bsz, q_len, _ = hidden_states.size()
 
         if self.config.pretraining_tp > 1:
@@ -768,7 +857,9 @@ class StreamllmLlamaAttention(nn.Module):
         attention_mask = _make_causal_mask(
             bsz=bsz,
             tgt_len=q_len,
-            past_key_values_length=past_key_value[0].shape[-2] if past_key_value is not None else 0,
+            past_key_values_length=(
+                past_key_value[0].shape[-2] if past_key_value is not None else 0
+            ),
             dtype=query_states.dtype,
             device=query_states.device,
         )
@@ -794,7 +885,9 @@ class StreamllmLlamaAttention(nn.Module):
         past_key_value = (key_states, value_states) if use_cache else None
 
         ### Shift Pos: key pos is the pos in cache (Rolling KV Cache and using relative pos emb)
-        key_position_ids = torch.arange(kv_seq_len, device=position_ids.device).unsqueeze(0)
+        key_position_ids = torch.arange(
+            kv_seq_len, device=position_ids.device
+        ).unsqueeze(0)
         key_states = apply_rotary_pos_emb_single(key_states, cos, sin, key_position_ids)
         ###
 
@@ -802,9 +895,9 @@ class StreamllmLlamaAttention(nn.Module):
         key_states = repeat_kv(key_states, self.num_key_value_groups)
         value_states = repeat_kv(value_states, self.num_key_value_groups)
 
-        attn_weights = torch.matmul(query_states, key_states.transpose(2, 3)) / math.sqrt(
-            self.head_dim
-        )
+        attn_weights = torch.matmul(
+            query_states, key_states.transpose(2, 3)
+        ) / math.sqrt(self.head_dim)
 
         if attn_weights.size() != (bsz, self.num_heads, q_len, kv_seq_len):
             raise ValueError(
@@ -820,9 +913,9 @@ class StreamllmLlamaAttention(nn.Module):
             attn_weights = attn_weights + attention_mask
 
         # upcast attention to fp32
-        attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(
-            query_states.dtype
-        )
+        attn_weights = nn.functional.softmax(
+            attn_weights, dim=-1, dtype=torch.float32
+        ).to(query_states.dtype)
 
         past_key_value = self.kv_cache(past_key_value)
 
@@ -886,10 +979,18 @@ class StreamllmLlamaAttention_absolute_position(nn.Module):
                 f"hidden_size must be divisible by num_heads (got `hidden_size`: {self.hidden_size}"
                 f" and `num_heads`: {self.num_heads})."
             )
-        self.q_proj = nn.Linear(self.hidden_size, self.num_heads * self.head_dim, bias=False)
-        self.k_proj = nn.Linear(self.hidden_size, self.num_key_value_heads * self.head_dim, bias=False)
-        self.v_proj = nn.Linear(self.hidden_size, self.num_key_value_heads * self.head_dim, bias=False)
-        self.o_proj = nn.Linear(self.num_heads * self.head_dim, self.hidden_size, bias=False)
+        self.q_proj = nn.Linear(
+            self.hidden_size, self.num_heads * self.head_dim, bias=False
+        )
+        self.k_proj = nn.Linear(
+            self.hidden_size, self.num_key_value_heads * self.head_dim, bias=False
+        )
+        self.v_proj = nn.Linear(
+            self.hidden_size, self.num_key_value_heads * self.head_dim, bias=False
+        )
+        self.o_proj = nn.Linear(
+            self.num_heads * self.head_dim, self.hidden_size, bias=False
+        )
         self._init_rope()
 
         self.kv_cache = StartRecentKVCache_LayerWise(
@@ -898,7 +999,6 @@ class StreamllmLlamaAttention_absolute_position(nn.Module):
             k_seq_dim=2,
             v_seq_dim=2,
         )
-
 
     def _init_rope(self):
         if self.config.rope_scaling is None:
@@ -928,7 +1028,11 @@ class StreamllmLlamaAttention_absolute_position(nn.Module):
                 raise ValueError(f"Unknown RoPE scaling type {scaling_type}")
 
     def _shape(self, tensor: torch.Tensor, seq_len: int, bsz: int):
-        return tensor.view(bsz, seq_len, self.num_heads, self.head_dim).transpose(1, 2).contiguous()
+        return (
+            tensor.view(bsz, seq_len, self.num_heads, self.head_dim)
+            .transpose(1, 2)
+            .contiguous()
+        )
 
     def forward(
         self,
@@ -939,7 +1043,7 @@ class StreamllmLlamaAttention_absolute_position(nn.Module):
         output_attentions: bool = False,
         use_cache: bool = False,
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
-        
+
         bsz, q_len, _ = hidden_states.size()
 
         if self.config.pretraining_tp > 1:
@@ -989,7 +1093,9 @@ class StreamllmLlamaAttention_absolute_position(nn.Module):
         attention_mask = _make_causal_mask(
             bsz=bsz,
             tgt_len=q_len,
-            past_key_values_length=past_key_value[0].shape[-2] if past_key_value is not None else 0,
+            past_key_values_length=(
+                past_key_value[0].shape[-2] if past_key_value is not None else 0
+            ),
             dtype=query_states.dtype,
             device=query_states.device,
         )
@@ -1020,9 +1126,9 @@ class StreamllmLlamaAttention_absolute_position(nn.Module):
         key_states = repeat_kv(key_states, self.num_key_value_groups)
         value_states = repeat_kv(value_states, self.num_key_value_groups)
 
-        attn_weights = torch.matmul(query_states, key_states.transpose(2, 3)) / math.sqrt(
-            self.head_dim
-        )
+        attn_weights = torch.matmul(
+            query_states, key_states.transpose(2, 3)
+        ) / math.sqrt(self.head_dim)
 
         if attn_weights.size() != (bsz, self.num_heads, q_len, kv_seq_len):
             raise ValueError(
@@ -1038,9 +1144,9 @@ class StreamllmLlamaAttention_absolute_position(nn.Module):
             attn_weights = attn_weights + attention_mask
 
         # upcast attention to fp32
-        attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(
-            query_states.dtype
-        )
+        attn_weights = nn.functional.softmax(
+            attn_weights, dim=-1, dtype=torch.float32
+        ).to(query_states.dtype)
 
         past_key_value = self.kv_cache(past_key_value)
 
@@ -1082,6 +1188,6 @@ class StreamllmLlamaForCausalLM_absolute_position(LlamaForCausalLM):
         super().__init__(config)
         num_layers = len(self.model.layers)
         for layer_idx in range(num_layers):
-            self.model.layers[layer_idx].self_attn = StreamllmLlamaAttention_absolute_position(config)
-
-
+            self.model.layers[layer_idx].self_attn = (
+                StreamllmLlamaAttention_absolute_position(config)
+            )
