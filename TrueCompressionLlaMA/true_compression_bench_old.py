@@ -9,7 +9,7 @@ seed = 3125
 torch.manual_seed(seed)
 torch.cuda.manual_seed_all(seed)
 compress_config = {}
-compress_config["compress_mode"] = "gear_tokenwiseQ_nopq"
+compress_config["compress_mode"] = "gear_batch"
 compress_config["quantize_bit"] = 4
 compress_config["left"] = 0.02
 compress_config["rank"] = 0.02  # 0.01
