@@ -1,1 +1,0 @@
-python eval_gsm8k_cot.py --model mistralai/Mistral-7B-v0.1 --prompt_file prompt_original.txt --batch_size 6 --max_new_tokens 256 --attention_number 40

@@ -1,9 +1,77 @@
-# FlashKVcache
-## Motivation
-For long prefill and generate token size tasks(text generation, diaglogue generation), KVcaches could be so huge that loading and saving could be time consuming. Thus systematically and compression optimization is in need for LLMs. Also, previous papers use PPL(perplexity) for evaluation of compressed LLMs. PPL could be low even if generation results are unconvincing. So we evaluate our algorithm in generation tasks and with the right metric.
-1. Compression algorithms: Low-rank, quantization.
-Lower rank/less bits for not important K,V
-2. recompute part of the K V caches.(reduce loading bandwidth, preserve important message)
-## Todo(11.1.2023->11.7.2023)
-1. Using model [Xgen-7b](https://arxiv.org/abs/2309.03450?ref=blog.salesforceairesearch.com) and set the benchmark of some text summarization tasks.
-2. Test of Pi4Cache-Q still works at sentence generation tasks
+
+## GEAR: Generative Inference with LLM via Approximation and Error Recovery #
+<p align="center"><img width="100%" src="./Fig/gt_intel.png"></p><br/>
+
+This is the repo for our recent work `GEAR: An Efficient KV Cache Compression Recipe for Near-Lossless Generative Inference of LLM.` `GEAR` is a "plug-and-play" inference only KV quantization method.
+`GEAR` augments any quantization scheme via an error recovery solution to boost the model accuracy while saving memory.
+
+[paper](https://arxiv.org/abs/2403.05527)
+
+
+## Updates
+- **March 8th, 2024**: Initial manuscript is submitted to arxiv!
+- **March 11th, 2024**: Initial code release!
+## Overview
+GEAR is an efficient KV cache compression framework that achieves
+near-lossless high-ratio compression. GEAR first applies quantization to majority of entries of
+similar magnitudes to ultra-low precision. It then employs a low-rank matrix to approximate
+the quantization error, and a sparse matrix to remedy individual errors from outlier entries.
+
+GEAR does not need to preserve any first or last tokens uncompressed like other low bit compression algorithms to achieve near lossless KV cache compression for LLMs.
+<p align="center"><img width="100%" src="./Fig/overview.png"></p><br/>
+
+## How to use GEAR
+```bash
+conda create -n GEAR python==3.10
+conda activate GEAR
+pip install -r requirements.txt
+```
+### Example
+```code
+from GEARLM import GearLlamaForCausalLM
+from transformers import AutoTokenizer
+compress_config = {}
+compress_config["compress_mode"] = "gear_batch" # batchwise-GEAR
+compress_config["quantize_bit"] = 4 # outlier quantization bit
+compress_config["left"] = 0.02 # outlier extraction rate
+compress_config["rank"] = 0.02  # setting rank for Key and value cache quantization error
+compress_config["loop"] = 3 # a constant for power iteration(an efficient SVD solver)
+compress_config["stream"] = True # streaming-gear set to true to perform better efficiency
+compress_config["streaming_gap"] = 20 # re-compress every 20 iteration 
+model = GearLlamaForCausalLM.from_pretrained(
+    "meta-llama/Llama-2-7b-hf",
+    cache_dir="../cache",
+    device_map=device_map,
+    compress_config=compress_config,
+    torch_dtype=torch.float16,
+    # torch_dtype = torch.float16,
+)
+tokenizer = AutoTokenizer.from_pretrained(
+    "meta-llama/Llama-2-7b-hf",
+    token=None,
+    padding_side="left",
+    model_max_length=max_length,
+    use_fast=False,
+    cache_dir="../cache",
+    max_length=max_length,
+)
+...
+```
+### Reposity architecture
+```
+.
+├── Fig
+├── GEARLM
+├── GenerationBench
+├── Readme.md
+├── TrueCompressionLlaMA
+├── lm-harness
+└── requirements.txt
+```
+`GEARLM` is the source code of python package
+
+`GenerationBench` is simluated compression tested on finetuned and un finetuned model with BBH, GSM8K, and MMLU dataset.
+
+`TrueCompressionLlaMA` are Llama-2 embeded with GEAR true compression code on an old version of transformers and a new version of transformers.
+
+`lm-harness` is simluated compression tested on Llama-2 and with 50+ datasets

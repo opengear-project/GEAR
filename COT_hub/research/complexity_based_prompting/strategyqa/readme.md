@@ -1,1 +1,0 @@
-Dataset can be downloaded at: https://allenai.org/data/strategyqa

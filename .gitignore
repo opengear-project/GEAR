@@ -20,5 +20,7 @@
 /GenerationBench/cache
 /GEARLM/build
 /GEARLM/dist
+/GEARLM/setup.py
+/GEARLM/test.py
 /GEARLM/GEARLM.egg-info
 
