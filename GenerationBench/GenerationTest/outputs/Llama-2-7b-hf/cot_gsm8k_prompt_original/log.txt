@@ -1,0 +1,12 @@
+03/10/2024 20:11:57 - INFO - accelerate.utils.modeling - We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+03/10/2024 20:12:37 - INFO - root - Preprocessing the dataset.
+03/10/2024 20:13:48 - INFO - accelerate.utils.modeling - We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+03/10/2024 20:14:29 - INFO - root - Preprocessing the dataset.
+03/10/2024 20:15:26 - INFO - accelerate.utils.modeling - We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+03/10/2024 20:16:06 - INFO - root - Preprocessing the dataset.
+03/10/2024 20:17:33 - INFO - accelerate.utils.modeling - We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+03/10/2024 20:18:13 - INFO - root - Preprocessing the dataset.
+03/10/2024 20:20:56 - INFO - accelerate.utils.modeling - We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+03/10/2024 20:21:36 - INFO - root - Preprocessing the dataset.
+03/10/2024 20:24:25 - INFO - accelerate.utils.modeling - We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+03/10/2024 20:25:05 - INFO - root - Preprocessing the dataset.
