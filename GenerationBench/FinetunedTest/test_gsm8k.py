@@ -9,7 +9,7 @@ import torch
 import transformers
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from GEARLM import SimulatedGearLlamaForCausalLM, CompressionConfig
-from peft import PeftModel
+
 from datasets import load_dataset
 from accelerate.utils import set_seed
 
@@ -44,11 +44,7 @@ def evaluation(model_args, data_args, compress_args):
             attention_number=compress_args.attention_number,
             device_num=compress_args.gpu,
             batch_num=data_args.batch_size,
-            stage=compress_args.stage,
             start_saving=compress_args.start_saving,
-            locality_saving=compress_args.locality_saving,
-            token_preserving=compress_args.token_preserving,
-            iter=compress_args.iter,
             streaming=compress_args.streaming,
             streaming_gap=compress_args.streaming_gap,
         )

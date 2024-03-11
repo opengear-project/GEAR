@@ -561,44 +561,7 @@ def compress_insert_function(
         starting_idx = int(0)
         locality_idx = -seq_len
     # print("starting_idx:", starting_idx, "locality_idx:", locality_idx,compress_config.token_preserving[layer_idx],batch, num_head, seq_len, sep_dim)
-    if compress_config.compress_method[layer_idx] == "Picache":
-        # TODO
-        batch, num_head, seq_len, sep_dim = previous_key.shape
-
-        if seq_len > compress_config.rank[layer_idx]:
-            previous_key = fake_picache_compress(
-                previous_key,
-                compress_config.loop[layer_idx],
-                compress_config.rank[layer_idx],
-                compress_config.device_num[layer_idx],
-                pbase1,
-                qbase1,
-                compress_config.quantize_bit[layer_idx],
-                compress_config.left[layer_idx],
-            )
-        else:
-            previous_key = fake_dense_sparse_uniformquantization(
-                previous_key,
-                compress_config.quantize_bit[layer_idx],
-                compress_config.left[layer_idx],
-            )
-        if seq_len > compress_config.rankv[layer_idx]:
-            previous_value = fake_picache_compress(
-                previous_value,
-                compress_config.loop[layer_idx],
-                compress_config.rankv[layer_idx],
-                compress_config.device_num[layer_idx],
-                pbase2,
-                qbase2,
-                compress_config.quantize_bit[layer_idx],
-                compress_config.left[layer_idx],
-            )
-        else:
-            previous_value = fake_dense_sparse_uniformquantization(
-                previous_value,
-                compress_config.quantize_bit[layer_idx],
-                compress_config.left[layer_idx],
-            )
+ 
 
     if compress_config.compress_method[layer_idx] == "groupquantization":
         previous_key[:, :, starting_idx:-locality_idx, :] = (

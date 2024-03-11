@@ -73,20 +73,9 @@ class CompressArguments:
         default=100,
         metadata={"help": "attention layer number of LLM, for LlAMA-2-7b it is 32"},
     )
-    stage: int = field(default=0, metadata={"help": "Evaluation batch size."})
-    gpu: int = field(default=1, metadata={"help": "Evaluation batch size."})
-    iter: int = field(default=1, metadata={"help": "Evaluation batch size."})
-    locality_saving: float = field(
-        default=0.0, metadata={"help": "Evaluation batch size."}
-    )
-    start_saving: float = field(
-        default=0.0, metadata={"help": "Evaluation batch size."}
-    )
-    token_preserving: bool = field(
-        default=False, metadata={"help": "Evaluation batch size."}
-    )
-    streaming: bool = field(default=False, metadata={"help": "Evaluation batch size."})
-    streaming_gap: int = field(default=0, metadata={"help": "Evaluation batch size."})
+    gpu: int = field(default=1, metadata={"help": "set gpu"})
+    streaming: bool = field(default=False, metadata={"help": "Use streaming mode."})
+    streaming_gap: int = field(default=0, metadata={"help": "iteration length for re-compression"})
 
 
 def smart_tokenizer_and_embedding_resize(

@@ -310,13 +310,8 @@ if __name__ == "__main__":
     parser.add_argument("--top_kprun", type=float, default=0.0, help="")
     parser.add_argument("--left", type=float, default=0.0, help="")
     parser.add_argument("--attention_number", type=int, default=100, help="")
-    parser.add_argument("--stage", type=int, default=0, help="")
     parser.add_argument("--gpu", type=int, default=0, help="")
-    parser.add_argument("--locality_saving", type=float, default=0.0, help="")
-    parser.add_argument("--start_saving", type=float, default=0.0, help="")
-    parser.add_argument(
-        "--token_preserving", action="store_true", default=False, help=""
-    )
+
     parser.add_argument("--heavy_size", type=int, default=0, help="")
     parser.add_argument("--recent_size", type=int, default=0, help="")
     parser.add_argument("--streaming", action="store_true", default=False, help="")
@@ -388,10 +383,7 @@ if __name__ == "__main__":
             attention_number=args.attention_number,
             device_num=args.gpu,
             batch_num=args.batch_size,
-            stage=args.stage,
-            start_saving=args.start_saving,
-            locality_saving=args.locality_saving,
-            token_preserving=args.token_preserving,
+
             heavy_size=args.heavy_size,
             recent_size=args.recent_size,
             streaming=args.streaming,

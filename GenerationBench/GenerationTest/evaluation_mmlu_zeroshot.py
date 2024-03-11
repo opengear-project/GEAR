@@ -177,10 +177,6 @@ def load(args):
             attention_number=args.attention_number,
             device_num=args.gpu,
             batch_num=args.batch_size,
-            stage=args.stage,
-            start_saving=args.start_saving,
-            locality_saving=args.locality_saving,
-            token_preserving=args.token_preserving,
             streaming=args.streaming,
             streaming_gap=args.streaming_gap,
         )
@@ -220,3 +216,125 @@ def load(args):
         tokenizer.pad_token = tokenizer.eos_token
     # model = model.to('cuda')
     return model, tokenizer
+def batch_split(prompts, batch_num):
+    batch_prompts = []
+    mini_batch = []
+    for prompt in prompts:
+        mini_batch.append(prompt)
+        if len(mini_batch) == batch_num:
+            batch_prompts.append(mini_batch)
+            mini_batch = []
+    if len(mini_batch) != 0:
+        batch_prompts.append(mini_batch)
+    return batch_prompts
+
+
+def batch_infer(model, tokenizer, prompts, args):
+    batch_size = args.batch_size
+    answers = []
+    for batch_input in tqdm(batch_split(prompts, batch_size)):
+        encode_inputs = prepare_input(tokenizer, batch_input)
+        outputs = model.generate(
+            **encode_inputs, max_new_tokens=1, pad_token_id=tokenizer.pad_token_id
+        )
+        answers.extend(tokenizer.batch_decode(outputs, skip_special_tokens=True))
+    answers = [answer[-1] for answer in answers]
+    return answers
+
+
+def main(args):
+    run_results = {}
+    output_filename = "run_results_%s_%sb.json" % (args.model,args.compress_method)
+
+    model, tokenizer = load(args)
+    start_time = time.time()
+    for task in TASKS:
+        print("Testing %s ..." % task)
+        records = []
+        dev_df = pd.read_csv(
+            os.path.join(args.data_dir, "dev", task + "_dev.csv"), header=None
+        )[: args.ntrain]
+        test_df = pd.read_csv(
+            os.path.join(args.data_dir, "test", task + "_test.csv"), header=None
+        )
+        for i in range(test_df.shape[0]):
+            # get prompt and make sure it fits
+            k = args.ntrain
+            prompt_end = format_example(test_df, i, include_answer=False)
+            train_prompt = gen_prompt(dev_df, task, k)
+            prompt = train_prompt + prompt_end
+            while len(tokenizer.tokenize(prompt)) + 1 > 2048:  # bos token
+                prompt_split = prompt.split("\n\n")
+                prompt_split.pop(1)
+                prompt = "\n\n".join(prompt_split)
+            label = test_df.iloc[i, test_df.shape[1] - 1]
+            records.append({"prompt": prompt, "answer": label})
+
+        pred_answers = batch_infer(
+            model, tokenizer, [record["prompt"] for record in records], args
+        )
+        gold_answers = [record["answer"] for record in records]
+        run_results[task] = {"pred_answers": pred_answers, "gold_answers": gold_answers}
+    with open(output_filename, "w") as f:
+        json.dump(run_results, f, ensure_ascii=False, indent=2)
+
+    compute_metric(output_filename)
+    end_time = time.time()
+    print("total run time %.2f" % (end_time - start_time))
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Evaluate MMLU Tasks")
+    parser.add_argument(
+        "--model", type=str, default="meta-llama/Llama-2-7b", help="Model name or path."
+    )
+    parser.add_argument(
+        "--tasks", nargs="+", type=str, default=TASKS, help="The evaluation tasks."
+    )
+    parser.add_argument(
+        "--prompt_file", type=str, default="lib_prompt/mmlu-cot.json", help=""
+    )
+    parser.add_argument("--batch_size", type=int, default=8, help="Batch size.")
+    parser.add_argument("--max_length", type=int, default=None, help="")
+    parser.add_argument("--max_new_tokens", type=int, default=256, help="")
+    parser.add_argument("--model_max_length", type=int, default=4096, help="")
+    parser.add_argument("--do_sample", action="store_true", default=False, help="")
+    parser.add_argument("--temperature", type=float, default=0.8, help="")
+    parser.add_argument("--top_k", type=int, default=50, help="")
+    parser.add_argument("--top_p", type=float, default=0.95, help="")
+    parser.add_argument("--dataset_split", type=str, default="test", help="")
+    parser.add_argument("--example_subset", type=str, default=None, help="")
+    parser.add_argument("--hf_token", type=str, default=None, help="")
+    parser.add_argument(
+        "--root_output_dir", type=str, default="outputs", help="Root output dir"
+    )
+    parser.add_argument("--debug", action="store_true", default=False, help="")
+    parser.add_argument("--compress_method", type=str, default="None", help="")
+    parser.add_argument("--rank", type=float, default=0.0, help="")
+    parser.add_argument("--rankv", type=float, default=0.0, help="")
+    parser.add_argument("--loop", type=int, default=0.0, help="")
+    parser.add_argument("--quantize_bit", type=int, default=8, help="")
+    parser.add_argument("--group_num", type=int, default=0, help="")
+    parser.add_argument("--top_kprun", type=float, default=0.0, help="")
+    parser.add_argument("--left", type=float, default=0.0, help="")
+    parser.add_argument("--attention_number", type=int, default=100, help="")
+
+    parser.add_argument("--gpu", type=int, default=0, help="")
+
+    parser.add_argument(
+        "--streaming", action="store_true", default=False, help=""
+    )
+    parser.add_argument(
+        "--streaming_gap", type=int, default=0, help=""
+    )
+    parser.add_argument(
+        "--ntrain", type=int, default=0, help=""
+    )
+    parser.add_argument('--data_dir', type=str, default='data/')
+    parser.add_argument('--weight_compress', action='store_true', default=False)
+    args = parser.parse_args()
+    if args.debug:
+        import ipdb
+        ipdb.set_trace()
+    
+    main(args)

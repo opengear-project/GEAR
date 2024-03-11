@@ -189,10 +189,7 @@ def load_model_tokenizer(args):
             attention_number=args.attention_number,
             device_num=args.gpu,
             batch_num=args.batch_size,
-            stage=args.stage,
-            start_saving=args.start_saving,
-            locality_saving=args.locality_saving,
-            token_preserving=args.token_preserving,
+
             streaming=args.streaming,
             streaming_gap=args.streaming_gap,
         )
@@ -458,39 +455,34 @@ if __name__ == "__main__":
         "--prompt_file", type=str, default="lib_prompt/mmlu-cot.json", help=""
     )
     parser.add_argument("--batch_size", type=int, default=8, help="Batch size.")
-    parser.add_argument("--max_length", type=int, default=None, help="")
-    parser.add_argument("--max_new_tokens", type=int, default=256, help="")
-    parser.add_argument("--model_max_length", type=int, default=3072, help="")
-    parser.add_argument("--do_sample", action="store_true", default=False, help="")
-    parser.add_argument("--temperature", type=float, default=0.8, help="")
-    parser.add_argument("--top_k", type=int, default=50, help="")
-    parser.add_argument("--top_p", type=float, default=0.95, help="")
-    parser.add_argument("--zeroshot", action="store_true", default=False, help="")
-    parser.add_argument("--dataset_split", type=str, default="test", help="")
-    parser.add_argument("--example_subset", type=str, default=None, help="")
+    parser.add_argument("--max_length", type=int, default=None, help="max length")
+    parser.add_argument("--max_new_tokens", type=int, default=256, help="max generation length")
+    parser.add_argument("--model_max_length", type=int, default=3072, help="model max input length")
+    parser.add_argument("--do_sample", action="store_true", default=False, help="argument for generation")
+    parser.add_argument("--temperature", type=float, default=0.8, help="argument for generation")
+    parser.add_argument("--top_k", type=int, default=50, help="argument for generation")
+    parser.add_argument("--top_p", type=float, default=0.95, help="argument for generation")
+    parser.add_argument("--zeroshot", action="store_true", default=False, help="whether use zeroshot or cot")
+    parser.add_argument("--dataset_split", type=str, default="test", help="which part of dataset to choose")
+    parser.add_argument("--example_subset", type=str, default=None, help="which part of dataset to choose")
     parser.add_argument("--hf_token", type=str, default=None, help="")
     parser.add_argument(
         "--root_output_dir", type=str, default="outputs", help="Root output dir"
     )
     parser.add_argument("--debug", action="store_true", default=False, help="")
-    parser.add_argument("--compress_method", type=str, default="None", help="")
-    parser.add_argument("--rank", type=float, default=0.0, help="")
-    parser.add_argument("--rankv", type=float, default=0.0, help="")
-    parser.add_argument("--loop", type=int, default=0, help="")
-    parser.add_argument("--quantize_bit", type=int, default=8, help="")
-    parser.add_argument("--group_num", type=int, default=0, help="")
+    parser.add_argument("--compress_method", type=str, default="None", help="choose one of the compression method",choices=["groupquantization","groupquantization_token","groupquantization_channel","groupquantization_kc_vt","uniformquantization","poweriteration","outlierquantization","quantize_with_lrap","outliterquantize_with_lrap"])
+    parser.add_argument("--rank", type=float, default=0.0, help="rank compared with smaller dimension set to K cache.")
+    parser.add_argument("--rankv", type=float, default=0.0, help="rank compared with smaller dimension set to V cache.")
+    parser.add_argument("--loop", type=int, default=0, help="loop of SVD solver, default = 0")
+    parser.add_argument("--quantize_bit", type=int, default=8, help="Quantize bit of algorithm")
+    parser.add_argument("--group_num", type=int, default=0, help="group number of group quantization")
     parser.add_argument("--top_kprun", type=float, default=0.0, help="")
-    parser.add_argument("--left", type=float, default=0.0, help="")
-    parser.add_argument("--attention_number", type=int, default=100, help="")
-    parser.add_argument("--stage", type=int, default=0, help="")
+    parser.add_argument("--left", type=float, default=0.0, help="outlier extraction part compared with total matrix")
+    parser.add_argument("--attention_number", type=int, default=100, help="attention layer number of LLM, for LlAMA-2-7b it is 32")
     parser.add_argument("--gpu", type=int, default=0, help="")
-    parser.add_argument("--locality_saving", type=float, default=0.0, help="")
-    parser.add_argument("--start_saving", type=float, default=0.0, help="")
-    parser.add_argument(
-        "--token_preserving", action="store_true", default=False, help=""
-    )
-    parser.add_argument("--streaming", action="store_true", default=False, help="")
-    parser.add_argument("--streaming_gap", type=int, default=0, help="")
+
+    parser.add_argument("--streaming", action="store_true", default=False, help="Use streaming mode.")
+    parser.add_argument("--streaming_gap", type=int, default=0, help="iteration length for re-compression")
 
     args = parser.parse_args()
     if args.debug:
