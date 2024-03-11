@@ -116,7 +116,10 @@ class LM(abc.ABC):
 
     @classmethod
     def create_from_arg_string(
-        cls: Type[T], arg_string: str, additional_config: Optional[dict] = None, compress_string:str = ""
+        cls: Type[T],
+        arg_string: str,
+        additional_config: Optional[dict] = None,
+        compress_string: str = "",
     ) -> T:
         """
         Creates an instance of the LM class using the given argument string and additional config.
@@ -133,7 +136,7 @@ class LM(abc.ABC):
         args2 = {k: v for k, v in additional_config.items() if v is not None}
         args3 = utils.simple_parse_args_string(compress_string)
 
-        return cls(**args, **args2,**args3)
+        return cls(**args, **args2, **args3)
 
     @property
     def rank(self):

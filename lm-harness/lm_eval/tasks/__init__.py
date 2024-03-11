@@ -103,12 +103,16 @@ def check_prompt_config(
                     **{
                         "task": "_".join(
                             [
-                                config["task"]
-                                if "task" in config
-                                else get_task_name_from_config(config),
-                                prompt_variation.split("/")[-1]
-                                if ".yaml" in prompt_variation
-                                else prompt_variation,
+                                (
+                                    config["task"]
+                                    if "task" in config
+                                    else get_task_name_from_config(config)
+                                ),
+                                (
+                                    prompt_variation.split("/")[-1]
+                                    if ".yaml" in prompt_variation
+                                    else prompt_variation
+                                ),
                             ]
                         )
                     },

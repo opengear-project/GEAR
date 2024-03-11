@@ -17,9 +17,9 @@ from transformers.models.auto.modeling_auto import (
     MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING_NAMES,
 )
 
-#TODO modify
+# TODO modify
 from .pi4cache import LlamaForCausalLM
-from .gear import LlamaForCausalLMNew,GPT2CompressConfig
+from .gear import LlamaForCausalLMNew, GPT2CompressConfig
 from lm_eval import utils
 from lm_eval.api.instance import Instance
 from lm_eval.api.model import LM
@@ -101,17 +101,17 @@ class HFLM(LM):
         peft: Optional[str] = None,
         autogptq: Optional[Union[bool, str]] = False,
         # Compress config
-        compress_method:str=None,
-        rank:int=0,
-        rankv:int=0,
-        loop:int=3,
-        quantize_bit:int=0,
-        group_num:int=0,
-        top_k:float=0,
-        left:float=0,
-        attention_number:int=100,
-        device_num:int=0,
-        stage:int=0,
+        compress_method: str = None,
+        rank: int = 0,
+        rankv: int = 0,
+        loop: int = 3,
+        quantize_bit: int = 0,
+        group_num: int = 0,
+        top_k: float = 0,
+        left: float = 0,
+        attention_number: int = 100,
+        device_num: int = 0,
+        stage: int = 0,
         **kwargs,
     ) -> None:
         super().__init__()
@@ -121,7 +121,9 @@ class HFLM(LM):
             eval_logger.warning(
                 "`pretrained` model kwarg is not of type `str`. Many other model arguments may be ignored. Please do not launch via accelerate or use `parallelize=True` if passing an existing model this way."
             )
-            assert not parallelize, "`parallelize=True` is not compatible with passing pre-initialized model to `pretrained`"
+            assert (
+                not parallelize
+            ), "`parallelize=True` is not compatible with passing pre-initialized model to `pretrained`"
             self._model = pretrained
             self._device = self._model.device
 
@@ -301,13 +303,10 @@ class HFLM(LM):
                             "with 'accelerate launch *script*'. "
                             f"Current run will proceed with {accelerator.num_processes} devices."
                         )
-                    assert (
-                        accelerator.distributed_type
-                        in [
-                            DistributedType.FSDP,
-                            DistributedType.MULTI_GPU,
-                        ]
-                    ), "Unsupported distributed type provided. Only DDP and FSDP are supported."
+                    assert accelerator.distributed_type in [
+                        DistributedType.FSDP,
+                        DistributedType.MULTI_GPU,
+                    ], "Unsupported distributed type provided. Only DDP and FSDP are supported."
                     if accelerator.distributed_type == DistributedType.FSDP:
                         self._model = accelerator.prepare(self.model)
                     else:
@@ -466,17 +465,17 @@ class HFLM(LM):
         peft: Optional[str] = None,
         autogptq: Optional[Union[bool, str]] = False,
         # Compress config
-        compress_method:str=None,
-        rank:int=0,
-        rankv:int=0,
-        loop:int=3,
-        quantize_bit:int=0,
-        group_num:int=0,
-        top_k:float=0,
-        left:float=0,
-        attention_number:int=100,
-        device_num:int=0,
-        stage:int=0,
+        compress_method: str = None,
+        rank: int = 0,
+        rankv: int = 0,
+        loop: int = 3,
+        quantize_bit: int = 0,
+        group_num: int = 0,
+        top_k: float = 0,
+        left: float = 0,
+        attention_number: int = 100,
+        device_num: int = 0,
+        stage: int = 0,
         streaming: Optional[bool] = False,
         streaming_gap: Optional[int] = 0,
         **kwargs,
@@ -516,35 +515,35 @@ class HFLM(LM):
                             model_kwargs["bnb_4bit_compute_dtype"]
                         )
             if pretrained == "meta-llama/Llama-2-7b-hf":
-            #     print("model_kwarges",model_kwargs)
-            #     compress_config = GPT2CompressConfig(
-            #         compress_method=compress_method,
-            #         rank=rank,
-            #         rankv=rankv,
-            #         loop=loop,
-            #         quantize_bit=quantize_bit,
-            #         group_num=group_num,
-            #         top_k=top_k,
-            #         left=left,
-            #         attention_number=attention_number,
-            #         device_num=device_num,
-            #         # batch_num=kwargs,
-            #         stage=stage,
-            #     )
-            #     compress_config.copy_for_all_attention()
-            #     compress_config.calculate_compress_ratio_list(4095, 4096)
-            #     self._model = LlamaForCausalLM.from_pretrained(
-            #         pretrained,
-            #         revision=revision,
-            #         torch_dtype=utils.get_dtype(dtype),
-            #         trust_remote_code=trust_remote_code,
-            #         use_cache=True,
-            #         compress_config=compress_config,
-            #         # quantization_config=quantization_config,
-            #         **model_kwargs,
-            #     )
-            # elif pretrained == "meta-llama/Llama-2-7b-hf-GEAR":
-                print("compress_method",compress_method,quantize_bit)
+                #     print("model_kwarges",model_kwargs)
+                #     compress_config = GPT2CompressConfig(
+                #         compress_method=compress_method,
+                #         rank=rank,
+                #         rankv=rankv,
+                #         loop=loop,
+                #         quantize_bit=quantize_bit,
+                #         group_num=group_num,
+                #         top_k=top_k,
+                #         left=left,
+                #         attention_number=attention_number,
+                #         device_num=device_num,
+                #         # batch_num=kwargs,
+                #         stage=stage,
+                #     )
+                #     compress_config.copy_for_all_attention()
+                #     compress_config.calculate_compress_ratio_list(4095, 4096)
+                #     self._model = LlamaForCausalLM.from_pretrained(
+                #         pretrained,
+                #         revision=revision,
+                #         torch_dtype=utils.get_dtype(dtype),
+                #         trust_remote_code=trust_remote_code,
+                #         use_cache=True,
+                #         compress_config=compress_config,
+                #         # quantization_config=quantization_config,
+                #         **model_kwargs,
+                #     )
+                # elif pretrained == "meta-llama/Llama-2-7b-hf-GEAR":
+                print("compress_method", compress_method, quantize_bit)
                 compress_config = GPT2CompressConfig(
                     compress_method=compress_method,
                     rank=rank,
@@ -573,7 +572,7 @@ class HFLM(LM):
                     # quantization_config=quantization_config,
                     **model_kwargs,
                 )
-                
+
             else:
                 self._model = self.AUTO_MODEL_CLASS.from_pretrained(
                     pretrained,
@@ -595,9 +594,9 @@ class HFLM(LM):
                 pretrained,
                 trust_remote_code=trust_remote_code,
                 model_basename=None if autogptq is True else Path(autogptq).stem,
-                use_safetensors=True
-                if autogptq is True
-                else autogptq.endswith(".safetensors"),
+                use_safetensors=(
+                    True if autogptq is True else autogptq.endswith(".safetensors")
+                ),
                 **model_kwargs,
             )
 
@@ -962,16 +961,18 @@ class HFLM(LM):
 
         chunks = utils.chunks(
             re_ord.get_reordered(),
-            n=self.batch_size
-            if self.batch_size != "auto"
-            else override_bs
-            if override_bs is not None
-            else 0,
-            fn=self._batch_scheduler
-            if self.batch_size == "auto"
-            and n_reordered_requests > 0
-            and not override_bs
-            else None,
+            n=(
+                self.batch_size
+                if self.batch_size != "auto"
+                else override_bs if override_bs is not None else 0
+            ),
+            fn=(
+                self._batch_scheduler
+                if self.batch_size == "auto"
+                and n_reordered_requests > 0
+                and not override_bs
+                else None
+            ),
         )
 
         pbar = tqdm(total=len(requests), disable=(disable_tqdm or (self.rank != 0)))
@@ -1095,7 +1096,9 @@ class HFLM(LM):
                 greedy_tokens = logits.argmax(dim=-1)
                 cont_toks = torch.tensor(
                     cont_toks, dtype=torch.long, device=self.device
-                ).unsqueeze(0)  # [1, seq]
+                ).unsqueeze(
+                    0
+                )  # [1, seq]
                 max_equal = (greedy_tokens == cont_toks).all()
 
                 # Obtain log-probs at the corresponding continuation token indices
@@ -1149,14 +1152,16 @@ class HFLM(LM):
         for key, re_ord in re_ords.items():
             chunks = utils.chunks(
                 re_ord.get_reordered(),
-                n=self.batch_size
-                if self.batch_size != "auto"
-                else adaptive_batch_size
-                if adaptive_batch_size is not None
-                else 0,
-                fn=self._batch_scheduler
-                if self.batch_size == "auto" and not adaptive_batch_size
-                else None,
+                n=(
+                    self.batch_size
+                    if self.batch_size != "auto"
+                    else adaptive_batch_size if adaptive_batch_size is not None else 0
+                ),
+                fn=(
+                    self._batch_scheduler
+                    if self.batch_size == "auto" and not adaptive_batch_size
+                    else None
+                ),
             )
             for chunk in chunks:
                 contexts, all_gen_kwargs = zip(*chunk)

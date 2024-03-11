@@ -1,6 +1,7 @@
 """
 Take in a YAML, and output all "other" splits with this YAML
 """
+
 import os
 import yaml
 import argparse
@@ -106,13 +107,17 @@ if __name__ == "__main__":
 
         yaml_dict = {
             "include": base_yaml_name,
-            "group": f"mmlu_{args.task_prefix}_{category}"
-            if args.task_prefix != ""
-            else f"mmlu_{category}",
+            "group": (
+                f"mmlu_{args.task_prefix}_{category}"
+                if args.task_prefix != ""
+                else f"mmlu_{category}"
+            ),
             "group_alias": category.replace("_", " "),
-            "task": f"mmlu_{args.task_prefix}_{subject}"
-            if args.task_prefix != ""
-            else f"mmlu_{subject}",
+            "task": (
+                f"mmlu_{args.task_prefix}_{subject}"
+                if args.task_prefix != ""
+                else f"mmlu_{subject}"
+            ),
             "task_alias": subject.replace("_", " "),
             "dataset_name": subject,
             "description": description,
@@ -145,9 +150,9 @@ if __name__ == "__main__":
     with open(file_save_path, "w") as yaml_file:
         yaml.dump(
             {
-                "group": f"mmlu_{args.task_prefix}"
-                if args.task_prefix != ""
-                else "mmlu",
+                "group": (
+                    f"mmlu_{args.task_prefix}" if args.task_prefix != "" else "mmlu"
+                ),
                 "task": mmlu_subcategories,
             },
             yaml_file,

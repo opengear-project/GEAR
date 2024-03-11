@@ -456,7 +456,6 @@ def compress_insert_function(
                 qbase1,
             )
 
-            
         if pbase2 is not None:
             previous_value = fake_poweriteration(
                 previous_value,

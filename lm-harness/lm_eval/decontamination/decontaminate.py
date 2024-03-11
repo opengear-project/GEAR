@@ -135,7 +135,11 @@ def get_train_overlap(docs_by_task_set: dict, ngrams_path: str, limit: int) -> d
                         matching_unique += 1
                         for task_name, task_set, doc_ids in merged_lookup[ngram]:
                             task_doc_set = duplicates[(task_name, task_set)]
-                            for doc_id in doc_ids:  # Record contamination across all relevant task/set combos
+                            for (
+                                doc_id
+                            ) in (
+                                doc_ids
+                            ):  # Record contamination across all relevant task/set combos
                                 task_doc_set.add(doc_id)
                         del merged_lookup[ngram]  # No point matching again
                     else:

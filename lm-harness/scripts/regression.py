@@ -59,9 +59,7 @@ def eval_models(args, branch=None):
         model_type = (
             "hf-causal"
             if model in causal_models
-            else "hf-seq2seq"
-            if model in seq2seq_models
-            else args.model
+            else "hf-seq2seq" if model in seq2seq_models else args.model
         )
         model_args = f"pretrained={model},{args.model_args}"
         # TODO: split_and_pad_windows in AutoSeq2SeqLM doesn"t exist, #527
@@ -74,9 +72,7 @@ def eval_models(args, branch=None):
         batch_size = (
             args.batch_size
             if model in causal_models or model_type == "hf-causal"
-            else 64
-            if args.batch_size == "auto"
-            else args.batch_size
+            else 64 if args.batch_size == "auto" else args.batch_size
         )
         output_path = (
             f"data/regression/{int(start_time)}-{branch}-{Path(model).name}.json"
@@ -144,9 +140,11 @@ def main():
     args.tasks = (
         ALL_TASKS
         if args.tasks == "all_tasks"
-        else utils.pattern_match(args.tasks.split(","), ALL_TASKS)
-        if isinstance(args.tasks, str)
-        else args.tasks
+        else (
+            utils.pattern_match(args.tasks.split(","), ALL_TASKS)
+            if isinstance(args.tasks, str)
+            else args.tasks
+        )
     )
 
     global initial_branch

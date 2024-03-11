@@ -1,0 +1,1 @@
+python3 test_gsm8k.py --model_name_or_path LoftQ/Llama-2-7b-hf-fp16-64rank-gsm8k --batch_size 8 --device_map "cuda:0" --gpu 1 --compress_method outliterquantize_with_lrap --attention_number 32 --quantize_bit 4 --iter 3 --left 0.02 --rank 0.02 --rankv 0.02

@@ -1,2 +1,0 @@
-python eval_bbh_cot.py --model TheBloke/Nous-Hermes-Llama-2-7B-GPTQ --batch_size 6 --max_new_tokens 128 --root_output_dir outputs --weight-compress GPTQ > llama2_GPTQ8.txt
-python eval_bbh_cot.py --model TheBloke/Llama-2-7B-AWQ --prompt_file prompt_original.txt --batch_size 10 --max_new_tokens 128 --weight-compress AWQ > llama_2_awq.test
