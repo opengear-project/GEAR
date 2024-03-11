@@ -1,5 +1,5 @@
 
-## GEAR: Generative Inference with LLM via Approximation and Error Recovery #
+## GEAR: An Efficient KV Cache Compression Recipe for Near-Lossless Generative Inference of LLM #
 <p align="center"><img width="100%" src="./Fig/gt_intel.png"></p><br/>
 
 This is the repo for our recent work `GEAR: An Efficient KV Cache Compression Recipe for Near-Lossless Generative Inference of LLM.` `GEAR` is a "plug-and-play" inference only KV quantization method.
