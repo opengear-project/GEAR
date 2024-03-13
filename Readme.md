@@ -1,5 +1,5 @@
 ![license](https://img.shields.io/badge/License-MIT-green.svg?labelColor=gray)
-[![arxiv](http://img.shields.io/badge/arxiv-2310.04562-yellow.svg)](https://arxiv.org/abs/2403.05527)
+[![arxiv](http://img.shields.io/badge/arxiv-2310.04562-yellow.svg)](https://arxiv.org/pdf/2403.05527.pdf)
 ## GEAR: An Efficient KV Cache Compression Recipe for Near-Lossless Generative Inference of LLM #
 <p align="center"><img width="60%" src="./Fig/gt_intel.png"></p><br/>
 
@@ -8,7 +8,7 @@ This is the repo for our recent work `GEAR: An Efficient KV Cache Compression Re
 
 Here, `GEAR` means `Ge`nerative Inference with LLM via `A`pproximation and Error `R`ecovery.
 
-[paper](https://arxiv.org/abs/2403.05527)
+[paper](https://arxiv.org/pdf/2403.05527.pdf)
 
 
 ## Updates
