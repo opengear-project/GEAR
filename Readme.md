@@ -1,4 +1,5 @@
 ![license](https://img.shields.io/badge/License-MIT-green.svg?labelColor=gray)
+[![arxiv](http://img.shields.io/badge/arxiv-2310.04562-yellow.svg)](https://arxiv.org/abs/2403.05527)
 ## GEAR: An Efficient KV Cache Compression Recipe for Near-Lossless Generative Inference of LLM #
 <p align="center"><img width="60%" src="./Fig/gt_intel.png"></p><br/>
 
