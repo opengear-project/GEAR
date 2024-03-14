@@ -6,7 +6,7 @@
 This is the repo for our recent work `GEAR: An Efficient KV Cache Compression Recipe for Near-Lossless Generative Inference of LLM.` `GEAR` is a "plug-and-play" inference only KV quantization method.
 `GEAR` augments any quantization scheme via an error recovery solution to boost the model accuracy while saving memory.
 
-Here, `GEAR` means `Ge`nerative Inference with LLM via `A`pproximation and Error `R`ecovery.
+Here, `GEAR` is the abbreviation of `Ge`nerative Inference with LLM via `A`pproximation and Error `R`ecovery.
 
 [paper](https://arxiv.org/pdf/2403.05527.pdf)
 
