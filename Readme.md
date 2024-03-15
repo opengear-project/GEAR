@@ -8,7 +8,7 @@ Official repo for `GEAR: An Efficient KV Cache Compression Recipe for Near-Lossl
 
 Here, `GEAR` is the abbreviation of `Ge`nerative Inference with LLM via `A`pproximation and Error `R`ecovery.
 
-[paper](https://arxiv.org/pdf/2403.05527.pdf)
+
 
 
 ## Updates
@@ -78,3 +78,17 @@ tokenizer = AutoTokenizer.from_pretrained(
 `TrueCompressionLlaMA` are Llama-2 embeded with GEAR true compression code on an old version of transformers and a new version of transformers.
 
 `lm-harness` is simluated compression tested on Llama-2 and with 50+ datasets
+## Developers
+[Hao Kang*](https://haokang-timmy.github.io/), [Qingru Zhang*](https://www.linkedin.com/in/qingru-zhang-4b789a187/), [Souvik Kundu](https://ksouvik52.github.io/), [Geonhwa Jeong](https://ghjeong12.github.io/), [Zaoxing Liu](https://zaoxing.github.io/), [Tushar Krishna](https://www.linkedin.com/in/tushar-krishna-a60b0970/), [Tuo Zhao](https://www2.isye.gatech.edu/~tzhao80/)
+## Citation
+[link to paper](https://arxiv.org/pdf/2403.05527.pdf)
+```
+@misc{kang2024gear,
+      title={GEAR: An Efficient KV Cache Compression Recipe for Near-Lossless Generative Inference of LLM}, 
+      author={Hao Kang and Qingru Zhang and Souvik Kundu and Geonhwa Jeong and Zaoxing Liu and Tushar Krishna and Tuo Zhao},
+      year={2024},
+      eprint={2403.05527},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
+}
+```
