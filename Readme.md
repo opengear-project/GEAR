@@ -79,7 +79,16 @@ tokenizer = AutoTokenizer.from_pretrained(
 
 `lm-harness` is simluated compression tested on Llama-2 and with 50+ datasets
 ## Developers
-[Hao Kang*](https://haokang-timmy.github.io/), [Qingru Zhang*](https://www.linkedin.com/in/qingru-zhang-4b789a187/), [Souvik Kundu](https://ksouvik52.github.io/), [Geonhwa Jeong](https://ghjeong12.github.io/), [Zaoxing Liu](https://zaoxing.github.io/), [Tushar Krishna](https://www.linkedin.com/in/tushar-krishna-a60b0970/), [Tuo Zhao](https://www2.isye.gatech.edu/~tzhao80/)
+
+- [Hao Kang*](https://haokang-timmy.github.io/)(Georgia Tech)
+- [Qingru Zhang*](https://www.linkedin.com/in/qingru-zhang-4b789a187/)(Georgia Tech)
+- [Souvik Kundu](https://ksouvik52.github.io/)(Intel)
+- [Geonhwa Jeong](https://ghjeong12.github.io/)(Georgia Tech)
+- [Zaoxing Liu](https://zaoxing.github.io/)(University of Maryland)
+- [Tushar Krishna](https://www.linkedin.com/in/tushar-krishna-a60b0970/)(Georgia Tech)
+- [Tuo Zhao](https://www2.isye.gatech.edu/~tzhao80/)(Georgia Tech)
+
+
 ## Citation
 [link to paper](https://arxiv.org/pdf/2403.05527.pdf)
 ```
@@ -92,3 +101,5 @@ tokenizer = AutoTokenizer.from_pretrained(
       primaryClass={cs.LG}
 }
 ```
+## Contributing
+We are welcoming everyone to contribute to this reposity by rasing PRs. If there is any problem you may also shot email to hkang342@gatech.edu.
