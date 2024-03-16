@@ -77,7 +77,7 @@ tokenizer = AutoTokenizer.from_pretrained(
 
 `TrueCompressionLlaMA` are Llama-2 embeded with GEAR true compression code on an old version of transformers and a new version of transformers.
 
-`lm-harness` is simluated compression tested on Llama-2 and with 50+ datasets
+`lm-harness` is simluated compression tested on LLaMA-2 7B
 ## Developers
 
 - [Hao Kang*](https://haokang-timmy.github.io/)(Georgia Tech)
