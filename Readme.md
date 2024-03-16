@@ -102,4 +102,4 @@ tokenizer = AutoTokenizer.from_pretrained(
 }
 ```
 ## Contributing
-We are welcoming everyone to contribute to this reposity by rasing PRs. If there is any problem you may also shot email to hkang342@gatech.edu, souvikk.kundu@intel.com.
+We are welcoming everyone to contribute to this reposity by rasing PRs. If there is any problem you may also shot email to hkang342@gatech.edu.
