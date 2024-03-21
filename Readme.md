@@ -1,13 +1,14 @@
-
+![license](https://img.shields.io/badge/License-MIT-green.svg?labelColor=gray)
+[![arxiv](http://img.shields.io/badge/arxiv-2310.04562-yellow.svg)](https://arxiv.org/pdf/2403.05527.pdf)
 ## GEAR: An Efficient KV Cache Compression Recipe for Near-Lossless Generative Inference of LLM #
-<p align="center"><img width="100%" src="./Fig/gt_intel.png"></p><br/>
+<p align="center"><img width="60%" src="./Fig/gt_intel.png"></p><br/>
 
-This is the repo for our recent work `GEAR: An Efficient KV Cache Compression Recipe for Near-Lossless Generative Inference of LLM.` `GEAR` is a "plug-and-play" inference only KV quantization method.
+Official repo for `GEAR: An Efficient KV Cache Compression Recipe for Near-Lossless Generative Inference of LLM.` `GEAR` is a "plug-and-play" inference only KV quantization method.
 `GEAR` augments any quantization scheme via an error recovery solution to boost the model accuracy while saving memory.
 
-Here, `GEAR` means `Ge`nerative Inference with LLM via `A`pproximation and Error `R`ecovery.
+Here, `GEAR` is the abbreviation of `Ge`nerative Inference with LLM via `A`pproximation and Error `R`ecovery.
 
-[paper](https://arxiv.org/abs/2403.05527)
+
 
 
 ## Updates
@@ -77,4 +78,29 @@ tokenizer = AutoTokenizer.from_pretrained(
 
 `TrueCompressionLlaMA` are Llama-2 embeded with GEAR true compression code on an old version of transformers and a new version of transformers.
 
-`lm-harness` is simluated compression tested on Llama-2 and with 50+ datasets
+`lm-harness` is simluated compression tested on LLaMA-2 7B
+## Developers
+
+- [Hao Kang*](https://haokang-timmy.github.io/)(Georgia Tech)
+- [Qingru Zhang*](https://www.linkedin.com/in/qingru-zhang-4b789a187/)(Georgia Tech)
+- [Souvik Kundu](https://ksouvik52.github.io/)(Intel)
+- [Geonhwa Jeong](https://ghjeong12.github.io/)(Georgia Tech)
+- [Zaoxing Liu](https://zaoxing.github.io/)(University of Maryland)
+- [Tushar Krishna](https://www.linkedin.com/in/tushar-krishna-a60b0970/)(Georgia Tech)
+- [Tuo Zhao](https://www2.isye.gatech.edu/~tzhao80/)(Georgia Tech)
+
+
+## Citation
+[link to paper](https://arxiv.org/pdf/2403.05527.pdf)
+```
+@misc{kang2024gear,
+      title={GEAR: An Efficient KV Cache Compression Recipe for Near-Lossless Generative Inference of LLM}, 
+      author={Hao Kang and Qingru Zhang and Souvik Kundu and Geonhwa Jeong and Zaoxing Liu and Tushar Krishna and Tuo Zhao},
+      year={2024},
+      eprint={2403.05527},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
+}
+```
+## Contributing
+We are welcoming everyone to contribute to this reposity by rasing PRs. If there is any problem you may also shot email to hkang342@gatech.edu.
