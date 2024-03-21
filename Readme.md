@@ -13,6 +13,7 @@ Here, `GEAR` means `Ge`nerative Inference with LLM via `A`pproximation and Error
 ## Updates
 - **March 8th, 2024**: Initial manuscript is submitted to arxiv!
 - **March 11th, 2024**: Initial code release!
+- **March 21th, 2024**： LongEval evaluation supported by GEAR!
 ## Overview
 GEAR is an efficient KV cache compression framework that achieves
 near-lossless high-ratio compression. GEAR first applies quantization to majority of entries of
