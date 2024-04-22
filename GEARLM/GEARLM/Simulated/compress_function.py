@@ -577,8 +577,7 @@ def compress_insert_function(
                     compress_config.quantize_bit[layer_idx],
                 )
             )
-
-    # SK: TODO take a look at this: idea merged from KIVI, token grouping does reasonably well on GSM8k-CoT at 4-bit, around ~13%
+    # SK: TODO take a look at this: idea merged from others, token grouping does reasonably well on GSM8k-CoT at 4-bit, around ~13%
     if compress_config.compress_method[layer_idx] == "groupquantization_token":
         previous_key[:, :, starting_idx:-locality_idx, :] = (
             fake_groupwise_token_asymmetric_quantization(
@@ -596,7 +595,7 @@ def compress_insert_function(
                 )
             )
 
-    # SK: TODO take a look at this: idea merged from KIVI, this channel grouping does better tha what was implemented earlier, Please check the code!
+    # SK: TODO take a look at this: idea merged from others, this channel grouping does better tha what was implemented earlier, Please check the code!
     if compress_config.compress_method[layer_idx] == "groupquantization_channel":
         previous_key[:, :, starting_idx:-locality_idx, :] = (
             fake_groupwise_channel_asymmetric_quantization(
@@ -614,7 +613,7 @@ def compress_insert_function(
                 )
             )
 
-    # SK: TODO take a look at this: idea merged from KIVI
+
     if compress_config.compress_method[layer_idx] == "groupquantization_kc_vt":
         previous_key[:, :, starting_idx:-locality_idx, :] = (
             fake_groupwise_channel_asymmetric_quantization(
@@ -743,7 +742,7 @@ def compress_insert_function(
                 compress_config.iter[layer_idx],
             )
 
-    # SK: TODO take a look at this: idea merged from KIVI
+    # SK: TODO take a look at this: idea merged from others
     if compress_config.compress_method[layer_idx] == "group_channel_with_lrap":
         smaller_dim = seq_len if seq_len <= num_head * sep_dim else num_head * sep_dim
         smaller_dim = int(smaller_dim)
@@ -763,7 +762,7 @@ def compress_insert_function(
                 compress_config.loop[layer_idx],
             )
 
-    # SK: TODO take a look at this: idea merged from KIVI
+    # SK: TODO take a look at this: idea merged from 
     if compress_config.compress_method[layer_idx] == "group_token_with_lrap":
         smaller_dim = seq_len if seq_len <= num_head * sep_dim else num_head * sep_dim
         smaller_dim = int(smaller_dim)
@@ -783,7 +782,7 @@ def compress_insert_function(
                 compress_config.loop[layer_idx],
             )
 
-    # SK: TODO take a look at this: idea merged from KIVI
+    # SK: TODO take a look at this: idea merged from 
     if compress_config.compress_method[layer_idx] == "group_kc_vt_with_lrap":
         smaller_dim = seq_len if seq_len <= num_head * sep_dim else num_head * sep_dim
         smaller_dim = int(smaller_dim)
