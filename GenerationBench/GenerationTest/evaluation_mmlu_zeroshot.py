@@ -4,7 +4,6 @@ import os
 import time
 
 import pandas as pd
-
 # import tensor_parallel as tp
 import torch
 from tqdm import tqdm
@@ -15,8 +14,6 @@ from transformers import (
     AutoModelForCausalLM,
 )
 import transformers
-
-
 TASKS = [
     "abstract_algebra",
     "anatomy",
@@ -78,6 +75,7 @@ TASKS = [
 ]
 
 choices = ["A", "B", "C", "D"]
+
 
 def compute_metric(output_filename):
     with open(output_filename, "r") as f:
@@ -145,21 +143,28 @@ def prepare_input(tokenizer, prompts):
 
     return input_tokens
 
+
 def load(args):
     model_kwargs = {}
-    if "Llama-2" in args.model:
+    if "Llama-2" or "Qwen" in args.model:
         model_kwargs["torch_dtype"] = torch.float16
         model_kwargs["device_map"] = "auto"
         model_kwargs["token"] = args.hf_token
-  
-
-    config = transformers.AutoConfig.from_pretrained(
-        args.model,
-        use_auth_token=True,
-        token=args.hf_token,
-        trust_remote_code=True,
-    )
-
+    if "Qwen" in args.model:
+        config = transformers.AutoConfig.from_pretrained(
+            args.model,
+            use_auth_token=True,
+            token=args.hf_token,
+            use_flash_attn = False,
+            trust_remote_code=True,
+        )
+    else:
+        config = transformers.AutoConfig.from_pretrained(
+            args.model,
+            use_auth_token=True,
+            token=args.hf_token,
+            trust_remote_code=True,
+        )
     from GEARLM import CompressionConfig, SimulatedGearLlamaForCausalLM
 
     compress_config = (
@@ -177,6 +182,10 @@ def load(args):
             attention_number=args.attention_number,
             device_num=args.gpu,
             batch_num=args.batch_size,
+            stage=args.stage,
+            start_saving=args.start_saving,
+            locality_saving=args.locality_saving,
+            token_preserving=args.token_preserving,
             streaming=args.streaming,
             streaming_gap=args.streaming_gap,
         )
@@ -210,12 +219,13 @@ def load(args):
         model_max_length=args.model_max_length,
         cache_dir="../cache",
         trust_remote_code=True,
-        # pad_token="<|endoftext|>",
     )
-    if "Mistral" in args.model:
+    if "Mistral" or "Llama" in args.model:
         tokenizer.pad_token = tokenizer.eos_token
     # model = model.to('cuda')
     return model, tokenizer
+
+
 def batch_split(prompts, batch_num):
     batch_prompts = []
     mini_batch = []
@@ -318,9 +328,13 @@ if __name__ == "__main__":
     parser.add_argument("--top_kprun", type=float, default=0.0, help="")
     parser.add_argument("--left", type=float, default=0.0, help="")
     parser.add_argument("--attention_number", type=int, default=100, help="")
-
+    parser.add_argument("--stage", type=int, default=0, help="")
     parser.add_argument("--gpu", type=int, default=0, help="")
-
+    parser.add_argument("--locality_saving", type=float, default=0.0, help="")
+    parser.add_argument("--start_saving", type=float, default=0.0, help="")
+    parser.add_argument(
+        "--token_preserving", action="store_true", default=False, help=""
+    )
     parser.add_argument(
         "--streaming", action="store_true", default=False, help=""
     )
@@ -330,11 +344,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--ntrain", type=int, default=0, help=""
     )
-    parser.add_argument('--data_dir', type=str, default='data/')
-    parser.add_argument('--weight_compress', action='store_true', default=False)
+    parser.add_argument('--data_dir', type=str, default='data/data/')
     args = parser.parse_args()
-    if args.debug:
-        import ipdb
-        ipdb.set_trace()
-    
+
     main(args)
