@@ -344,7 +344,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--ntrain", type=int, default=0, help=""
     )
-    parser.add_argument('--data_dir', type=str, default='data/data/')
+    parser.add_argument('--data_dir', type=str, default='data/')
     args = parser.parse_args()
 
     main(args)
