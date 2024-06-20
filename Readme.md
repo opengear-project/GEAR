@@ -1,5 +1,6 @@
 ![license](https://img.shields.io/badge/License-MIT-green.svg?labelColor=gray)
 [![arxiv](http://img.shields.io/badge/arxiv-2310.04562-yellow.svg)](https://arxiv.org/pdf/2403.05527.pdf)
+## Now codebase of GEAR is being renewed and new code will be available in two weeks.
 ## GEAR: An Efficient KV Cache Compression Recipe for Near-Lossless Generative Inference of LLM #
 
 Official repo for `GEAR: An Efficient KV Cache Compression Recipe for Near-Lossless Generative Inference of LLM.` `GEAR` is a "plug-and-play" inference only KV quantization method.
