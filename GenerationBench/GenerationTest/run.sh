@@ -1,1 +1,0 @@
-python evaluation_gsm8k.py --model meta-llama/Llama-2-7b-hf --prompt_file gsm8k_prompt_original.txt --batch_size 8 --max_new_tokens 256 --compress_method outliterquantize_with_lrap --attention_number 40 --quantize_bit 4 --left 0.01 --rank 0.02 --rankv 0.02 --loop 3 --streaming --streaming_gap 20

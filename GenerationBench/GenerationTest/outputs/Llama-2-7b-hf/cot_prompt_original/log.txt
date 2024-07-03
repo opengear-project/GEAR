@@ -1,2 +1,0 @@
-03/10/2024 20:06:48 - INFO - accelerate.utils.modeling - We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
-03/10/2024 20:07:28 - INFO - root - Preprocessing the dataset.

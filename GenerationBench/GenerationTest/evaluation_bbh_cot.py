@@ -181,9 +181,13 @@ def load_model_tokenizer(args):
             compress_method=args.compress_method,
             rank=args.rank,
             rankv=args.rankv,
+            prefill_rank = args.prefillrank,
+            prefill_rankv = args.prefillrankv,
+            
             loop=args.loop,
             quantize_bit=args.quantize_bit,
             group_num=args.group_num,
+            group_size = args.group_size,
             top_k=args.top_kprun,
             left=args.left,
             attention_number=args.attention_number,
@@ -192,6 +196,7 @@ def load_model_tokenizer(args):
 
             streaming=args.streaming,
             streaming_gap=args.streaming_gap,
+            stream_grouping=args.stream_grouping,
         )
     )
     if compress_config is not None:
@@ -470,12 +475,15 @@ if __name__ == "__main__":
         "--root_output_dir", type=str, default="outputs", help="Root output dir"
     )
     parser.add_argument("--debug", action="store_true", default=False, help="")
-    parser.add_argument("--compress_method", type=str, default="None", help="choose one of the compression method",choices=["groupquantization","groupquantization_token","groupquantization_channel","groupquantization_kc_vt","uniformquantization","poweriteration","outlierquantization","quantize_with_lrap","outliterquantize_with_lrap"])
+    parser.add_argument("--compress_method", type=str, default="None", help="choose one of the compression method")
     parser.add_argument("--rank", type=float, default=0.0, help="rank compared with smaller dimension set to K cache.")
     parser.add_argument("--rankv", type=float, default=0.0, help="rank compared with smaller dimension set to V cache.")
+    parser.add_argument("--prefillrank", type=float, default=0.0, help="rank compared with smaller dimension set to K cache.")
+    parser.add_argument("--prefillrankv", type=float, default=0.0, help="rank compared with smaller dimension set to V cache.")
     parser.add_argument("--loop", type=int, default=0, help="loop of SVD solver, default = 0")
     parser.add_argument("--quantize_bit", type=int, default=8, help="Quantize bit of algorithm")
     parser.add_argument("--group_num", type=int, default=0, help="group number of group quantization")
+    parser.add_argument("--group_size", type=int, default=0, help="")
     parser.add_argument("--top_kprun", type=float, default=0.0, help="")
     parser.add_argument("--left", type=float, default=0.0, help="outlier extraction part compared with total matrix")
     parser.add_argument("--attention_number", type=int, default=100, help="attention layer number of LLM, for LlAMA-2-7b it is 32")
@@ -483,7 +491,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--streaming", action="store_true", default=False, help="Use streaming mode.")
     parser.add_argument("--streaming_gap", type=int, default=0, help="iteration length for re-compression")
-
+    parser.add_argument("--stream_grouping", action="store_true", default=False, help="Use streaming mode.")
     args = parser.parse_args()
     if args.debug:
         import ipdb

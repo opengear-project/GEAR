@@ -1,0 +1,111 @@
+Question: Three birds are flying at a fast rate of 900 kilometers per hour. What is their speed in miles per minute? [1km = 0.6 miles]
+Option:
+A)32400
+B)6000
+C)600
+D)60000
+E)10\nThe answer is
+Let's think step by step
+To calculate the equivalent of miles in a kilometer
+0.6 kilometers = 1 mile.
+900 kilometers = (0.6)*900 = 540 miles. 
+Then there are 60 minutes in 1 hour. 
+So speed in miles/minutes = 60 * 540 = 32400.
+The answer is A). 
+
+Question: A ship is leaving a port. It takes 240 seconds to passes through a 750m channel to get to the port gates, and takes 60 seconds to pass through the gates of the port. What is its length?
+Option:
+A)100 m
+B)150 m
+C)200 m
+D)250 m
+E)300 m
+Let's think step by step
+Let the length of the ship be x metres and its speed be y m/sec.
+Then, x / y = 60 ⇒ y = x / 60 
+Therefore (x + 750) / 240 = x / 60.
+So x = 250 m.
+The answer is D).
+
+Question: A rectangular piece of cloth 2 feet wide was cut lengthwise into two smaller rectangular pieces. The shorter piece was one-third of the length of the longer of the 2 new pieces and had an area of 12 square feet. What was the length Q in feet of the original piece of cloth before cutting?
+Option:
+A)6
+B)18
+C)24
+D)36
+E)48
+Let's think step by step
+The question says, length of shorter piece is 1/3rd of the length of longer of the two new pieces.
+This means after I split it into two pieces, I have a shorter piece and a longer one.
+The length of shorter is 1/3rd the length of longer.
+The 6 I found out was length of shorter piece.
+Then, length of longer should be 18 and total length should be 24.
+The answer is C).
+
+Question: In the xy-coordinate plane, which of the following points must lie on the line kx + 2y = 6 for every possible value of k?
+Option:
+A)(1,1)
+B)(0,3)
+C)(2,0)
+D)(3,6)
+E)(6,3)
+Let's think step by step
+For a point to satisfy the given equation for all possible values of k, then x must equal 0.
+When x=0, the equation is simply 2y = 6, and then y = 3.
+The answer is B).
+
+Question: A travel company wants to charter a plane to the Bahamas. Chartering the plane costs $5,000. So far, 12 people have signed up for the trip. If the company charges $200 per ticket, how many more passengers must sign up for the trip before the company can make any profit on the charter?
+Option:
+A)7
+B)9
+C)13
+D)27
+E)45
+Let's think step by step
+Additional passengers (i.e., an integer, let's say x) who must sign up before the company can make any profit = ?
+200 * 12 + 200 * x >= 5000\n2400 + 200x >= 5000.
+Then 200x >= 2600.
+And x >= 2600/200.
+So x >= 13.
+The answer is C).
+
+Question: Kirk sells cars. On two sales, Kirk has received commissions of $850, and $705, and he has one additional sale pending. If Kirk is to receive an average (arithmetic mean) commission of exactly $820 on the three sales, then the third commission must be:
+Option:
+A)$895
+B)$905
+C)$910
+D)$915
+E)$945
+Let's think step by step
+Let X be the third value.
+Then 850 + 705 + X = 820 * 3.
+Therefore 1555 + X = 2460.
+So X = 905.
+The answer is B).
+
+Question: A group of 5 friends were to contribute equally to purchase items from a store. If store offered them a promotional discount of 15%, how much did each friend pay, given a total bill of $ 1200?
+Option:
+A)$203
+B)$202
+C)$209
+D)$205
+E)$204
+Let's think step by step
+At the non-discounted price, each friend would pay $240, as $ 1200 divided by 5 friends is $240 per friend.
+But if the bill is 15% off, then each friend would pay 15% less.
+15% of $240 is $36, 
+So each friend saves $36 and pays the remaining $204.
+The answer is E).
+
+Question: ABC company pays an average of $120 per vehicle each month in outdoor parking fees for three of its eight vehicles. The company pays garage parking fees for the remaining five vehicles. If ABC pays an average of $240 per vehicle overall each month for parking, how much does ABC pay per month in garage parking fees for its vehicles?
+Option:
+A)300
+B)420
+C)912
+D)1340
+E)1500
+Let's think step by step
+This means it could go out sometimes and it could stay at the garage sometimes, 
+thus the ABC company still has to pay fees for going-out cars in garage
+So the math will be 240*8 cars-3*120=1340 fee for parking in garage.
+The answer is D).

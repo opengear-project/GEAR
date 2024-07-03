@@ -1,4 +1,4 @@
-## Gemeration Bench
+## Generation Bench
 All results here are tested by simulated compression code.
 
 ## Reposity architecture

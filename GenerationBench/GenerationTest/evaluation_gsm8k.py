@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from dataclasses_json import DataClassJsonMixin
 from torch.utils.tensorboard import SummaryWriter
 from GEARLM import SimulatedGearLlamaForCausalLM, CompressionConfig, SimulatedGearMistralForCausalLM, MistralConfig
-from transformers import LlamaTokenizer
+from transformers import LlamaTokenizer, AutoTokenizer
 
 
 IGNORE_INDEX = -100
@@ -304,9 +304,14 @@ if __name__ == "__main__":
     parser.add_argument("--compress_method", type=str, default="None", help="")
     parser.add_argument("--rank", type=float, default=0.0, help="")
     parser.add_argument("--rankv", type=float, default=0.0, help="")
+    parser.add_argument("--prefillrank", type=float, default=0.0, help="rank compared with smaller dimension set to K cache.")
+    parser.add_argument("--prefillrankv", type=float, default=0.0, help="rank compared with smaller dimension set to V cache.")
+    parser.add_argument("--merge_group_k", type=float, default=0.0, help="")
+    parser.add_argument("--merge_group_v", type=float, default=0.0, help="")
     parser.add_argument("--loop", type=int, default=0, help="")
     parser.add_argument("--quantize_bit", type=int, default=8, help="")
     parser.add_argument("--group_num", type=int, default=0, help="")
+    parser.add_argument("--group_size", type=int, default=0, help="")
     parser.add_argument("--top_kprun", type=float, default=0.0, help="")
     parser.add_argument("--left", type=float, default=0.0, help="")
     parser.add_argument("--attention_number", type=int, default=100, help="")
@@ -317,6 +322,10 @@ if __name__ == "__main__":
     parser.add_argument("--streaming", action="store_true", default=False, help="")
     parser.add_argument("--streaming_gap", type=int, default=0, help="")
     parser.add_argument("--zero_shot", action="store_true", default=False, help="")
+    parser.add_argument("--stream_grouping", action="store_true", default=False, help="Use streaming mode.")
+    parser.add_argument("--token_preserving", action="store_true", default=False, help="")
+    parser.add_argument("--start", type=int, default=0, help="")
+    parser.add_argument("--locality", type=int, default=0, help="")
 
     args = parser.parse_args()
 
@@ -375,26 +384,29 @@ if __name__ == "__main__":
             compress_method=args.compress_method,
             rank=args.rank,
             rankv=args.rankv,
+            prefill_rank = args.prefillrank,
+            prefill_rankv = args.prefillrankv,
+            
             loop=args.loop,
             quantize_bit=args.quantize_bit,
             group_num=args.group_num,
+            group_size = args.group_size,
             top_k=args.top_kprun,
             left=args.left,
             attention_number=args.attention_number,
             device_num=args.gpu,
             batch_num=args.batch_size,
 
-            heavy_size=args.heavy_size,
-            recent_size=args.recent_size,
             streaming=args.streaming,
             streaming_gap=args.streaming_gap,
+            stream_grouping=args.stream_grouping,
         )
     )
     if compress_config is not None:
         compress_config.copy_for_all_attention()
         compress_config.calculate_compress_ratio_list(4095, 4096)
     
-    if "Llama-2" in args.model:
+    if "Llama" in args.model:
        
         model = SimulatedGearLlamaForCausalLM.from_pretrained(
             args.model,
@@ -402,7 +414,7 @@ if __name__ == "__main__":
             **model_kwargs,
             compress_config=compress_config,
         )
-        tokenizer = LlamaTokenizer.from_pretrained(
+        tokenizer = AutoTokenizer.from_pretrained(
             args.model,
             token=args.hf_token,
             padding_side="left",
@@ -470,6 +482,7 @@ if __name__ == "__main__":
                 padding="longest",
                 truncation=True,
             )
+            print(inputs.input_ids.shape)
             inputs = inputs.to("cuda")
             generate_kwargs = dict(
                 return_dict_in_generate=True,
