@@ -36,17 +36,15 @@ def fake_groupwise_token_asymmetric_quantization( ####
     input = input.permute(0, 2, 1, 3).contiguous().type(dtype)
     return dequantized_input
 
-
-def fake_groupwise_channel_asymmetric_quantization_new( ####
+def fake_groupwise_channel_asymmetric_quantization_new(
     input: torch.Tensor, quantize_bit, group_size=128
 ):
     batch, num_head, seq_len, sep_dim = input.shape
     dtype = input.dtype
-
     # group_size = 128
     input = (
         input.permute(0, 2, 1, 3).contiguous().view(batch, seq_len, sep_dim * num_head)
-    ).float()
+    )
     input = input.view(batch, seq_len, num_head * sep_dim)
     group_num = input.shape[1] // group_size
 
@@ -453,6 +451,17 @@ def compress_insert_function(
                 int(num_head * sep_dim),
             )
 
+    if compress_config.compress_method[layer_idx] == "KIVI":
+        previous_key[:, :, starting_idx:-locality_idx, :] = fake_groupwise_channel_asymmetric_quantization_new(
+            previous_key[:, :, starting_idx:-locality_idx, :],
+            compress_config.quantize_bit[layer_idx],
+            compress_config.group_size[layer_idx]
+        )
+        previous_value[:, :, starting_idx:-locality_idx, :] = fake_groupwise_token_asymmetric_quantization(
+            previous_value[:, :, starting_idx:-locality_idx, :],
+            compress_config.quantize_bit[layer_idx],
+            compress_config.group_size[layer_idx]
+        )
 
     if compress_config.compress_method[layer_idx] == "GEAR":
         prefill_rank = int(compress_config.prefill_rank[layer_idx])
