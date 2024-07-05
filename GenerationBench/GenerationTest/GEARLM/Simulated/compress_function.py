@@ -451,7 +451,7 @@ def compress_insert_function(
                 int(num_head * sep_dim),
             )
 
-    if compress_config.compress_method[layer_idx] == "KIVI":
+    if compress_config.compress_method[layer_idx] == "KIVI_V2":
         previous_key[:, :, starting_idx:-locality_idx, :] = fake_groupwise_channel_asymmetric_quantization_new(
             previous_key[:, :, starting_idx:-locality_idx, :],
             compress_config.quantize_bit[layer_idx],
