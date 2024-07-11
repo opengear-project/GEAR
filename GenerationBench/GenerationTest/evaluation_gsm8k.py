@@ -543,7 +543,7 @@ if __name__ == "__main__":
     with evaluation_result_file.open("w") as handle:
         json.dump(evaluation_result.to_dict(), handle)
 
-    with generation_file.open("w") as handle:
+    with generation_file.open("w", encoding="utf-8") as handle:
         for question, generation, answer in zip(
             all_question, all_generation, all_answer
         ):
