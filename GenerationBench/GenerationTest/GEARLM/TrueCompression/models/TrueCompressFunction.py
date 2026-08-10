@@ -18,7 +18,7 @@ def clear_rank_distribution():
     _adaptive_rank_distribution = []
 
 
-def save_rank_distribution_to_csv(filename="adaptive_rank_distribution.csv"):
+def save_rank_distribution_to_csv(filename="rank_distribution.csv"):
     """Save the recorded adaptive ranks to a CSV file."""
     global _adaptive_rank_distribution
     
@@ -38,7 +38,7 @@ def save_rank_distribution_to_csv(filename="adaptive_rank_distribution.csv"):
             for idx, rank in enumerate(_adaptive_rank_distribution):
                 writer.writerow([idx, rank])
         
-        print(f"Adaptive rank distribution saved to {filename} ({len(_adaptive_rank_distribution)} records)")
+        # print(f"Adaptive rank distribution saved to {filename} ({len(_adaptive_rank_distribution)} records)")
     except Exception as e:
         print(f"Error saving rank distribution to CSV: {e}")
 
@@ -69,7 +69,7 @@ def get_adaptive_rank(tensor: torch.Tensor, energy_threshold: float = 0.5):
     
     # print(f"[DEBUG] Total ranks recorded so far: {len(_adaptive_rank_distribution)}")
     
-    return rank
+    return torch.clamp(rank, min=1, max=16)
 
 
 def transfer_8bit_to_4bit(input: torch.Tensor):
@@ -213,12 +213,12 @@ def true_poweriteration(input: torch.Tensor, loop, rank, p_base=None, q_base=Non
     batch, num_head, seq_len, sep_dim = input.shape
     
     # Use adaptive rank if no rank is passed (rank <= 0)
-    # if rank <= 0:
-    # adaptive_ranks = get_adaptive_rank(input)
-    # rank = int(torch.mean(adaptive_ranks.float()).item())
-    # print(f"[TRUE_POWERITERATION] USING ADAPTIVE RANK: {rank} (shape: {batch}x{num_head}x{seq_len}x{sep_dim})")
+    if rank <= 0:
+        adaptive_ranks = get_adaptive_rank(input)
+        rank = int(torch.mean(adaptive_ranks.float()).item())
+        # print(f"[TRUE_POWERITERATION] USING ADAPTIVE RANK: {rank} (shape: {batch}x{num_head}x{seq_len}x{sep_dim})")
     # else:
-        # print(f"[TRUE_POWERITERATION] USING FIXED RANK: {rank}")
+    # print(f"[TRUE_POWERITERATION] USING FIXED RANK: {rank}")
     
     input = (
         input.permute(0, 2, 1, 3).contiguous().view(batch, seq_len, sep_dim * num_head)

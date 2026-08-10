@@ -35,10 +35,12 @@ setup(
         CUDAExtension(
             name="kivi_gemv",
             sources=[
-                "csrc/pybind.cpp", 
-                "csrc/gemv_cuda.cu"
+                "csrc/pybind.cpp",
+                "csrc/gemv_cuda.cu",
+                "csrc/adaptive_rank_cuda.cu",
             ],
             extra_compile_args=extra_compile_args,
+            libraries=["cublas", "cusolver"],
         ),
     ],
     cmdclass={"build_ext": BuildExtension},

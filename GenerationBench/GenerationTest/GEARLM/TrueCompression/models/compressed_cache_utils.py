@@ -66,11 +66,11 @@ class FPBuffer:
 
         self._initialised = False
 
-        if recency_tokens == 0 and buffer_len > 0:
-            raise ValueError(
-                "recency_tokens=0 is invalid when buffer_len > 0. "
-                "The flush window would always be empty."
-            )
+        # if recency_tokens == 0 and buffer_len > 0:
+        #     raise ValueError(
+        #         "recency_tokens=0 is invalid when buffer_len > 0. "
+        #         "The flush window would always be empty."
+        #     )
 
     # ── helpers ───────────────────────────────────────────────────────────────
 

@@ -112,8 +112,8 @@ def fake_poweriteration_group(input: torch.Tensor, loop, rank, device, p_base, q
 
     # Use adaptive rank if no rank is passed (rank <= 0)
     # if rank <= 0:
-    adaptive_ranks = get_adaptive_rank(input)
-    rank = int(torch.mean(adaptive_ranks.float()).item())
+    # adaptive_ranks = get_adaptive_rank(input)
+    # rank = int(torch.mean(adaptive_ranks.float()).item())
 
     input = input.float()
     if q_base is not None and p_base is not None:

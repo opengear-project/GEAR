@@ -4,6 +4,11 @@ import random
 import numpy as np
 import torch
 
+try:
+    import kivi_gemv
+except ImportError:
+    kivi_gemv = None
+
 
 def quant_and_pack_kcache(k: torch.FloatTensor, group_size: int, bits: int):
     assert len(k.shape) == 4
@@ -290,10 +295,9 @@ def triton_quantize_and_pack_along_last_dim_witherror(data: torch.Tensor, group_
 
 def headwise_lrap(tensor: torch.Tensor, rank, loop):
 
-    # Use adaptive rank if no rank is passed (rank <= 0)
-    # if rank <= 0:
-    adaptive_ranks = get_adaptive_rank(tensor)
-    rank = int(torch.mean(adaptive_ranks).item())
+    if rank <= 0:
+        adaptive_ranks = get_adaptive_rank(tensor)
+        rank = max(1, int(torch.mean(adaptive_ranks.float()).item()))
 
     dtype = tensor.dtype
     shape = tensor.shape
@@ -317,12 +321,32 @@ def headwise_lrap(tensor: torch.Tensor, rank, loop):
     return p_base, q_base
 
 
-def get_adaptive_rank(tensor: torch.Tensor, energy_threshold: float = 0.5):
-    # print("Calculating adaptive rank...")
-    shape = tensor.shape
-    batch, num_head, seq_len, head_dim = shape
+def _get_adaptive_rank_reference(
+    tensor: torch.Tensor, energy_threshold: float = 0.5, max_rank: int = 16
+):
+    if tensor.dim() == 4:
+        batch, num_head, seq_len, head_dim = tensor.shape
+        tensor = (
+            tensor.permute(0, 2, 1, 3)
+            .contiguous()
+            .reshape(batch, seq_len, num_head * head_dim)
+        )
     tensor = tensor.float()
-    u, s, v = torch.linalg.svd(tensor)
+    _, s, _ = torch.linalg.svd(tensor, full_matrices=False)
     energy = torch.cumsum(s**2, dim=-1) / torch.sum(s**2, dim=-1, keepdim=True)
     rank = torch.sum(energy < energy_threshold, dim=-1)
-    return rank
+    return torch.clamp(rank, min=1, max=max_rank)
+
+
+def get_adaptive_rank(
+    tensor: torch.Tensor, energy_threshold: float = 0.5, max_rank: int = 16
+):
+    if (
+        kivi_gemv is not None
+        and tensor.is_cuda
+        and tensor.dim() == 4
+    ):
+        return kivi_gemv.get_adaptive_rank_cuda(
+            tensor, energy_threshold, max_rank
+        )
+    return _get_adaptive_rank_reference(tensor, energy_threshold, max_rank)

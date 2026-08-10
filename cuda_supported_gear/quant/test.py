@@ -7,7 +7,7 @@ import ipdb
 import math
 import os
 import triton
-from new_pack import quant_and_pack_vcache, unpack_and_dequant_kcache, triton_quantize_and_pack_along_last_dim, unpack_and_dequant_vcache, quant_and_pack_kcache
+from new_pack import quant_and_pack_vcache, unpack_and_dequant_kcache, triton_quantize_and_pack_along_last_dim, unpack_and_dequant_vcache, quant_and_pack_kcache, get_adaptive_rank, _get_adaptive_rank_reference, headwise_lrap
 from matmul import triton_bmm_fA_qB_outer
 from timeit_v2 import py_benchmark
 
@@ -202,10 +202,51 @@ def test_4d_qmatmul():
 		print(f'bits {bits}, err: {err}')
 
 
+def test_adaptive_rank():
+	if not torch.cuda.is_available():
+		print("CUDA not available, skipping adaptive rank test")
+		return
+
+	try:
+		import kivi_gemv
+	except ImportError:
+		raise RuntimeError("kivi_gemv extension is required for adaptive rank tests")
+
+	shapes = [
+		(1, 32, 128, 128),
+		(1, 32, 512, 128),
+		(2, 8, 64, 64),
+	]
+	energy_threshold = 0.5
+	max_rank = 16
+
+	for shape in shapes:
+		tensor = torch.randn(shape, device="cuda", dtype=torch.float16)
+		cuda_ranks = get_adaptive_rank(tensor, energy_threshold, max_rank)
+		ref_ranks = _get_adaptive_rank_reference(tensor, energy_threshold, max_rank)
+		assert cuda_ranks.shape == ref_ranks.shape
+		mismatch = (cuda_ranks.cpu() != ref_ranks.cpu()).sum().item()
+		print(
+			f"shape={shape} cuda={cuda_ranks.tolist()} ref={ref_ranks.tolist()} "
+			f"mismatch={mismatch}"
+		)
+		assert mismatch == 0, f"rank mismatch for shape {shape}"
+
+	p_base, q_base = headwise_lrap(
+		torch.randn(1, 32, 128, 128, device="cuda", dtype=torch.float16),
+		rank=0,
+		loop=2,
+	)
+	assert p_base.shape[-1] >= 1
+	assert q_base.shape[-1] >= 1
+	print("adaptive rank tests passed")
+
+
 if __name__ == '__main__':
 	set_seed(114514)
 	# test_kcache()
 	# test_vcache()
 	# test_4d_qmatmul()
 	# test_streaming_kvcache()
+	# test_adaptive_rank()
 	test_bmm_speed()
